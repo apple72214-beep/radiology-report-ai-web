@@ -12,13 +12,21 @@ from backend.dicom_utils import create_synthetic_dicom
 
 
 def main() -> None:
-    study_uid = generate_uid()
+    urgent_uid = generate_uid()
+    routine_uid = generate_uid()
     files = [
         (
-            f"demo-{i:02d}.dcm",
-            create_synthetic_dicom(index=i, study_uid=study_uid, seed=i),
+            f"demo-urgent-{i:02d}.dcm",
+            create_synthetic_dicom(index=i, study_uid=urgent_uid, seed=i, lesion=True, patient_id="DEMO-0001"),
         )
         for i in range(6)
+    ]
+    files += [
+        (
+            f"demo-routine-{i:02d}.dcm",
+            create_synthetic_dicom(index=i, study_uid=routine_uid, seed=100 + i, lesion=False, patient_id="DEMO-0002"),
+        )
+        for i in range(4)
     ]
     created = studies.ingest(owner_id="demo", files=files)
     for study in created:

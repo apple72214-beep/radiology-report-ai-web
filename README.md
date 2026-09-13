@@ -11,6 +11,17 @@ Enterprise AI Radiology Platform
 - Demo data: `python scripts/make_demo_study.py` (synthetic 6-slice chest study)
 - Study storage directory: `HAGAR_STUDY_STORE` (default `data/studies`)
 
+## v0.2 — Heuristic triage, live worklist & PWA
+
+- Triage on ingest: `backend/triage.py` (CPU heuristic baseline; pluggable for a
+  MONAI/TorchXRayVision model later) scores opacity asymmetry + density and tags
+  each study `urgent` / `routine`; the worklist is ordered urgent-first.
+- Live updates: `GET /events` (Server-Sent Events with replayable history) pushes
+  `study_received` events; the viewer refreshes automatically.
+- PWA: `manifest.webmanifest` + `sw.js` make the viewer installable
+  ("Add to Home Screen") and offline-capable: app shell precached, rendered
+  frames cached stale-while-revalidate.
+
 ## Shared analysis SSE event history
 
 For a multi-worker deployment, set `HAGAR_ANALYSIS_EVENT_STORE_PATH` to a file on a **shared persistent filesystem** (for example a mounted volume visible to every API worker). The analysis SSE hub then persists event history and polls the shared store so a subscriber connected to Worker B can replay and receive events published by Worker A.

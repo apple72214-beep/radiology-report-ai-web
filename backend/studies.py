@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from .dicom_utils import read_dataset
+from .triage import analyze
 
 
 @dataclass
@@ -26,6 +27,7 @@ class Study:
     owner_id: str
     status: str = "received"
     instances: list[Instance] = field(default_factory=list)
+    triage: dict | None = None
 
 
 def store_root() -> Path:
@@ -69,6 +71,8 @@ def ingest(owner_id: str, files: list[tuple[str, bytes]]) -> list[Study]:
         instances_dir.mkdir(parents=True, exist_ok=True)
         (instances_dir / f"{idx:04d}.dcm").write_bytes(data)
         study.instances.append(Instance(idx=idx, sop_uid=sop_uid, number=number))
+        if study.triage is None:
+            study.triage = analyze(data).as_dict()
         touched[study_uid] = study
 
     result = []
@@ -88,6 +92,9 @@ def list_studies() -> list[Study]:
             study = _load_meta(directory.name)
             if study is not None:
                 studies.append(study)
+    studies.sort(
+        key=lambda s: 0 if (s.triage or {}).get("priority") == "urgent" else 1
+    )
     return studies
 
 

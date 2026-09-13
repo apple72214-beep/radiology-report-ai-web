@@ -25,6 +25,7 @@ def create_synthetic_dicom(
     rows: int = 256,
     cols: int = 256,
     seed: int | None = None,
+    lesion: bool = True,
 ) -> bytes:
     """Create a synthetic chest-like CR instance for demos and tests."""
     rng = np.random.default_rng(seed if seed is not None else index)
@@ -38,9 +39,11 @@ def create_synthetic_dicom(
     lungs += 600 * np.exp(
         -(((xx - cols * 0.65) ** 2) / 1800 + ((yy - rows / 2) ** 2) / 3200)
     )
-    blob = 350 * np.exp(
-        -(((xx - cols * 0.62) ** 2) / 260 + ((yy - rows * 0.42) ** 2) / 260)
-    )
+    blob = 0.0
+    if lesion:
+        blob = 350 * np.exp(
+            -(((xx - cols * 0.62) ** 2) / 260 + ((yy - rows * 0.42) ** 2) / 260)
+        )
     noise = rng.normal(0, 24, (rows, cols))
     pixels = np.clip(base - lungs + blob + noise, 0, 4095)
     arr = (pixels / 4095 * 4095).astype(np.uint16)
