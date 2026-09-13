@@ -2,6 +2,15 @@
 
 Enterprise AI Radiology Platform
 
+## v0.1 — Study intake & built-in viewer
+
+- Upload DICOM instances: `POST /studies/upload` (multipart, field `files`)
+- Worklist: `GET /studies` · Study detail: `GET /studies/{study_uid}`
+- Server-side rendered frames: `GET /studies/{study_uid}/instances/{idx}/png?preset=auto|lung|mediastinum|bone`
+- Web viewer (Arabic RTL, offline-friendly — frames are rendered on the server, no CDNs): open `/`
+- Demo data: `python scripts/make_demo_study.py` (synthetic 6-slice chest study)
+- Study storage directory: `HAGAR_STUDY_STORE` (default `data/studies`)
+
 ## Shared analysis SSE event history
 
 For a multi-worker deployment, set `HAGAR_ANALYSIS_EVENT_STORE_PATH` to a file on a **shared persistent filesystem** (for example a mounted volume visible to every API worker). The analysis SSE hub then persists event history and polls the shared store so a subscriber connected to Worker B can replay and receive events published by Worker A.

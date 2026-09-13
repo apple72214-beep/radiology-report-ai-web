@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Radiology report AI — العارض</title>
+    <style>
+      :root { --bg:#0f172a; --panel:#1e293b; --line:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#34d399; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; background:var(--bg); color:var(--text); }
+      header { display:flex; align-items:baseline; gap:.8rem; padding:1rem 1.4rem; border-bottom:1px solid var(--line); }
+      header h1 { font-size:1.15rem; margin:0; }
+      header span { color:var(--muted); font-size:.8rem; }
+      main { display:grid; grid-template-columns:minmax(280px,380px) 1fr; gap:1rem; padding:1rem 1.4rem; }
+      @media (max-width:820px){ main { grid-template-columns:1fr; } }
+      section { background:var(--panel); border:1px solid var(--line); border-radius:.6rem; padding:1rem; }
+      h2 { font-size:.95rem; margin:0 0 .8rem; color:var(--accent); }
+      button, select, input[type=file] { font:inherit; }
+      button { background:var(--accent); color:#082f49; border:0; border-radius:.4rem; padding:.45rem .9rem; cursor:pointer; font-weight:600; }
+      button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+      table { width:100%; border-collapse:collapse; font-size:.85rem; }
+      th, td { text-align:right; padding:.4rem .3rem; border-bottom:1px solid var(--line); }
+      th { color:var(--muted); font-weight:500; }
+      .viewer { display:flex; flex-direction:column; gap:.7rem; align-items:center; }
+      .viewer img { max-width:100%; max-height:62vh; background:#000; border-radius:.4rem; image-rendering:pixelated; }
+      .controls { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; justify-content:center; color:var(--muted); font-size:.85rem; }
+      input[type=range] { width:min(320px,70vw); accent-color:var(--accent); }
+      .meta { color:var(--muted); font-size:.8rem; text-align:center; }
+      .empty { color:var(--muted); font-size:.85rem; text-align:center; padding:1.5rem 0; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Radiology report AI</h1>
+      <span>v0.1 — استيعاب الدراسات وعرضها (يعمل بدون إنترنت)</span>
+    </header>
+    <main>
+      <section>
+        <h2>رفع دراسات DICOM</h2>
+        <input id="files" type="file" accept=".dcm,.dicom,application/dicom" multiple />
+        <p><button id="upload">رفع إلى المنصة</button></p>
+        <h2>قائمة العمل</h2>
+        <table id="worklist">
+          <thead><tr><th>المريض</th><th>النوع</th><th>الشرائح</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty" id="empty">لا توجد دراسات بعد — ارفع ملفات DICOM أو ولّد دراسة تجريبية.</p>
+      </section>
+      <section class="viewer">
+        <h2>العارض</h2>
+        <img id="frame" alt="إطار الدراسة" src="" style="display:none" />
+        <div class="controls">
+          <label>الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
+          <label>النافذة:
+            <select id="preset">
+              <option value="auto">تلقائي</option>
+              <option value="lung">رئة</option>
+              <option value="mediastinum">منصف</option>
+              <option value="bone">عظم</option>
+            </select>
+          </label>
+        </div>
+        <p class="meta" id="meta"></p>
+      </section>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let current = null;
+
+      async function refresh() {
+        const res = await fetch("/studies");
+        const studies = await res.json();
+        const body = document.querySelector("#worklist tbody");
+        body.innerHTML = "";
+        $("empty").style.display = studies.length ? "none" : "block";
+        for (const s of studies) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td></td><td></td><td></td><td></td>`;
+          tr.children[0].textContent = s.patient_id;
+          tr.children[1].textContent = s.modality;
+          tr.children[2].textContent = s.instances.length;
+          const btn = document.createElement("button");
+          btn.className = "ghost";
+          btn.textContent = "عرض";
+          btn.onclick = () => openStudy(s.study_uid);
+          tr.children[3].appendChild(btn);
+          body.appendChild(tr);
+        }
+      }
+
+      async function openStudy(uid) {
+        const res = await fetch(`/studies/${uid}`);
+        current = await res.json();
+        $("slice").max = Math.max(0, current.instances.length - 1);
+        $("slice").value = 0;
+        $("frame").style.display = "block";
+        show(0);
+      }
+
+      function show(idx) {
+        if (!current) return;
+        $("frame").src = `/studies/${current.study_uid}/instances/${idx}/png?preset=${$("preset").value}`;
+        const inst = current.instances[idx];
+        $("meta").textContent = `${current.patient_id} • ${current.modality} • شريحة ${idx + 1} من ${current.instances.length} • ${current.description || ""}`;
+      }
+
+      $("slice").addEventListener("input", (e) => show(Number(e.target.value)));
+      $("preset").addEventListener("change", () => show(Number($("slice").value)));
+      $("upload").addEventListener("click", async () => {
+        const input = $("files");
+        if (!input.files.length) return;
+        const form = new FormData();
+        for (const f of input.files) form.append("files", f);
+        await fetch("/studies/upload", { method: "POST", body: form });
+        input.value = "";
+        refresh();
+      });
+
+      refresh();
+    </script>
+  </body>
+</html>
