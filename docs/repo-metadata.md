@@ -1,4 +1,6 @@
-# hagar-radiology-ai — metadata from Arena preview
+# Radiology report AI — metadata from Arena preview
+
+> Renamed on 2026-09-13 from `hagar-radiology-ai` (restored from Arena preview).
 Owner: dhrajar2-ship-it | Repo: hagar-radiology-ai (Private) | Branch: main
 
 ## Recent commits

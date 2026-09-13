@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 
 app = FastAPI(
-    title="Hagar Radiology AI",
+    title="Radiology report AI",
     description="Enterprise AI Radiology Platform",
     version="0.1.0",
 )

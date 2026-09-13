@@ -1,1 +1,1 @@
-"""Hagar radiology API package."""
+"""Radiology report AI API package."""

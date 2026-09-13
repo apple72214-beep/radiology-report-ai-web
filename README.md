@@ -1,4 +1,4 @@
-# hagar-radiology-ai
+# Radiology report AI
 
 Enterprise AI Radiology Platform
 
