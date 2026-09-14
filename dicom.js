@@ -107,6 +107,11 @@ export function parseDicom(buffer) {
       }
       pixels = { kind: "gray", w: cols, h: rows, data, photometric };
     }
+    const sp = str(tags["0028,0030"]);
+    if (sp) {
+      const parts = sp.split("\\").map((x) => parseFloat(x));
+      if (parts.length === 2 && parts.every((x) => x > 0)) pixels.spacing = parts;
+    }
   }
   return {
     studyUid: str(tags["0020,000d"]) || "unknown-study",

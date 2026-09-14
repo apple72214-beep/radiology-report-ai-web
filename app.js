@@ -112,6 +112,22 @@ export async function seedDemo() {
   await refresh();
 }
 
+function txDel(uid) {
+  return new Promise((resolve) => {
+    const req = tx("readwrite", (s) => s.delete(uid));
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+  });
+}
+
+function txClear() {
+  return new Promise((resolve) => {
+    const req = tx("readwrite", (s) => s.clear());
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+  });
+}
+
 /* ---- zip containers: extract DICOM members inside the browser ---- */
 function hasDicmMagic(bytes) {
   return bytes.byteLength > 132 && bytes[128] === 0x44 && bytes[129] === 0x49 &&
@@ -256,6 +272,53 @@ export function drawFrame(canvas, pixels, preset, modality) {
   ctx.putImageData(img, 0, 0);
 }
 
+/* ---- viewer interaction: zoom / pan / measure ---- */
+let vk = 1, vx = 0, vy = 0, measureMode = false, mPts = [];
+function applyView() {
+  $("vwrap").style.transform = `translate(${vx}px, ${vy}px) scale(${vk})`;
+}
+function resetView(fit) {
+  const f = current && current.frames[Number($("slice").value || 0)];
+  vk = fit && f ? Math.max(1, Math.min(4, ($("viewport").clientWidth || f.w) / f.w)) : 1;
+  vx = 0; vy = 0;
+  applyView();
+}
+function imgPoint(e) {
+  const r = $("vwrap").getBoundingClientRect();
+  return [(e.clientX - r.left) / vk, (e.clientY - r.top) / vk];
+}
+function centerOn(ix, iy) {
+  const vr = $("viewport").getBoundingClientRect();
+  const r = $("vwrap").getBoundingClientRect();
+  vx += vr.left + vr.width / 2 - (r.left + ix * vk);
+  vy += vr.top + vr.height / 2 - (r.top + iy * vk);
+  applyView();
+}
+function drawOverlay() {
+  const ov = $("overlay");
+  const ctx = ov.getContext("2d");
+  ctx.clearRect(0, 0, ov.width, ov.height);
+  if (!mPts.length) return;
+  ctx.strokeStyle = "#38bdf8"; ctx.fillStyle = "#38bdf8"; ctx.lineWidth = 1.5;
+  for (const [x, y] of mPts) { ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); }
+  if (mPts.length === 2) {
+    ctx.beginPath(); ctx.moveTo(mPts[0][0], mPts[0][1]); ctx.lineTo(mPts[1][0], mPts[1][1]); ctx.stroke();
+  }
+}
+function measureOut() {
+  const out = $("measure-out");
+  if (!out) return;
+  if (mPts.length === 2 && current) {
+    const px = Math.hypot(mPts[1][0] - mPts[0][0], mPts[1][1] - mPts[0][1]);
+    const sp = current.frames[Number($("slice").value)] && current.frames[Number($("slice").value)].spacing;
+    out.textContent = sp
+      ? "المسافة: " + (px * sp[0]).toFixed(1) + " مم (" + px.toFixed(0) + " بكسل)"
+      : "المسافة: " + px.toFixed(0) + " بكسل";
+  } else {
+    out.textContent = measureMode ? "انقر نقطتين على الصورة" : "";
+  }
+}
+
 /* ---- UI wiring ---- */
 const $ = (id) => document.getElementById(id);
 
@@ -284,6 +347,19 @@ export async function refresh() {
     btn.textContent = "عرض";
     btn.onclick = () => openStudy(s);
     tr.children[4].appendChild(btn);
+    const del = document.createElement("button");
+    del.className = "ghost";
+    del.textContent = "✕";
+    del.title = "حذف الدراسة من الجهاز";
+    del.style.marginInlineStart = ".3rem";
+    del.style.padding = ".2rem .5rem";
+    del.onclick = async () => {
+      if (!confirm("حذف دراسة " + s.patient + " من هذا الجهاز؟")) return;
+      await txDel(s.uid);
+      if (current && current.uid === s.uid) current = null;
+      await refresh();
+    };
+    tr.children[4].appendChild(del);
     body.appendChild(tr);
   }
 }
@@ -302,6 +378,14 @@ async function openStudy(study) {
 function show(idx) {
   if (!current) return;
   drawFrame($("frame"), current.frames[idx], $("preset").value, current.modality);
+  const ov = $("overlay");
+  ov.width = current.frames[idx].w;
+  ov.height = current.frames[idx].h;
+  $("viewport").style.display = "block";
+  mPts = [];
+  drawOverlay();
+  measureOut();
+  resetView(true);
   $("meta").textContent =
     `${current.patient} • ${current.modality} • شريحة ${idx + 1} من ${current.frames.length} • ${current.description || ""}`;
 }
@@ -363,6 +447,65 @@ export function init() {
   $("copy-report").addEventListener("click", () => {
     const t = $("report-ar").textContent + "\n\n" + $("report-en").textContent;
     if (navigator.clipboard) navigator.clipboard.writeText(t);
+  });
+  $("clear-all").addEventListener("click", async () => {
+    if (!confirm("تفريغ القائمة: حذف كل الدراسات من هذا الجهاز؟")) return;
+    await txClear();
+    current = null;
+    await refresh();
+  });
+  const vp = $("viewport");
+  const ptrs = new Map();
+  let pinch0 = 0, k0 = 1, moved = false;
+  vp.addEventListener("pointerdown", (e) => {
+    vp.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    moved = false;
+    if (ptrs.size === 2) {
+      const v = [...ptrs.values()];
+      pinch0 = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]);
+      k0 = vk;
+    }
+  });
+  vp.addEventListener("pointermove", (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    const prev = ptrs.get(e.pointerId);
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptrs.size === 2) {
+      const v = [...ptrs.values()];
+      const d = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]);
+      if (pinch0 > 0) { vk = Math.max(0.5, Math.min(8, (k0 * d) / pinch0)); moved = true; applyView(); }
+    } else if (ptrs.size === 1 && vk > 1.01) {
+      vx += e.clientX - prev[0]; vy += e.clientY - prev[1]; moved = true; applyView();
+    } else if (ptrs.size === 1 && Math.hypot(e.clientX - prev[0], e.clientY - prev[1]) > 4) {
+      moved = true;
+    }
+  });
+  const vpUp = (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) pinch0 = 0;
+    if (!moved && measureMode && ptrs.size === 0) {
+      const p = imgPoint(e);
+      if (mPts.length === 2) mPts = [p]; else mPts.push(p);
+      drawOverlay();
+      measureOut();
+    }
+  };
+  vp.addEventListener("pointerup", vpUp);
+  vp.addEventListener("pointercancel", vpUp);
+  vp.addEventListener("dblclick", (e) => {
+    if (vk > 1.01) resetView(true);
+    else { const pt = imgPoint(e); vk = 3; centerOn(pt[0], pt[1]); }
+  });
+  $("zoom-reset").addEventListener("click", () => resetView(true));
+  $("measure").addEventListener("click", () => {
+    measureMode = !measureMode;
+    mPts = [];
+    drawOverlay();
+    measureOut();
+    $("measure").style.color = measureMode ? "var(--accent)" : "";
+    $("measure").style.borderColor = measureMode ? "var(--accent)" : "";
   });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 }

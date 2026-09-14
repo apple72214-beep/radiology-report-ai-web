@@ -59,11 +59,22 @@
           <tbody></tbody>
         </table>
         <p class="empty" id="empty">لا توجد دراسات — ارفع DICOM أو اضغط "توليد ديمو".</p>
+        <p><button id="clear-all" class="ghost">تفريغ القائمة من الجهاز</button></p>
         <p class="hint">💾 كل المعالجة تحدث داخل متصفحك: لا سيرفر، لا إنترنت مطلوب بعد التثبيت، ولا بيانات تغادر جهازك. من قائمة المتصفح ⋮ ← "إضافة إلى الشاشة الرئيسية" لتثبيتها كتطبيق.</p>
       </section>
       <section class="viewer">
         <h2>العارض</h2>
-        <canvas id="frame" style="display:none"></canvas>
+        <div id="viewport" style="display:none; position:relative; overflow:hidden; width:100%; background:#000; border-radius:.4rem; touch-action:none;">
+          <div id="vwrap" style="transform-origin:0 0; position:relative; width:max-content; margin:0 auto;">
+            <canvas id="frame" style="display:none; image-rendering:pixelated;"></canvas>
+            <canvas id="overlay" style="position:absolute; inset:0; pointer-events:none;"></canvas>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="zoom-reset" class="ghost">1:1</button>
+          <button id="measure" class="ghost">قياس</button>
+          <span id="measure-out"></span>
+        </div>
         <div class="controls">
           <label>الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
           <label>النافذة:
