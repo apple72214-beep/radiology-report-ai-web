@@ -22,7 +22,14 @@
          release channel: raw (4s timeout) -> mirror -> localStorage;
          probe version-named UI; register version-named SW; retire others. */
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
+      const JSR = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/release.json";
       const MIRROR = "./release.json";
+      const ORIGINS = [
+        "./",
+        "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/",
+        "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/",
+        "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"
+      ];
       const known = ["v11", "v10", "v9"];
       const cands = [];
       const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
@@ -35,24 +42,27 @@
         } catch (e) {} finally { clearTimeout(t); }
         return null;
       };
-      for (const src of [RAW, MIRROR]) add(await grab(src));
+      for (const src of [RAW, JSR, MIRROR]) add(await grab(src));
       add(localStorage.getItem("rrai-build"));
       known.forEach(add);
-      let build = null;
+      let build = null, origin = "./";
       for (const b of cands) {
-        try {
-          const u = await fetch("./ui." + b + ".html?b=" + b, { cache: "no-store" });
-          if (u.ok) { build = b; document.body.innerHTML = await u.text(); break; }
-        } catch (e) {}
+        for (const o of ORIGINS) {
+          try {
+            const u = await fetch(o + "ui." + b + ".html?b=" + b, { cache: "no-store" });
+            if (u.ok) { build = b; origin = o; document.body.innerHTML = await u.text(); break; }
+          } catch (e) {}
+        }
+        if (build) break;
       }
       if (!build) {
         document.getElementById("splash").textContent = "تعذر تحميل أي إصدار معروف — تحقق من الاتصال ثم أعد الفتح.";
       } else {
         localStorage.setItem("rrai-build", build);
         try {
-          const m = await import("./app." + build + ".js");
+          const m = await import(origin + "app." + build + ".js");
           m.init();
-          if ("serviceWorker" in navigator) {
+          if (origin === "./" && "serviceWorker" in navigator) {
             navigator.serviceWorker.register("./sw." + build + ".js?b=" + build).then(async (reg) => {
               const all = await navigator.serviceWorker.getRegistrations();
               for (const r of all) if (r !== reg) r.unregister().catch(() => {});
