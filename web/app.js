@@ -114,6 +114,7 @@ export async function seedDemo() {
 /* ---- ingest uploaded files ---- */
 export async function ingestFiles(fileList) {
   const groups = new Map();
+  let skipped = 0;
   for (const file of fileList) {
     const buf = await file.arrayBuffer();
     let parsed;
@@ -121,9 +122,10 @@ export async function ingestFiles(fileList) {
       parsed = parseDicom(buf);
     } catch (e) {
       console.warn("skip", file.name, e);
+      skipped++;
       continue;
     }
-    if (!parsed.pixels) continue;
+    if (!parsed.pixels) { skipped++; continue; }
     if (!groups.has(parsed.studyUid)) {
       groups.set(parsed.studyUid, {
         uid: parsed.studyUid,
@@ -141,6 +143,7 @@ export async function ingestFiles(fileList) {
     await putStudy(study);
   }
   await refresh();
+  return { added: groups.size, skipped };
 }
 
 /* ---- rendering ---- */
@@ -238,6 +241,13 @@ function show(idx) {
     `${current.patient} • ${current.modality} • شريحة ${idx + 1} من ${current.frames.length} • ${current.description || ""}`;
 }
 
+function setStatus(msg, warn) {
+  const el = $("ingest-status");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = warn ? "#fca5a5" : "#86efac";
+}
+
 export function init() {
   openDb().then(async (d) => {
     db = d;
@@ -247,8 +257,22 @@ export function init() {
   $("preset").addEventListener("change", () => show(Number($("slice").value)));
   $("upload").addEventListener("click", async () => {
     const input = $("files");
-    if (!input.files.length) return;
-    await ingestFiles(input.files);
+    if (!input.files.length) {
+      setStatus("اختر ملفات DICOM أولًا ثم اضغط رفع وتحليل.", true);
+      return;
+    }
+    const r = await ingestFiles(input.files);
+    if (r.added === 0) {
+      setStatus(
+        "لم تُضف أي دراسة: الملفات غير مدعومة في هذه النسخة (DICOM مضغوط JPEG2000/JPEG-LS مثلًا) أو لا تحتوي بكسل. الدعم الكامل قادم في v0.3.",
+        true
+      );
+    } else {
+      setStatus(
+        "تمت إضافة " + r.added + " دراسات" + (r.skipped ? " — تم تجاهل " + r.skipped + " ملفات غير مدعومة" : "") + ".",
+        false
+      );
+    }
     input.value = "";
   });
   $("demo").addEventListener("click", () => seedDemo());
