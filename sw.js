@@ -1,14 +1,14 @@
 /* Offline shell v9: version-named assets + immutable launcher.
    release.json is never cached; everything else is cache-first. */
-const BUILD = "v9";
-const CACHE = "rrai-web-v9";
+const BUILD = "v10";
+const CACHE = "rrai-web-v10";
 const PRECACHE = [
   "./index.html",
-  "./ui.v9.html",
-  "./app.v9.js",
-  "./dicom.v9.js",
-  "./report.v9.js",
-  "./codecs/decode.v9.js",
+  "./ui.v10.html",
+  "./app.v10.js",
+  "./dicom.v10.js",
+  "./report.v10.js",
+  "./codecs/decode.v10.js",
   "./codecs/charlswasm.js?b=v9",
   "./codecs/openjphjs.js?b=v9",
   "./codecs/openjpegwasm.js?b=v9",

@@ -1,9 +1,9 @@
 /* Radiology report AI — browser-only worklist, triage and viewer. */
-import { parseDicom } from "./dicom.v9.js";
-import { draftReport } from "./report.v9.js";
-import { decodeCompressed } from "./codecs/decode.v9.js";
+import { parseDicom } from "./dicom.v10.js";
+import { draftReport } from "./report.v10.js";
+import { decodeCompressed } from "./codecs/decode.v10.js";
 
-const APP_BUILD = "v9";
+const APP_BUILD = "v10";
 
 function checkUpdate() {
   fetch("./sw.js?cb=" + Date.now(), { cache: "no-store" })
@@ -240,6 +240,7 @@ export async function ingestFiles(fileList) {
           description: parsed.description,
           frames: [],
           created: Date.now(),
+          compressedSrc: parsed.compressed || null,
         });
       }
       groups.get(parsed.studyUid).frames.push(px);
@@ -405,9 +406,19 @@ async function openStudy(study) {
   show(0);
 }
 
+function frameStats(px) {
+  const d = px && px.data;
+  if (!d || !d.length) return { min: 0, max: 0 };
+  let mn = Infinity, mx = -Infinity;
+  const step = Math.max(1, Math.floor(d.length / 20000));
+  for (let i = 0; i < d.length; i += step) { if (d[i] < mn) mn = d[i]; if (d[i] > mx) mx = d[i]; }
+  return { min: mn === Infinity ? 0 : mn, max: mx === -Infinity ? 0 : mx };
+}
+
 function show(idx) {
   if (!current) return;
-  drawFrame($("frame"), current.frames[idx], $("preset").value, current.modality);
+  const f0 = current.frames[idx];
+  drawFrame($("frame"), f0, $("preset").value, current.modality);
   const ov = $("overlay");
   ov.width = current.frames[idx].w;
   ov.height = current.frames[idx].h;
@@ -418,6 +429,21 @@ function show(idx) {
   resetView(true);
   $("meta").textContent =
     `${current.patient} • ${current.modality} • شريحة ${idx + 1} من ${current.frames.length} • ${current.description || ""}`;
+  const st = frameStats(f0);
+  $("meta").textContent += " • [" + st.min + "-" + st.max + "]";
+  if (st.max - st.min < 2 && current.compressedSrc) {
+    decodeCompressed(current.compressedSrc, current)
+      .then((px) => {
+        current.frames[idx] = px;
+        putStudy(current);
+        drawFrame($("frame"), px, $("preset").value, current.modality);
+        const ov2 = $("overlay");
+        ov2.width = px.w;
+        ov2.height = px.h;
+        $("meta").textContent += " • [أعيد الفك]";
+      })
+      .catch(() => {});
+  }
 }
 
 function setStatus(msg, warn) {
