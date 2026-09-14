@@ -1,14 +1,27 @@
-/* Offline shell for the browser edition (GitHub Pages).
-   v7: release-keyed cache keys (?b=BUILD) so a stale CDN edge can never
-   serve a mixed release; navigations resolve to the keyed index.html. */
-const BUILD = "v8";
-const CACHE = "rrai-web-v8";
-const SHELL = ["./", "./index.html", "./app.js", "./dicom.js", "./report.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
-const keyed = (u) => u + (u.includes("?") ? "&" : "?") + "b=" + BUILD;
-const isShellPath = (url) => SHELL.some((s) => url.pathname.endsWith(s.replace("./", "/")) || url.pathname + "/" === s);
+/* Offline shell v9: version-named assets + immutable launcher.
+   release.json is never cached; everything else is cache-first. */
+const BUILD = "v9";
+const CACHE = "rrai-web-v9";
+const PRECACHE = [
+  "./index.html",
+  "./ui.v9.html",
+  "./app.v9.js",
+  "./dicom.v9.js",
+  "./report.v9.js",
+  "./codecs/decode.v9.js",
+  "./codecs/charlswasm.js?b=v9",
+  "./codecs/openjphjs.js?b=v9",
+  "./codecs/openjpegwasm.js?b=v9",
+  "./codecs/charlswasm.wasm",
+  "./codecs/openjphjs.wasm",
+  "./codecs/openjpegwasm.wasm",
+  "./manifest.webmanifest",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL.map((s) => keyed(s)))));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
   self.skipWaiting();
 });
 
@@ -25,51 +38,32 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== location.origin) return;
   if (event.request.mode === "navigate") {
-    const indexUrl = keyed(new URL("./index.html", self.location.href).href);
     event.respondWith(
-      caches.match(indexUrl).then(
+      caches.match("./index.html").then(
         (cached) =>
           cached ||
-          fetch(indexUrl).then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE).then((cache) => cache.put(indexUrl, copy));
+          fetch("./index.html").then((r) => {
+            if (r.ok) {
+              const copy = r.clone();
+              caches.open(CACHE).then((c) => c.put("./index.html", copy));
             }
-            return response;
+            return r;
           })
       )
     );
     return;
   }
-  if (url.pathname.includes("/codecs/")) {
-    // Immutable decoder assets: runtime cache-first for offline reuse.
-    event.respondWith(
-      caches.match(event.request).then(
-        (cached) =>
-          cached ||
-          fetch(event.request).then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-            }
-            return response;
-          })
-      )
-    );
-    return;
-  }
-  if (!isShellPath(url)) return;
-  const kUrl = keyed(url.href);
+  if (url.pathname.endsWith("/release.json")) return; // always network, never cached
   event.respondWith(
-    caches.match(kUrl).then(
+    caches.match(event.request).then(
       (cached) =>
         cached ||
-        fetch(kUrl).then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(kUrl, copy));
+        fetch(event.request).then((r) => {
+          if (r.ok) {
+            const copy = r.clone();
+            caches.open(CACHE).then((c) => c.put(event.request, copy));
           }
-          return response;
+          return r;
         })
     )
   );

@@ -1,9 +1,9 @@
 /* Radiology report AI — browser-only worklist, triage and viewer. */
-import { parseDicom } from "./dicom.js";
-import { draftReport } from "./report.js";
-import { decodeCompressed } from "./codecs/decode.js";
+import { parseDicom } from "./dicom.v9.js";
+import { draftReport } from "./report.v9.js";
+import { decodeCompressed } from "./codecs/decode.v9.js";
 
-const APP_BUILD = "v7";
+const APP_BUILD = "v9";
 
 function checkUpdate() {
   fetch("./sw.js?cb=" + Date.now(), { cache: "no-store" })
