@@ -46,8 +46,9 @@ export function draftReport(study) {
       ? `الانطباع: ظل بؤري عالي الكثافة يرجَّح أنه آفة، يتمركز في الربع ${QUAD_AR[bi]} من الحقل الداخلي (متوسط كثافة الربع ${Math.round(qs[bi])} مقابل ${Math.round(qMean)} لمتوسط الحقول). الأولوية: حرجة.`
       : `الانطباع: لا يبرز ظل بؤري عالي الكثافة في الحقول الأربعة (أعلى ربع ${Math.round(qs[bi])} مقابل متوسط ${Math.round(qMean)})؛ النمط ضمن الحدود الروتينية. الأولوية: روتينية.`,
     `مؤشر الفرز الآلي: ${study.triage ? study.triage.score.toFixed(4) : "—"} (عتبة الحرج ≥ 0.01).`,
+    study.signedBy ? `الاعتماد: مسجلة بتوقيع ${study.signedBy}.` : "",
     "التوصية: مراجعة أخصائي الأشعة واعتماد التقرير النهائي — هذه المسودة ليست تشخيصًا.",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   const en = [
     "Radiology report draft — AI-generated, decision support only",
@@ -56,8 +57,9 @@ export function draftReport(study) {
       ? `Impression: focal high-density opacity suggestive of a lesion, centered in the ${QUAD_EN[bi]} quadrant of the inner field (quadrant mean ${Math.round(qs[bi])} vs field mean ${Math.round(qMean)}). Triage priority: urgent.`
       : `Impression: no dominant focal high-density opacity across the four quadrants (max quadrant ${Math.round(qs[bi])} vs mean ${Math.round(qMean)}); pattern within routine limits. Triage priority: routine.`,
     `Automated triage score: ${study.triage ? study.triage.score.toFixed(4) : "—"} (urgent threshold >= 0.01).`,
+    study.signedBy ? `Sign-off: recorded under ${study.signedBy}.` : "",
     "Recommendation: radiologist review and sign-off required — this draft is not a diagnosis.",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   return { ar, en };
 }

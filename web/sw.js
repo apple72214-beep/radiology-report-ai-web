@@ -1,5 +1,5 @@
 /* Offline shell for the browser edition (GitHub Pages). */
-const CACHE = "rrai-web-v5";
+const CACHE = "rrai-web-v6";
 const SHELL = ["./", "./index.html", "./app.js", "./dicom.js", "./report.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
