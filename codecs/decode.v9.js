@@ -27,7 +27,7 @@ function getCharls() {
   if (!charlsP) {
     charlsP = nodeRequire
       ? Promise.resolve(nodeRequire("./charlswasm.js")({ locateFile: wasmPath }))
-      : loadScript("./codecs/charlswasm.js").then(() =>
+      : loadScript("./codecs/charlswasm.js?b=v9").then(() =>
           self.CharLSWASM({ locateFile: (p) => "./codecs/" + p })
         );
   }
@@ -38,7 +38,7 @@ function getOjph() {
   if (!ojphP) {
     ojphP = nodeRequire
       ? Promise.resolve(nodeRequire("./openjphjs.js")({ locateFile: wasmPath }))
-      : loadScript("./codecs/openjphjs.js").then(() =>
+      : loadScript("./codecs/openjphjs.js?b=v9").then(() =>
           self.Module({ locateFile: (p) => "./codecs/" + p })
         );
   }
@@ -49,7 +49,7 @@ function getOjpeg() {
   if (!ojpegP) {
     ojpegP = nodeRequire
       ? Promise.resolve(nodeRequire("./openjpegwasm.js")({ locateFile: wasmPath }))
-      : loadScript("./codecs/openjpegwasm.js").then(() =>
+      : loadScript("./codecs/openjpegwasm.js?b=v9").then(() =>
           self.OpenJPEGWASM({ locateFile: (p) => "./codecs/" + p })
         );
   }
