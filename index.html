@@ -76,6 +76,14 @@
           </label>
         </div>
         <p class="meta" id="meta"></p>
+        <p><button id="gen-report" class="ghost">توليد مسودة التقرير (ع/EN)</button></p>
+        <pre id="report-ar" style="display:none; white-space:pre-wrap; text-align:right; color:var(--text); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.82rem;"></pre>
+        <pre id="report-en" style="display:none; white-space:pre-wrap; text-align:left; direction:ltr; color:var(--muted); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.78rem;"></pre>
+        <p class="controls" id="sign-row" style="display:none">
+          <label><input type="checkbox" id="signoff" /> اعتماد مراجعة الأخصائي</label>
+          <input id="signer" placeholder="اسم الأخصائي" style="background:#0b1220; color:var(--text); border:1px solid var(--line); border-radius:.4rem; padding:.3rem .5rem;" />
+          <button id="copy-report" class="ghost">نسخ المسودة</button>
+        </p>
       </section>
     </main>
     <script type="module">

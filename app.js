@@ -1,5 +1,6 @@
 /* Radiology report AI — browser-only worklist, triage and viewer. */
 import { parseDicom } from "./dicom.js";
+import { draftReport } from "./report.js";
 
 const DB_NAME = "rrai";
 const STORE = "studies";
@@ -269,7 +270,7 @@ export async function refresh() {
   for (const s of studies) {
     const tr = document.createElement("tr");
     for (let i = 0; i < 5; i++) tr.appendChild(document.createElement("td"));
-    tr.children[0].textContent = s.patient;
+    tr.children[0].textContent = s.patient + (s.signedBy ? " ✔" : "");
     tr.children[1].textContent = s.modality;
     const badge = document.createElement("span");
     const priority = s.triage?.priority || "routine";
@@ -291,6 +292,9 @@ async function openStudy(study) {
   $("slice").max = Math.max(0, study.frames.length - 1);
   $("slice").value = 0;
   $("frame").style.display = "block";
+  $("report-ar").style.display = "none";
+  $("report-en").style.display = "none";
+  $("sign-row").style.display = "none";
   show(0);
 }
 
@@ -336,5 +340,28 @@ export function init() {
     input.value = "";
   });
   $("demo").addEventListener("click", () => seedDemo());
+  $("gen-report").addEventListener("click", () => {
+    if (!current) return;
+    const d = draftReport(current);
+    $("report-ar").textContent = d.ar;
+    $("report-en").textContent = d.en;
+    $("report-ar").style.display = "block";
+    $("report-en").style.display = "block";
+    $("sign-row").style.display = "flex";
+    $("signoff").checked = !!current.signedBy;
+    $("signer").value = current.signedBy || "";
+  });
+  const saveSign = async () => {
+    if (!current) return;
+    current.signedBy = $("signoff").checked ? ($("signer").value || "أخصائي") : "";
+    await putStudy(current);
+    await refresh();
+  };
+  $("signoff").addEventListener("change", saveSign);
+  $("signer").addEventListener("change", saveSign);
+  $("copy-report").addEventListener("click", () => {
+    const t = $("report-ar").textContent + "\n\n" + $("report-en").textContent;
+    if (navigator.clipboard) navigator.clipboard.writeText(t);
+  });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 }
