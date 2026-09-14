@@ -2,6 +2,25 @@
 import { parseDicom } from "./dicom.js";
 import { draftReport } from "./report.js";
 
+const APP_BUILD = "v7";
+
+function checkUpdate() {
+  fetch("./sw.js?cb=" + Date.now(), { cache: "no-store" })
+    .then((r) => (r.ok ? r.text() : ""))
+    .then((t) => {
+      const m = t.match(/const BUILD = "([^"]+)"/);
+      if (m && m[1] !== APP_BUILD) {
+        const b = $("update-banner");
+        if (b) {
+          b.style.display = "block";
+          b.innerHTML =
+            'تحديث متاح (' + m[1] + '): <a href="?v=' + m[1] + '" style="color:var(--accent)">افتح النسخة المحدثة الآن</a> أو امسح بيانات الموقع من إعدادات Chrome.';
+        }
+      }
+    })
+    .catch(() => {});
+}
+
 const DB_NAME = "rrai";
 const STORE = "studies";
 let db = null;
@@ -507,5 +526,6 @@ export function init() {
     $("measure").style.color = measureMode ? "var(--accent)" : "";
     $("measure").style.borderColor = measureMode ? "var(--accent)" : "";
   });
+  checkUpdate();
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 }
