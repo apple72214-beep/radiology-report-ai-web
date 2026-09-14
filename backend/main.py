@@ -38,6 +38,21 @@ def health_check():
     return {"status": "ok"}
 
 
+SAMPLES = Path(__file__).resolve().parent.parent / "data" / "samples"
+
+
+@app.get("/samples/{name}.dcm")
+def sample_dicom(name: str):
+    """Downloadable synthetic sample studies (lesion = urgent, clean = routine)."""
+    if name not in {"lesion", "clean"}:
+        return Response(status_code=404, content="unknown sample")
+    return FileResponse(
+        SAMPLES / f"{name}.dcm",
+        media_type="application/dicom",
+        filename=f"{name}.dcm",
+    )
+
+
 @app.get("/")
 def viewer():
     """Built-in, offline-friendly study worklist and viewer (PWA)."""
