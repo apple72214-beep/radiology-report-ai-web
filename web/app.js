@@ -1,6 +1,7 @@
 /* Radiology report AI — browser-only worklist, triage and viewer. */
 import { parseDicom } from "./dicom.js";
 import { draftReport } from "./report.js";
+import { decodeCompressed } from "./codecs/decode.js";
 
 const APP_BUILD = "v7";
 
@@ -220,7 +221,17 @@ export async function ingestFiles(fileList) {
         skipped++;
         continue;
       }
-      if (!parsed.pixels) { skipped++; continue; }
+      let px = parsed.pixels;
+      if (!px && parsed.compressed) {
+        try {
+          px = await decodeCompressed(parsed.compressed, parsed);
+        } catch (e) {
+          console.warn("decode fail", entry.name, e);
+          skipped++;
+          continue;
+        }
+      }
+      if (!px) { skipped++; continue; }
       if (!groups.has(parsed.studyUid)) {
         groups.set(parsed.studyUid, {
           uid: parsed.studyUid,
@@ -231,7 +242,7 @@ export async function ingestFiles(fileList) {
           created: Date.now(),
         });
       }
-      groups.get(parsed.studyUid).frames.push(parsed.pixels);
+      groups.get(parsed.studyUid).frames.push(px);
     }
   }
   for (const study of groups.values()) {
@@ -432,7 +443,7 @@ export function init() {
     const r = await ingestFiles(input.files);
     if (r.added === 0) {
       setStatus(
-        "لم تُضف أي دراسة: الملفات غير مدعومة في هذه النسخة (DICOM مضغوط JPEG2000/JPEG-LS مثلًا) أو لا تحتوي بكسل. الدعم الكامل قادم في v0.3.",
+        "لم تُضف أي دراسة: الملفات تالفة أو بصيغة تعذّر فكّها حتى بعد تفعيل مفكات v0.4 (راجع سجل الطرفية).",
         true
       );
     } else {
