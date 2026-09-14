@@ -112,6 +112,22 @@ export async function seedDemo() {
   await refresh();
 }
 
+function txDel(uid) {
+  return new Promise((resolve) => {
+    const req = tx("readwrite", (s) => s.delete(uid));
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+  });
+}
+
+function txClear() {
+  return new Promise((resolve) => {
+    const req = tx("readwrite", (s) => s.clear());
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+  });
+}
+
 /* ---- zip containers: extract DICOM members inside the browser ---- */
 function hasDicmMagic(bytes) {
   return bytes.byteLength > 132 && bytes[128] === 0x44 && bytes[129] === 0x49 &&
@@ -210,8 +226,9 @@ export async function ingestFiles(fileList) {
 /* ---- rendering ---- */
 const PRESETS = { auto: null, lung: [-600, 1600], mediastinum: [40, 400], bone: [300, 1500] };
 
-export function drawFrame(canvas, pixels, preset, photometric) {
+export function drawFrame(canvas, pixels, preset, modality) {
   const { w, h } = pixels;
+  const photometric = pixels.photometric || "MONOCHROME2";
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
@@ -227,7 +244,7 @@ export function drawFrame(canvas, pixels, preset, photometric) {
     const d = pixels.data;
     let lo, hi;
     const win = PRESETS[preset];
-    if (win && photometric === "CT") {
+    if (win && modality === "CT") {
       lo = win[0] - win[1] / 2; hi = win[0] + win[1] / 2;
     } else {
       let min = Infinity, max = -Infinity;
@@ -283,6 +300,19 @@ export async function refresh() {
     btn.textContent = "عرض";
     btn.onclick = () => openStudy(s);
     tr.children[4].appendChild(btn);
+    const del = document.createElement("button");
+    del.className = "ghost";
+    del.textContent = "✕";
+    del.title = "حذف الدراسة من الجهاز";
+    del.style.marginInlineStart = ".3rem";
+    del.style.padding = ".2rem .5rem";
+    del.onclick = async () => {
+      if (!confirm("حذف دراسة " + s.patient + " من هذا الجهاز؟")) return;
+      await txDel(s.uid);
+      if (current && current.uid === s.uid) current = null;
+      await refresh();
+    };
+    tr.children[4].appendChild(del);
     body.appendChild(tr);
   }
 }
@@ -362,6 +392,12 @@ export function init() {
   $("copy-report").addEventListener("click", () => {
     const t = $("report-ar").textContent + "\n\n" + $("report-en").textContent;
     if (navigator.clipboard) navigator.clipboard.writeText(t);
+  });
+  $("clear-all").addEventListener("click", async () => {
+    if (!confirm("تفريغ القائمة: حذف كل الدراسات من هذا الجهاز؟")) return;
+    await txClear();
+    current = null;
+    await refresh();
   });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 }
