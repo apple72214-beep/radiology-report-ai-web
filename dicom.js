@@ -84,15 +84,28 @@ export function parseDicom(buffer) {
   const cols = num(tags["0028,0011"]);
   const bitsAllocated = num(tags["0028,0100"]) || 16;
   const photometric = str(tags["0028,0004"]) || "MONOCHROME2";
+  const tsuid = str(tags["0002,0010"]);
+  if (/^1\.2\.840\.10008\.1\.2\.(4|5)/.test(tsuid)) {
+    throw new Error("compressed transfer syntax unsupported in v0.3a: " + tsuid);
+  }
+  const signed = num(tags["0028,0103"]) === 1;
+  const slope = num(tags["0028,1053"]) || 1;
+  const intercept = num(tags["0028,1052"]) || 0;
   let pixels = null;
   if (pixelData && rows && cols) {
     if (photometric.startsWith("RGB") || num(tags["0028,0002"]) === 3) {
-      pixels = { kind: "rgb", w: cols, h: rows, data: new Uint8Array(pixelData) };
+      pixels = { kind: "rgb", w: cols, h: rows, data: new Uint8Array(pixelData), photometric };
     } else if (bitsAllocated === 8) {
-      pixels = { kind: "gray", w: cols, h: rows, data: new Uint8Array(pixelData) };
+      pixels = { kind: "gray", w: cols, h: rows, data: new Uint8Array(pixelData), photometric };
     } else {
-      const u16 = new Uint16Array(pixelData.buffer.slice(pixelData.byteOffset, pixelData.byteOffset + pixelData.length));
-      pixels = { kind: "gray", w: cols, h: rows, data: u16 };
+      const copy = pixelData.buffer.slice(pixelData.byteOffset, pixelData.byteOffset + pixelData.length);
+      const raw = signed ? new Int16Array(copy) : new Uint16Array(copy);
+      let data = raw;
+      if (slope !== 1 || intercept !== 0) {
+        data = new Float32Array(raw.length);
+        for (let i = 0; i < raw.length; i++) data[i] = raw[i] * slope + intercept;
+      }
+      pixels = { kind: "gray", w: cols, h: rows, data, photometric };
     }
   }
   return {

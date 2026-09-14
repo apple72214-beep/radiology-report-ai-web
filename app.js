@@ -210,8 +210,9 @@ export async function ingestFiles(fileList) {
 /* ---- rendering ---- */
 const PRESETS = { auto: null, lung: [-600, 1600], mediastinum: [40, 400], bone: [300, 1500] };
 
-export function drawFrame(canvas, pixels, preset, photometric) {
+export function drawFrame(canvas, pixels, preset, modality) {
   const { w, h } = pixels;
+  const photometric = pixels.photometric || "MONOCHROME2";
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
@@ -227,7 +228,7 @@ export function drawFrame(canvas, pixels, preset, photometric) {
     const d = pixels.data;
     let lo, hi;
     const win = PRESETS[preset];
-    if (win && photometric === "CT") {
+    if (win && modality === "CT") {
       lo = win[0] - win[1] / 2; hi = win[0] + win[1] / 2;
     } else {
       let min = Infinity, max = -Infinity;
