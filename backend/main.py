@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import studies
+from .demo import seed_demo
 from .events import bus
 from .render import PRESETS, render_png
 
@@ -17,6 +18,13 @@ app = FastAPI(
     description="Enterprise AI Radiology Platform",
     version="0.3.0",
 )
+
+
+@app.on_event("startup")
+def _seed_if_empty() -> None:
+    """Keep ephemeral hosting (free tiers) demonstrable after cold starts."""
+    if not studies.list_studies():
+        seed_demo()
 
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
 
