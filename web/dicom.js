@@ -16,6 +16,7 @@ export function parseDicom(buffer) {
   }
   const tags = {};
   let pixelData = null;
+  let compressedFragments = null;
   let implicit = false;
 
   // Meta group is explicit; detect implicit if first VR looks invalid.
@@ -56,6 +57,26 @@ export function parseDicom(buffer) {
       off += 4;
     }
     if (length === 0xffffffff) {
+      if (group === 0x7fe0 && element === 0x0010) {
+        // Encapsulated pixel data: collect item fragments (skip empty BOT).
+        const frags = [];
+        let scan = off;
+        while (scan + 8 <= bytes.byteLength) {
+          const g2 = dv.getUint16(scan, true);
+          const e2 = dv.getUint16(scan + 2, true);
+          const l2 = dv.getUint32(scan + 4, true);
+          if (g2 === 0xfffe && e2 === 0xe0dd) { scan += 8; break; }
+          if (g2 === 0xfffe && e2 === 0xe000) {
+            if (l2 !== 0xffffffff && l2 > 0) frags.push(bytes.subarray(scan + 8, scan + 8 + l2));
+            scan += 8 + (l2 === 0xffffffff ? 0 : l2);
+            continue;
+          }
+          break;
+        }
+        compressedFragments = frags;
+        off = scan;
+        continue;
+      }
       // Undefined length: skip to sequence/item delimitation tag.
       let scan = off;
       while (scan + 8 <= bytes.byteLength) {
@@ -85,12 +106,19 @@ export function parseDicom(buffer) {
   const bitsAllocated = num(tags["0028,0100"]) || 16;
   const photometric = str(tags["0028,0004"]) || "MONOCHROME2";
   const tsuid = str(tags["0002,0010"]);
-  if (/^1\.2\.840\.10008\.1\.2\.(4|5)/.test(tsuid)) {
-    throw new Error("compressed transfer syntax unsupported in v0.3a: " + tsuid);
-  }
   const signed = num(tags["0028,0103"]) === 1;
   const slope = num(tags["0028,1053"]) || 1;
   const intercept = num(tags["0028,1052"]) || 0;
+  let compressed = null;
+  if (compressedFragments && compressedFragments.length) {
+    let frags = compressedFragments;
+    // drop basic offset table if present (first item whose first uint32 == 0)
+    if (frags.length > 1 && frags[0].length >= 4 &&
+        new DataView(frags[0].buffer, frags[0].byteOffset, 4).getUint32(0, true) === 0) {
+      frags = frags.slice(1);
+    }
+    compressed = { tsuid, fragments: frags.map((f) => f.slice()) };
+  }
   let pixels = null;
   if (pixelData && rows && cols) {
     if (photometric.startsWith("RGB") || num(tags["0028,0002"]) === 3) {
@@ -120,6 +148,11 @@ export function parseDicom(buffer) {
     description: str(tags["0008,1030"]) || "",
     instanceNumber: num(tags["0020,0013"]) || 0,
     photometric,
+    rows,
+    cols,
+    bitsAllocated,
+    signed,
+    compressed,
     pixels,
   };
 }

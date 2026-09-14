@@ -1,8 +1,8 @@
 /* Offline shell for the browser edition (GitHub Pages).
    v7: release-keyed cache keys (?b=BUILD) so a stale CDN edge can never
    serve a mixed release; navigations resolve to the keyed index.html. */
-const BUILD = "v7";
-const CACHE = "rrai-web-v7";
+const BUILD = "v8";
+const CACHE = "rrai-web-v8";
 const SHELL = ["./", "./index.html", "./app.js", "./dicom.js", "./report.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 const keyed = (u) => u + (u.includes("?") ? "&" : "?") + "b=" + BUILD;
 const isShellPath = (url) => SHELL.some((s) => url.pathname.endsWith(s.replace("./", "/")) || url.pathname + "/" === s);
@@ -34,6 +34,23 @@ self.addEventListener("fetch", (event) => {
             if (response.ok) {
               const copy = response.clone();
               caches.open(CACHE).then((cache) => cache.put(indexUrl, copy));
+            }
+            return response;
+          })
+      )
+    );
+    return;
+  }
+  if (url.pathname.includes("/codecs/")) {
+    // Immutable decoder assets: runtime cache-first for offline reuse.
+    event.respondWith(
+      caches.match(event.request).then(
+        (cached) =>
+          cached ||
+          fetch(event.request).then((response) => {
+            if (response.ok) {
+              const copy = response.clone();
+              caches.open(CACHE).then((cache) => cache.put(event.request, copy));
             }
             return response;
           })
