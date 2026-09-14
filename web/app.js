@@ -111,32 +111,92 @@ export async function seedDemo() {
   await refresh();
 }
 
+/* ---- zip containers: extract DICOM members inside the browser ---- */
+function hasDicmMagic(bytes) {
+  return bytes.byteLength > 132 && bytes[128] === 0x44 && bytes[129] === 0x49 &&
+    bytes[130] === 0x43 && bytes[131] === 0x4d;
+}
+
+async function inflateRaw(raw) {
+  if (typeof DecompressionStream === "undefined") return null;
+  const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return await new Response(stream).arrayBuffer();
+}
+
+export async function unzipDicom(buf) {
+  const dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= 0 && i > buf.byteLength - 65558; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) return [];
+  const count = Math.min(dv.getUint16(eocd + 10, true), 300);
+  let ptr = dv.getUint32(eocd + 16, true);
+  const out = [];
+  for (let n = 0; n < count; n++) {
+    if (ptr + 46 > buf.byteLength || dv.getUint32(ptr, true) !== 0x02014b50) break;
+    const method = dv.getUint16(ptr + 10, true);
+    const csize = dv.getUint32(ptr + 20, true);
+    const loff = dv.getUint32(ptr + 42, true);
+    const nlen = dv.getUint16(ptr + 28, true);
+    const name = new TextDecoder().decode(new Uint8Array(buf, ptr + 46, nlen));
+    ptr += 46 + nlen + dv.getUint16(ptr + 30, true) + dv.getUint16(ptr + 32, true);
+    const byName = /\.(dcm|dicom)$/i.test(name);
+    const lnlen = dv.getUint16(loff + 26, true);
+    const lextra = dv.getUint16(loff + 28, true);
+    const start = loff + 30 + lnlen + lextra;
+    if (start + csize > buf.byteLength) continue;
+    const raw = new Uint8Array(buf, start, csize);
+    let bytes = null;
+    if (method === 0) {
+      if (!byName && !hasDicmMagic(raw)) continue;
+      bytes = raw.slice().buffer;
+    } else if (method === 8) {
+      bytes = await inflateRaw(raw);
+      if (!bytes) continue;
+    } else continue;
+    const u8 = new Uint8Array(bytes);
+    if (!byName && !hasDicmMagic(u8)) continue;
+    out.push({ name, bytes });
+  }
+  return out;
+}
+
+async function buffersFromFile(file) {
+  const buf = await file.arrayBuffer();
+  if ((file.name || "").toLowerCase().endsWith(".zip")) return await unzipDicom(buf);
+  return [{ name: file.name, bytes: buf }];
+}
+
 /* ---- ingest uploaded files ---- */
 export async function ingestFiles(fileList) {
   const groups = new Map();
   let skipped = 0;
   for (const file of fileList) {
-    const buf = await file.arrayBuffer();
-    let parsed;
-    try {
-      parsed = parseDicom(buf);
-    } catch (e) {
-      console.warn("skip", file.name, e);
-      skipped++;
-      continue;
+    const entries = await buffersFromFile(file);
+    if ((file.name || "").toLowerCase().endsWith(".zip") && entries.length === 0) { skipped++; continue; }
+    for (const entry of entries) {
+      let parsed;
+      try {
+        parsed = parseDicom(entry.bytes);
+      } catch (e) {
+        console.warn("skip", entry.name, e);
+        skipped++;
+        continue;
+      }
+      if (!parsed.pixels) { skipped++; continue; }
+      if (!groups.has(parsed.studyUid)) {
+        groups.set(parsed.studyUid, {
+          uid: parsed.studyUid,
+          patient: parsed.patientId,
+          modality: parsed.modality,
+          description: parsed.description,
+          frames: [],
+          created: Date.now(),
+        });
+      }
+      groups.get(parsed.studyUid).frames.push(parsed.pixels);
     }
-    if (!parsed.pixels) { skipped++; continue; }
-    if (!groups.has(parsed.studyUid)) {
-      groups.set(parsed.studyUid, {
-        uid: parsed.studyUid,
-        patient: parsed.patientId,
-        modality: parsed.modality,
-        description: parsed.description,
-        frames: [],
-        created: Date.now(),
-      });
-    }
-    groups.get(parsed.studyUid).frames.push(parsed.pixels);
   }
   for (const study of groups.values()) {
     study.triage = triage(study.frames[0]);
