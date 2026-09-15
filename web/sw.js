@@ -1,70 +1,54 @@
-/* Offline shell v9: version-named assets + immutable launcher.
-   release.json is never cached; everything else is cache-first. */
-const BUILD = "v11";
-const CACHE = "rrai-web-v11";
-const PRECACHE = [
-  "./index.html",
-  "./ui.v11.html",
-  "./app.v11.js",
-  "./dicom.v11.js",
-  "./report.v11.js",
-  "./codecs/decode.v11.js",
-  "./codecs/charlswasm.js?b=v9",
-  "./codecs/openjphjs.js?b=v9",
-  "./codecs/openjpegwasm.js?b=v9",
-  "./codecs/charlswasm.wasm",
-  "./codecs/openjphjs.wasm",
-  "./codecs/openjpegwasm.wasm",
-  "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+const BUILD = "v13";
+const CACHE = "rrai-web-v13";
+const CRITICAL = [
+  "./", "./start.html", "./index.html", "./manifest.webmanifest",
+  "./ui.v13.html", "./app.v13.js", "./dicom.v13.js", "./report.v13.js", "./sw.v13.js"
 ];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
-  self.skipWaiting();
+const BEST_EFFORT = [
+  "./icons/icon-192.png", "./icons/icon-512.png",
+  "./codecs/decode.v13.js", "./codecs/charlswasm.js", "./codecs/charlswasm.wasm",
+  "./codecs/openjpegwasm.js", "./codecs/openjpegwasm.wasm", "./codecs/openjphjs.js", "./codecs/openjphjs.wasm"
+];
+self.addEventListener("install", (e) => {
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await Promise.allSettled(CRITICAL.map((u) => c.add(u)));
+    self.skipWaiting();
+  })());
 });
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => clients.claim())
-  );
+self.addEventListener("activate", (e) => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    const c = await caches.open(CACHE);
+    Promise.allSettled(BEST_EFFORT.map((u) => c.add(u)));
+    await self.clients.claim();
+  })());
 });
-
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || url.origin !== location.origin) return;
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      caches.match("./index.html").then(
-        (cached) =>
-          cached ||
-          fetch("./index.html").then((r) => {
-            if (r.ok) {
-              const copy = r.clone();
-              caches.open(CACHE).then((c) => c.put("./index.html", copy));
-            }
-            return r;
-          })
-      )
-    );
+self.addEventListener("fetch", (e) => {
+  const url = new URL(e.request.url);
+  if (e.request.mode === "navigate") {
+    e.respondWith((async () => {
+      const c = await caches.open(CACHE);
+      for (const k of ["./start.html", "./index.html", "./"]) {
+        const hit = await c.match(k);
+        if (hit) return hit;
+      }
+      return fetch(e.request);
+    })());
     return;
   }
-  if (url.pathname.endsWith("/release.json")) return; // always network, never cached
-  event.respondWith(
-    caches.match(event.request).then(
-      (cached) =>
-        cached ||
-        fetch(event.request).then((r) => {
-          if (r.ok) {
-            const copy = r.clone();
-            caches.open(CACHE).then((c) => c.put(event.request, copy));
-          }
-          return r;
-        })
-    )
-  );
+  if (url.pathname.endsWith("/release.json")) return;
+  e.respondWith((async () => {
+    const hit = await caches.match(e.request);
+    if (hit) return hit;
+    const res = await fetch(e.request);
+    try {
+      if (res.ok && url.origin === location.origin) {
+        const c = await caches.open(CACHE);
+        c.put(e.request, res.clone());
+      }
+    } catch (err) {}
+    return res;
+  })());
 });
