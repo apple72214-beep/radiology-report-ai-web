@@ -6,73 +6,202 @@
     <title>Radiology report AI — نسخة المتصفح</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#0f172a" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="icon" type="image/png" href="./icons/icon-192.png" />
     <style>
       body { margin:0; background:#0f172a; color:#e2e8f0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; }
-      #splash { min-height:100vh; display:flex; align-items:center; justify-content:center; font-size:1rem; padding:1rem; text-align:center; }
+      #splash { min-height:100vh; display:flex; align-items:center; justify-content:center; font-size:1rem; padding:1rem; text-align:center; white-space:pre-wrap; }
     </style>
   </head>
   <body>
     <div id="splash">Radiology report AI — جارٍ التحميل…</div>
     <script type="module">
-      /* Immutable bootstrap (start.html == index.html). Never edit in place:
-         release channel: raw (4s timeout) -> mirror -> localStorage;
-         probe version-named UI; register version-named SW; retire others. */
+      /* Resilient bootstrap v2.3: poisoned-proxy-cache proof.
+         - exact char+byte length validation (truncation detected)
+         - fresh hostnames the intermediary has never cached (project alias)
+         - external wrapper origin (allorigins)
+         - Range-chunked reassembly (4 KiB slices under the truncation threshold)
+         - blob module assembly: import() never touches the network
+         - live log line: stage + host + attempt + seconds + last error */
+      const MARK = "ب2.5";
+      const EXPECT = {"consult": [5239, 5341, "729d62402ecb1ccc2959c7f55fc55f5141c5f088f4881bf8aa378bc565daf8ec"], "decode": [5236, 5236, "2fa6e6667066d1c1e474451919c4ffb8b9312eedd0bf4e9411c868ac811701dd"], "dicom": [6129, 6129, "73784560566cf06c6a23a87321fdf0c108f9f4bcd1c3e363a1e0efaea6ac113f"], "triage": [5206, 5542, "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"], "docx": [8654, 8926, "822d9b0ad4aa247c8d21b88772ab13d112b90309b0da8c277912d776bc938f89"], "measure": [1650, 1652, "39044eae7274081becae2478481b4eace4ed9d8bfa5063e0d9c9513c33bd667f"], "compare": [1442, 1444, "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"], "report": [8574, 9460, "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"], "app": [46792, 48762, "763d706681bc37316c27ef188c9491da450e9f24eb78eda46f52b87ac5341622"], "ui": [7302, 7787, "12a8716050f3d01bedc39160aa1b8f7a3122d175003a457748e9ee2af480284a"]};
+      const TOPO = ["consult","decode","dicom","triage","docx","measure","compare","report","app"];
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
       const JSR = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/release.json";
       const MIRROR = "./release.json";
-      const ORIGINS = [
-        "./",
+      const ALIAS = "https://radiology-report-ai-web-apple72214-beep.vercel.app/";
+      const PIN = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@7105e2b1d64302c93e5464893222b24f1e881ab2/";
+      const ORIGINS = ["./", PIN, ALIAS,
         "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/",
         "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/",
-        "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"
-      ];
-      const known = ["v11", "v10", "v9"];
-      const cands = [];
-      const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
+        "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"];
+      const WRAP = (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u);
+      const PREFIXES = ["", "r1/", "r2/", "r3/"];
+      const known = ["v35", "v34", "v33", "v11"];
+      const splash = document.getElementById("splash");
+      let logLine = MARK + " — بدء…", lastErr = null;
+      const t0 = Date.now();
+      setInterval(() => {
+        const el = document.getElementById("splash") || splash;
+        el.textContent = logLine + " — " + Math.round((Date.now() - t0) / 1000) + "ث" + (lastErr ? "\nآخر خطأ: " + (lastErr.message || lastErr) : "");
+      }, 1000);
+      const say = (t) => { logLine = MARK + " — " + t; };
+      const failPanel = (msg) => {
+        const el = document.getElementById("splash") || splash;
+        el.innerHTML = msg + '<br><button id="rrai-retry" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:1rem;border:0;border-radius:.5rem;background:#e2e8f0;color:#0f172a;font-family:inherit">إعادة المحاولة الآن</button>';
+        const btn = document.getElementById("rrai-retry");
+        if (btn) btn.onclick = () => location.reload();
+      };
+      const hostOf = (o) => (o === "./" ? "الخادم الأساسي" : o.replace("https://", "").split("/")[0]);
       const grab = async (src) => {
         const ctl = new AbortController();
-        const t = setTimeout(() => ctl.abort(), 4000);
+        const t = setTimeout(() => ctl.abort(), 2500);
         try {
           const r = await fetch(src + (src.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
-          if (r.ok) return (await r.json()).build;
-        } catch (e) {} finally { clearTimeout(t); }
-        return null;
+          if (!r.ok) return null;
+          const j = await r.json();
+          return j && j.build;
+        } catch (e) { return null; } finally { clearTimeout(t); }
       };
-      for (const src of [RAW, JSR, MIRROR]) add(await grab(src));
-      add(localStorage.getItem("rrai-build"));
-      known.forEach(add);
-      let build = null, origin = "./";
-      for (const b of cands) {
-        for (const o of ORIGINS) {
-          try {
-            const u = await fetch(o + "ui." + b + ".html?b=" + b, { cache: "no-store" });
-            if (u.ok) { build = b; origin = o; document.body.innerHTML = await u.text(); break; }
-          } catch (e) {}
-        }
-        if (build) break;
-      }
-      if (!build) {
-        document.getElementById("splash").textContent = "تعذر تحميل أي إصدار معروف — تحقق من الاتصال ثم أعد الفتح.";
-      } else {
-        localStorage.setItem("rrai-build", build);
+      const fetchBuf = async (u, ms, headers) => {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), ms || 15000);
         try {
-          const m = await import(origin + "app." + build + ".js");
-          m.init();
-          if (origin === "./" && "serviceWorker" in navigator) {
-            navigator.serviceWorker.register("./sw." + build + ".js?b=" + build).then(async (reg) => {
-              const all = await navigator.serviceWorker.getRegistrations();
-              for (const r of all) if (r !== reg) r.unregister().catch(() => {});
-            }).catch(() => {});
-          }
-        } catch (e) {
-          const s = document.getElementById("splash");
-          if (s) s.textContent = "تعذر تشغيل الإصدار " + build + " — أعد الفتح.";
+          const r = await fetch(u, { cache: "no-store", signal: ctl.signal, headers: headers || {} });
+          if (!r.ok && r.status !== 206) throw new Error("http " + r.status);
+          return await r.arrayBuffer();
+        } finally { clearTimeout(t); }
+      };
+      const rangedFetch = async (u, byteLen, label) => {
+        const CH = 4096;
+        const parts = [];
+        let pos = 0;
+        while (pos < byteLen) {
+          const end = Math.min(pos + CH - 1, byteLen - 1);
+          say(label + " — شريحة " + (pos / CH + 1) + "/" + Math.ceil(byteLen / CH));
+          const buf = await fetchBuf(u + (u.includes("?") ? "&" : "?") + "rg=" + pos, 12000, { Range: "bytes=" + pos + "-" + end });
+          if (!buf || buf.byteLength === 0) throw new Error("empty-chunk@" + pos);
+          if (buf.byteLength === byteLen && pos === 0) return buf; /* proxy ignored Range, full body ok */
+          if (buf.byteLength !== end - pos + 1) throw new Error("chunk-len " + buf.byteLength + "@" + pos);
+          parts.push(buf);
+          pos = end + 1;
         }
-      }
+        let total = 0;
+        parts.forEach((p) => (total += p.byteLength));
+        const out = new Uint8Array(total);
+        let off = 0;
+        parts.forEach((p) => { out.set(new Uint8Array(p), off); off += p.byteLength; });
+        return out.buffer;
+      };
+      const sha256hex = async (buf) => {
+        const d = await crypto.subtle.digest("SHA-256", buf);
+        return Array.from(new Uint8Array(d)).map((x) => x.toString(16).padStart(2, "0")).join("");
+      };
+      const checkSha = async (buf, exp) => {
+        if (exp && exp[2]) {
+          const h = await sha256hex(buf);
+          if (h !== exp[2]) throw new Error("sha " + h.slice(0, 8) + "≠" + exp[2].slice(0, 8));
+        }
+      };
+      const getValidated = async (path, exp, label) => {
+        const expChars = exp ? exp[0] : 0, expBytes = exp ? exp[1] : 0;
+        let err = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          for (const px of PREFIXES) {
+          for (let i = 0; i < ORIGINS.length; i++) {
+            const o = ORIGINS[(i + attempt) % ORIGINS.length];
+            if (px && o !== "./" && o !== ALIAS) continue; /* prefixes exist only on our Vercel hosts */
+            const base = o + px + path + "?b=" + Date.now() + "-" + i;
+            say(label + " من " + hostOf(o) + (px ? "/" + px.slice(0, 2) : "") + " (محاولة " + (attempt + 1) + ")");
+            try {
+              const buf = await fetchBuf(base);
+              const txt = new TextDecoder().decode(buf);
+              if (!txt || txt.length < 400) throw new Error("empty-body " + (txt ? txt.length : 0));
+              if (expChars && txt.length !== expChars) throw new Error("len " + txt.length + "≠" + expChars);
+              await checkSha(buf, exp);
+              return txt;
+            } catch (e) {
+              err = e; lastErr = e;
+              if (expBytes) {
+                try {
+                  say(label + " — إعادة تجميع شرائح من " + hostOf(o) + (px ? "/" + px.slice(0, 2) : ""));
+                  const buf = await rangedFetch(o + px + path, expBytes, label);
+                  const txt = new TextDecoder().decode(buf);
+                  if (expChars && txt.length !== expChars) throw new Error("ranged-len " + txt.length + "≠" + expChars);
+                  await checkSha(buf, exp);
+                  return txt;
+                } catch (e2) { err = e2; lastErr = e2; }
+              }
+            }
+          }
+          }
+          try {
+            say(label + " عبر غلاف خارجي (محاولة " + (attempt + 1) + ")");
+            const buf = await fetchBuf(WRAP(ALIAS + path), 20000);
+            const txt = new TextDecoder().decode(buf);
+            if (expChars && txt.length !== expChars) throw new Error("wrap-len " + txt.length + "≠" + expChars);
+            await checkSha(buf, exp);
+            return txt;
+          } catch (e) { err = e; lastErr = e; }
+        }
+        throw err || new Error("fetch failed: " + path);
+      };
+      (async () => {
+        const builds = await Promise.all([grab(MIRROR), grab(JSR), grab(RAW)]);
+        const cands = [];
+        const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
+        builds.forEach(add);
+        add(localStorage.getItem("rrai-build"));
+        known.forEach(add);
+        let done = false;
+        for (const b of cands) {
+          let uiText = null;
+          try {
+            uiText = await getValidated("ui." + b + ".html", EXPECT.ui, "الواجهة");
+          } catch (e) { continue; }
+          document.body.innerHTML = uiText;
+          const texts = {};
+          let ok = true;
+          for (const n of TOPO) {
+            const p = n === "decode" ? "codecs/decode." + b + ".js" : n + "." + b + ".js";
+            const exp = b === "v35" && EXPECT[n] ? EXPECT[n] : 0;
+            try {
+              texts[n] = await getValidated(p, exp, "وحدة " + n);
+            } catch (e) { ok = false; break; }
+          }
+          if (!ok) continue;
+          say("تركيب الوحدات داخليًا…");
+          const blobUrls = {};
+          try {
+            for (const n of TOPO) {
+              let txt = texts[n];
+              for (const d of TOPO) {
+                if (d === n || !blobUrls[d]) continue;
+                const rel = d === "decode" ? "./codecs/decode." + b + ".js" : "./" + d + "." + b + ".js";
+                txt = txt.split('"' + rel + '"').join('"' + blobUrls[d] + '"');
+              }
+              blobUrls[n] = URL.createObjectURL(new Blob([txt], { type: "text/javascript" }));
+            }
+            const mod = await import(blobUrls.app);
+            say("بدء التطبيق…");
+            localStorage.setItem("rrai-build", b);
+            await mod.init();
+            if ("serviceWorker" in navigator) {
+              const swReg = (u, sc) => navigator.serviceWorker.register(u, sc ? { scope: sc } : undefined);
+              swReg("r1/sw." + b + ".js?b=" + b, "./").catch(() => swReg("./sw." + b + ".js?b=" + b)).then(async (reg) => {
+                if (!reg) return;
+                const all = await navigator.serviceWorker.getRegistrations();
+                for (const r of all) if (r !== reg) r.unregister().catch(() => {});
+              }).catch(() => {});
+            }
+            done = true;
+            break;
+          } catch (e) {
+            lastErr = e;
+            say("فشل التركيب الداخلي للإصدار " + b);
+          }
+        }
+        if (!done) failPanel(MARK + " — تعذر تحميل أي إصدار سليم بعد دوران كامل على المرايا والشرائح." + (lastErr ? "<br>آخر خطأ: " + (lastErr.message || lastErr) : ""));
+      })();
     </script>
   </body>
 </html>
