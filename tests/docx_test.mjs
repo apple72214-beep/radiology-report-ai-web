@@ -1,5 +1,5 @@
-import { buildDocxReport, crc32 } from "../docx.v24.js";
-import { signedDocHash } from "../report.v24.js";
+import { buildDocxReport, crc32 } from "../docx.v26.js";
+import { signedDocHash } from "../report.v26.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -10,7 +10,7 @@ const m = { signer: "د. أ", license: "L1", org: { ar: "م", en: "H" }, at: "20
 const bytes = buildDocxReport(study, draft, m);
 if (bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) console.log("PASS zip-magic"); else { fails++; console.log("FAIL magic"); }
 const tail = Buffer.from(bytes.slice(bytes.length - 22));
-if (tail.readUInt32LE(0) === 0x06054b50 && tail.readUInt16LE(8) === 3) console.log("PASS zip-eocd-3entries"); else { fails++; console.log("FAIL eocd"); }
+if (tail.readUInt32LE(0) === 0x06054b50 && tail.readUInt16LE(8) === 7) console.log("PASS zip-eocd-7entries"); else { fails++; console.log("FAIL eocd"); }
 const buf = Buffer.from(bytes);
 if (["[Content_Types].xml", "_rels/.rels", "word/document.xml"].every((n) => buf.includes(Buffer.from(n)))) console.log("PASS entries"); else { fails++; console.log("FAIL entries"); }
 const docXml = buf.toString("utf8");
