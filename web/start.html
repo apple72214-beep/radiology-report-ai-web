@@ -6,21 +6,17 @@
     <title>Radiology report AI — نسخة المتصفح</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#0f172a" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="icon" type="image/png" href="./icons/icon-192.png" />
     <style>
       body { margin:0; background:#0f172a; color:#e2e8f0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; }
-      #splash { min-height:100vh; display:flex; align-items:center; justify-content:center; font-size:1rem; padding:1rem; text-align:center; }
+      #splash { min-height:100vh; display:flex; align-items:center; justify-content:center; font-size:1rem; padding:1rem; text-align:center; white-space:pre-wrap; }
     </style>
   </head>
   <body>
     <div id="splash">Radiology report AI — جارٍ التحميل…</div>
     <script type="module">
-      /* Immutable bootstrap (start.html == index.html). Never edit in place:
-         release channel: raw (4s timeout) -> mirror -> localStorage;
-         probe version-named UI; register version-named SW; retire others. */
+      /* Resilient bootstrap v2: validates payload size, retries with backoff,
+         rotates origins, races imports against timeouts. Blockade-proxy proof. */
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
       const JSR = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/release.json";
       const MIRROR = "./release.json";
@@ -30,7 +26,15 @@
         "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/",
         "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"
       ];
-      const known = ["v11", "v10", "v9"];
+      const known = ["v35", "v34", "v33", "v11"];
+      const splash = document.getElementById("splash");
+      const say = (t) => { splash.textContent = t; };
+      const failPanel = (msg) => {
+        const el = document.getElementById("splash") || splash;
+        el.innerHTML = msg + '<br><button id="rrai-retry" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:1rem;border:0;border-radius:.5rem;background:#e2e8f0;color:#0f172a;font-family:inherit">إعادة المحاولة الآن</button>';
+        const btn = document.getElementById("rrai-retry");
+        if (btn) btn.onclick = () => location.reload();
+      };
       const cands = [];
       const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
       const grab = async (src) => {
@@ -38,41 +42,96 @@
         const t = setTimeout(() => ctl.abort(), 4000);
         try {
           const r = await fetch(src + (src.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
-          if (r.ok) return (await r.json()).build;
-        } catch (e) {} finally { clearTimeout(t); }
-        return null;
+          if (!r.ok) return null;
+          const j = await r.json();
+          return j && j.build;
+        } catch (e) { return null; } finally { clearTimeout(t); }
       };
-      for (const src of [RAW, JSR, MIRROR]) add(await grab(src));
-      add(localStorage.getItem("rrai-build"));
-      known.forEach(add);
-      let build = null, origin = "./";
-      for (const b of cands) {
-        for (const o of ORIGINS) {
-          try {
-            const u = await fetch(o + "ui." + b + ".html?b=" + b, { cache: "no-store" });
-            if (u.ok) { build = b; origin = o; document.body.innerHTML = await u.text(); break; }
-          } catch (e) {}
-        }
-        if (build) break;
-      }
-      if (!build) {
-        document.getElementById("splash").textContent = "تعذر تحميل أي إصدار معروف — تحقق من الاتصال ثم أعد الفتح.";
-      } else {
-        localStorage.setItem("rrai-build", build);
+      const fetchText = async (u, minLen, ms) => {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), ms || 9000);
         try {
-          const m = await import(origin + "app." + build + ".js");
-          m.init();
+          const r = await fetch(u + (u.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
+          if (!r.ok) throw new Error("http " + r.status);
+          const txt = await r.text();
+          if (!txt || txt.length < (minLen || 400)) throw new Error("empty-body " + (txt ? txt.length : 0));
+          return txt;
+        } finally { clearTimeout(t); }
+      };
+      const importRace = (u, ms) => {
+        let to;
+        return Promise.race([
+          import(u),
+          new Promise((_, rej) => { to = setTimeout(() => rej(new Error("import-timeout")), ms || 12000); }),
+        ]).finally(() => clearTimeout(to));
+      };
+      (async () => {
+        for (const src of [MIRROR, JSR, RAW]) add(await grab(src));
+        add(localStorage.getItem("rrai-build"));
+        known.forEach(add);
+        let done = false;
+        for (const b of cands) {
+          let uiText = null, origin = null;
+          for (const o of ORIGINS) {
+            for (let attempt = 0; attempt < 3 && !uiText; attempt++) {
+              try {
+                uiText = await fetchText(o + "ui." + b + ".html?b=" + b, 800);
+                origin = o;
+              } catch (e) {
+                say("Radiology report AI — جارٍ التحميل…\n(محاولة " + (attempt + 1) + " للواجهة من " + (o === "./" ? "الخادم الأساسي" : "مرآة") + ")");
+                await new Promise((r) => setTimeout(r, 600));
+              }
+            }
+            if (uiText) break;
+          }
+          if (!uiText) continue;
+          document.body.innerHTML = uiText;
+          const sp = document.getElementById("splash");
+          const say2 = (t) => { if (sp) sp.textContent = t; else say(t); };
+          const urls = ORIGINS.map((o) => o + "app." + b + ".js");
+          if (origin !== "./") urls.unshift(origin + "app." + b + ".js");
+          let mod = null, lastErr = null;
+          let hbText = "";
+          const t0 = Date.now();
+          const hb = setInterval(() => {
+            const secs = Math.round((Date.now() - t0) / 1000);
+            if (hbText) say2(hbText + " — " + secs + "ث");
+          }, 2000);
+          for (let attempt = 0; attempt < 4 && !mod; attempt++) {
+            for (const u of urls) {
+              try {
+                hbText = "Radiology report AI — تحميل الوحدة… محاولة " + (attempt + 1);
+                say2(hbText);
+                mod = await importRace(u, 30000);
+                if (mod && mod.init) { origin = u.startsWith("http") ? u.slice(0, u.indexOf("app.")) : "./"; break; }
+                mod = null;
+              } catch (e) { lastErr = e; }
+            }
+            if (!mod) await new Promise((r) => setTimeout(r, 800));
+          }
+          clearInterval(hb);
+          if (!mod) {
+            failPanel("تعذر تشغيل الإصدار " + b + " بعد 4 محاولات: " + (lastErr && lastErr.message ? lastErr.message : lastErr) + "<br><span style=\"font-size:.85rem\">المحاولات دارت على أربع مرايا — الزر يعيد الدورة كاملة.</span>");
+            done = true;
+            break;
+          }
+          localStorage.setItem("rrai-build", b);
+          try {
+            await mod.init();
+          } catch (e) {
+            say2("تعذر بدء الإصدار " + b + ": " + (e && e.message ? e.message : e));
+          }
           if (origin === "./" && "serviceWorker" in navigator) {
-            navigator.serviceWorker.register("./sw." + build + ".js?b=" + build).then(async (reg) => {
+            navigator.serviceWorker.register("./sw." + b + ".js?b=" + b).then(async (reg) => {
               const all = await navigator.serviceWorker.getRegistrations();
               for (const r of all) if (r !== reg) r.unregister().catch(() => {});
             }).catch(() => {});
           }
-        } catch (e) {
-          const s = document.getElementById("splash");
-          if (s) s.textContent = "تعذر تشغيل الإصدار " + build + " — أعد الفتح.";
+          done = true;
+          break;
         }
-      }
+        if (!done) failPanel("تعذر تحميل أي إصدار معروف — تحقق من الاتصال.");
+      })();
     </script>
   </body>
 </html>
