@@ -510,7 +510,7 @@ function setupCompareUI() {
     '<div><canvas id="cmp-a" style="width:32%;max-width:220px;background:#000;"></canvas><div style="font-size:.75rem;">الحالية</div></div>' +
     '<div><canvas id="cmp-b" style="width:32%;max-width:220px;background:#000;"></canvas><div style="font-size:.75rem;">السابقة/الأخرى</div></div>' +
     '<div><canvas id="cmp-d" style="width:32%;max-width:220px;background:#000;"></canvas><div style="font-size:.75rem;">خريطة الفرق (أحمر = ساخن)</div></div>' +
-    "</div><div id="compare-out" style="margin-top:.4rem;font-size:.85rem;color:var(--accent);"></div>";
+    '</div><div id="compare-out" style="margin-top:.4rem;font-size:.85rem;color:var(--accent);"></div>';
   const vwrap = $("vwrap");
   const sec = (vwrap && vwrap.closest ? vwrap.closest("section") : null) || vwrap;
   if (sec && sec.parentNode) sec.parentNode.insertBefore(root, sec.nextSibling);
