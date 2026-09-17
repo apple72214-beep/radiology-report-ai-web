@@ -1,13 +1,12 @@
-const BUILD = "v32";
-const CACHE = "rrai-web-v32";
+const BUILD = "v16";
+const CACHE = "rrai-web-v16";
 const CRITICAL = [
   "./", "./start.html", "./index.html", "./manifest.webmanifest",
-  "./ui.v32.html", "./app.v32.js", "./dicom.v32.js", "./report.v32.js", "./sw.v32.js",
-  "./triage.v32.js", "./consult.v32.js", "./docx.v32.js", "./measure.v32.js", "./compare.v32.js"
+  "./ui.v16.html", "./app.v16.js", "./dicom.v16.js", "./report.v16.js", "./sw.v16.js"
 ];
 const BEST_EFFORT = [
   "./icons/icon-192.png", "./icons/icon-512.png",
-  "./codecs/decode.v32.js", "./codecs/charlswasm.js", "./codecs/charlswasm.wasm",
+  "./codecs/decode.v16.js", "./codecs/charlswasm.js", "./codecs/charlswasm.wasm",
   "./codecs/openjpegwasm.js", "./codecs/openjpegwasm.wasm", "./codecs/openjphjs.js", "./codecs/openjphjs.wasm"
 ];
 self.addEventListener("install", (e) => {
