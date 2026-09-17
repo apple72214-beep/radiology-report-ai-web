@@ -15,8 +15,13 @@
   <body>
     <div id="splash">Radiology report AI — جارٍ التحميل…</div>
     <script type="module">
-      /* Resilient bootstrap v2: validates payload size, retries with backoff,
-         rotates origins, races imports against timeouts. Blockade-proxy proof. */
+      /* Resilient bootstrap v2.2 "fetch-then-blob": every module is fetched as
+         validated text (exact char-length check = truncation/poison proof),
+         then assembled into blob: modules so import() never touches the network.
+         Live log line shows stage + host + elapsed seconds + last error. */
+      const MARK = "ب2.2";
+      const EXPECT = {"consult": 5239, "decode": 5236, "dicom": 6129, "triage": 5206, "docx": 8654, "measure": 1650, "compare": 1442, "report": 8574, "app": 46792, "ui": 7302};
+      const TOPO = ["consult","decode","dicom","triage","docx","measure","compare","report","app"];
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
       const JSR = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/release.json";
       const MIRROR = "./release.json";
@@ -28,18 +33,23 @@
       ];
       const known = ["v35", "v34", "v33", "v11"];
       const splash = document.getElementById("splash");
-      const say = (t) => { splash.textContent = t; };
+      let logLine = MARK + " — بدء…", lastErr = null;
+      const t0 = Date.now();
+      setInterval(() => {
+        const el = document.getElementById("splash") || splash;
+        el.textContent = logLine + " — " + Math.round((Date.now() - t0) / 1000) + "ث" + (lastErr ? "\nآخر خطأ: " + (lastErr.message || lastErr) : "");
+      }, 1000);
+      const say = (t) => { logLine = MARK + " — " + t; };
       const failPanel = (msg) => {
         const el = document.getElementById("splash") || splash;
         el.innerHTML = msg + '<br><button id="rrai-retry" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:1rem;border:0;border-radius:.5rem;background:#e2e8f0;color:#0f172a;font-family:inherit">إعادة المحاولة الآن</button>';
         const btn = document.getElementById("rrai-retry");
         if (btn) btn.onclick = () => location.reload();
       };
-      const cands = [];
-      const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
+      const hostOf = (o) => (o === "./" ? "الخادم الأساسي" : o.replace("https://", "").split("/")[0]);
       const grab = async (src) => {
         const ctl = new AbortController();
-        const t = setTimeout(() => ctl.abort(), 4000);
+        const t = setTimeout(() => ctl.abort(), 2500);
         try {
           const r = await fetch(src + (src.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
           if (!r.ok) return null;
@@ -47,90 +57,85 @@
           return j && j.build;
         } catch (e) { return null; } finally { clearTimeout(t); }
       };
-      const fetchText = async (u, minLen, ms) => {
+      const fetchExact = async (u, exp, ms) => {
         const ctl = new AbortController();
-        const t = setTimeout(() => ctl.abort(), ms || 9000);
+        const t = setTimeout(() => ctl.abort(), ms || 15000);
         try {
           const r = await fetch(u + (u.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
           if (!r.ok) throw new Error("http " + r.status);
           const txt = await r.text();
-          if (!txt || txt.length < (minLen || 400)) throw new Error("empty-body " + (txt ? txt.length : 0));
+          if (!txt || txt.length < 400) throw new Error("empty-body " + (txt ? txt.length : 0));
+          if (exp && txt.length !== exp) throw new Error("len " + txt.length + "≠" + exp);
           return txt;
         } finally { clearTimeout(t); }
       };
-      const importRace = (u, ms) => {
-        let to;
-        return Promise.race([
-          import(u),
-          new Promise((_, rej) => { to = setTimeout(() => rej(new Error("import-timeout")), ms || 12000); }),
-        ]).finally(() => clearTimeout(to));
+      const getValidated = async (path, exp, label) => {
+        let err = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          for (let i = 0; i < ORIGINS.length; i++) {
+            const o = ORIGINS[(i + attempt) % ORIGINS.length];
+            say(label + " من " + hostOf(o) + " (محاولة " + (attempt + 1) + ")");
+            try {
+              return await fetchExact(o + path + "?b=" + Date.now(), exp);
+            } catch (e) { err = e; lastErr = e; }
+          }
+        }
+        throw err || new Error("fetch failed: " + path);
       };
       (async () => {
-        for (const src of [MIRROR, JSR, RAW]) add(await grab(src));
+        const builds = await Promise.all([grab(MIRROR), grab(JSR), grab(RAW)]);
+        const cands = [];
+        const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
+        builds.forEach(add);
         add(localStorage.getItem("rrai-build"));
         known.forEach(add);
         let done = false;
         for (const b of cands) {
-          let uiText = null, origin = null;
-          for (const o of ORIGINS) {
-            for (let attempt = 0; attempt < 3 && !uiText; attempt++) {
-              try {
-                uiText = await fetchText(o + "ui." + b + ".html?b=" + b, 800);
-                origin = o;
-              } catch (e) {
-                say("Radiology report AI — جارٍ التحميل…\n(محاولة " + (attempt + 1) + " للواجهة من " + (o === "./" ? "الخادم الأساسي" : "مرآة") + ")");
-                await new Promise((r) => setTimeout(r, 600));
-              }
-            }
-            if (uiText) break;
-          }
-          if (!uiText) continue;
+          let uiText = null, uiOrigin = "./";
+          try {
+            uiText = await getValidated("ui." + b + ".html", EXPECT.ui || 0, "الواجهة");
+          } catch (e) { continue; }
           document.body.innerHTML = uiText;
-          const sp = document.getElementById("splash");
-          const say2 = (t) => { if (sp) sp.textContent = t; else say(t); };
-          const urls = ORIGINS.map((o) => o + "app." + b + ".js");
-          if (origin !== "./") urls.unshift(origin + "app." + b + ".js");
-          let mod = null, lastErr = null;
-          let hbText = "";
-          const t0 = Date.now();
-          const hb = setInterval(() => {
-            const secs = Math.round((Date.now() - t0) / 1000);
-            if (hbText) say2(hbText + " — " + secs + "ث");
-          }, 2000);
-          for (let attempt = 0; attempt < 4 && !mod; attempt++) {
-            for (const u of urls) {
-              try {
-                hbText = "Radiology report AI — تحميل الوحدة… محاولة " + (attempt + 1);
-                say2(hbText);
-                mod = await importRace(u, 30000);
-                if (mod && mod.init) { origin = u.startsWith("http") ? u.slice(0, u.indexOf("app.")) : "./"; break; }
-                mod = null;
-              } catch (e) { lastErr = e; }
-            }
-            if (!mod) await new Promise((r) => setTimeout(r, 800));
+          const texts = {};
+          let ok = true;
+          for (const n of TOPO) {
+            const p = n === "decode" ? "codecs/decode." + b + ".js" : n + "." + b + ".js";
+            const exp = b === "v35" && EXPECT[n] ? EXPECT[n] : 0;
+            try {
+              texts[n] = await getValidated(p, exp, "وحدة " + n);
+            } catch (e) { ok = false; break; }
           }
-          clearInterval(hb);
-          if (!mod) {
-            failPanel("تعذر تشغيل الإصدار " + b + " بعد 4 محاولات: " + (lastErr && lastErr.message ? lastErr.message : lastErr) + "<br><span style=\"font-size:.85rem\">المحاولات دارت على أربع مرايا — الزر يعيد الدورة كاملة.</span>");
+          if (!ok) continue;
+          say("تركيب الوحدات داخليًا…");
+          const blobUrls = {};
+          try {
+            for (const n of TOPO) {
+              let txt = texts[n];
+              for (const d of TOPO) {
+                if (d === n || !blobUrls[d]) continue;
+                const rel = d === "decode" ? "./codecs/decode." + b + ".js" : "./" + d + "." + b + ".js";
+                txt = txt.split('"' + rel + '"').join('"' + blobUrls[d] + '"');
+              }
+              blobUrls[n] = URL.createObjectURL(new Blob([txt], { type: "text/javascript" }));
+            }
+            const mod = await import(blobUrls.app);
+            say("بدء التطبيق…");
+            localStorage.setItem("rrai-build", b);
+            await mod.init();
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.register("./sw." + b + ".js?b=" + b).then(async (reg) => {
+                const all = await navigator.serviceWorker.getRegistrations();
+                for (const r of all) if (r !== reg) r.unregister().catch(() => {});
+              }).catch(() => {});
+            }
             done = true;
             break;
-          }
-          localStorage.setItem("rrai-build", b);
-          try {
-            await mod.init();
           } catch (e) {
-            say2("تعذر بدء الإصدار " + b + ": " + (e && e.message ? e.message : e));
+            lastErr = e;
+            say("فشل التركيب الداخلي للإصدار " + b);
           }
-          if (origin === "./" && "serviceWorker" in navigator) {
-            navigator.serviceWorker.register("./sw." + b + ".js?b=" + b).then(async (reg) => {
-              const all = await navigator.serviceWorker.getRegistrations();
-              for (const r of all) if (r !== reg) r.unregister().catch(() => {});
-            }).catch(() => {});
-          }
-          done = true;
-          break;
         }
-        if (!done) failPanel("تعذر تحميل أي إصدار معروف — تحقق من الاتصال.");
+        if (!done) failPanel(MARK + " — تعذر تحميل أي إصدار سليم بعد دوران كامل على المرايا." + (lastErr ? "<br>آخر خطأ: " + (lastErr.message || lastErr) : ""));
       })();
     </script>
   </body>
