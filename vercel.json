@@ -26,6 +26,18 @@
     {
       "source": "/r3/:path*",
       "destination": "/:path*"
+    },
+    {
+      "source": "/x",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/y",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/z",
+      "destination": "/index.html"
     }
   ]
 }
