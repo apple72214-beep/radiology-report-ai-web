@@ -22,7 +22,7 @@
          - Range-chunked reassembly (4 KiB slices under the truncation threshold)
          - blob module assembly: import() never touches the network
          - live log line: stage + host + attempt + seconds + last error */
-      const MARK = "ب2.5";
+      const MARK = "ب2.6";
       const EXPECT = {"consult": [5239, 5341, "729d62402ecb1ccc2959c7f55fc55f5141c5f088f4881bf8aa378bc565daf8ec"], "decode": [5236, 5236, "2fa6e6667066d1c1e474451919c4ffb8b9312eedd0bf4e9411c868ac811701dd"], "dicom": [6129, 6129, "73784560566cf06c6a23a87321fdf0c108f9f4bcd1c3e363a1e0efaea6ac113f"], "triage": [5206, 5542, "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"], "docx": [8654, 8926, "822d9b0ad4aa247c8d21b88772ab13d112b90309b0da8c277912d776bc938f89"], "measure": [1650, 1652, "39044eae7274081becae2478481b4eace4ed9d8bfa5063e0d9c9513c33bd667f"], "compare": [1442, 1444, "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"], "report": [8574, 9460, "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"], "app": [46792, 48762, "763d706681bc37316c27ef188c9491da450e9f24eb78eda46f52b87ac5341622"], "ui": [7302, 7787, "12a8716050f3d01bedc39160aa1b8f7a3122d175003a457748e9ee2af480284a"]};
       const TOPO = ["consult","decode","dicom","triage","docx","measure","compare","report","app"];
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
@@ -184,7 +184,12 @@
             const mod = await import(blobUrls.app);
             say("بدء التطبيق…");
             localStorage.setItem("rrai-build", b);
-            await mod.init();
+            await Promise.race([
+              mod.init(),
+              new Promise((_, rej) => setTimeout(() => rej(new Error("init-timeout")), 90000))
+            ]);
+            const spd = document.getElementById("splash");
+            if (spd) spd.remove();
             if ("serviceWorker" in navigator) {
               const swReg = (u, sc) => navigator.serviceWorker.register(u, sc ? { scope: sc } : undefined);
               swReg("r1/sw." + b + ".js?b=" + b, "./").catch(() => swReg("./sw." + b + ".js?b=" + b)).then(async (reg) => {
@@ -197,7 +202,8 @@
             break;
           } catch (e) {
             lastErr = e;
-            say("فشل التركيب الداخلي للإصدار " + b);
+            const st = localStorage.getItem("rrai-boot-stage") || "غير معروف";
+            say("توقف الإصدار " + b + " عند مرحلة: " + st);
           }
         }
         if (!done) failPanel(MARK + " — تعذر تحميل أي إصدار سليم بعد دوران كامل على المرايا والشرائح." + (lastErr ? "<br>آخر خطأ: " + (lastErr.message || lastErr) : ""));
