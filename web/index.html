@@ -6,21 +6,22 @@
     <title>Radiology report AI — نسخة المتصفح</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#0f172a" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="icon" type="image/png" href="./icons/icon-192.png" />
     <style>
       body { margin:0; background:#0f172a; color:#e2e8f0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; }
-      #splash { min-height:100vh; display:flex; align-items:center; justify-content:center; font-size:1rem; padding:1rem; text-align:center; }
+      #splash { min-height:100vh; display:flex; align-items:center; justify-content:center; font-size:1rem; padding:1rem; text-align:center; white-space:pre-wrap; }
     </style>
   </head>
   <body>
     <div id="splash">Radiology report AI — جارٍ التحميل…</div>
     <script type="module">
-      /* Immutable bootstrap (start.html == index.html). Never edit in place:
-         release channel: raw (4s timeout) -> mirror -> localStorage;
-         probe version-named UI; register version-named SW; retire others. */
+      /* Resilient bootstrap v2.2 "fetch-then-blob": every module is fetched as
+         validated text (exact char-length check = truncation/poison proof),
+         then assembled into blob: modules so import() never touches the network.
+         Live log line shows stage + host + elapsed seconds + last error. */
+      const MARK = "ب2.2";
+      const EXPECT = {"consult": 5239, "decode": 5236, "dicom": 6129, "triage": 5206, "docx": 8654, "measure": 1650, "compare": 1442, "report": 8574, "app": 46792, "ui": 7302};
+      const TOPO = ["consult","decode","dicom","triage","docx","measure","compare","report","app"];
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
       const JSR = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/release.json";
       const MIRROR = "./release.json";
@@ -30,49 +31,112 @@
         "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/",
         "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"
       ];
-      const known = ["v11", "v10", "v9"];
-      const cands = [];
-      const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
+      const known = ["v35", "v34", "v33", "v11"];
+      const splash = document.getElementById("splash");
+      let logLine = MARK + " — بدء…", lastErr = null;
+      const t0 = Date.now();
+      setInterval(() => {
+        const el = document.getElementById("splash") || splash;
+        el.textContent = logLine + " — " + Math.round((Date.now() - t0) / 1000) + "ث" + (lastErr ? "\nآخر خطأ: " + (lastErr.message || lastErr) : "");
+      }, 1000);
+      const say = (t) => { logLine = MARK + " — " + t; };
+      const failPanel = (msg) => {
+        const el = document.getElementById("splash") || splash;
+        el.innerHTML = msg + '<br><button id="rrai-retry" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:1rem;border:0;border-radius:.5rem;background:#e2e8f0;color:#0f172a;font-family:inherit">إعادة المحاولة الآن</button>';
+        const btn = document.getElementById("rrai-retry");
+        if (btn) btn.onclick = () => location.reload();
+      };
+      const hostOf = (o) => (o === "./" ? "الخادم الأساسي" : o.replace("https://", "").split("/")[0]);
       const grab = async (src) => {
         const ctl = new AbortController();
-        const t = setTimeout(() => ctl.abort(), 4000);
+        const t = setTimeout(() => ctl.abort(), 2500);
         try {
           const r = await fetch(src + (src.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
-          if (r.ok) return (await r.json()).build;
-        } catch (e) {} finally { clearTimeout(t); }
-        return null;
+          if (!r.ok) return null;
+          const j = await r.json();
+          return j && j.build;
+        } catch (e) { return null; } finally { clearTimeout(t); }
       };
-      for (const src of [RAW, JSR, MIRROR]) add(await grab(src));
-      add(localStorage.getItem("rrai-build"));
-      known.forEach(add);
-      let build = null, origin = "./";
-      for (const b of cands) {
-        for (const o of ORIGINS) {
-          try {
-            const u = await fetch(o + "ui." + b + ".html?b=" + b, { cache: "no-store" });
-            if (u.ok) { build = b; origin = o; document.body.innerHTML = await u.text(); break; }
-          } catch (e) {}
-        }
-        if (build) break;
-      }
-      if (!build) {
-        document.getElementById("splash").textContent = "تعذر تحميل أي إصدار معروف — تحقق من الاتصال ثم أعد الفتح.";
-      } else {
-        localStorage.setItem("rrai-build", build);
+      const fetchExact = async (u, exp, ms) => {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), ms || 15000);
         try {
-          const m = await import(origin + "app." + build + ".js");
-          m.init();
-          if (origin === "./" && "serviceWorker" in navigator) {
-            navigator.serviceWorker.register("./sw." + build + ".js?b=" + build).then(async (reg) => {
-              const all = await navigator.serviceWorker.getRegistrations();
-              for (const r of all) if (r !== reg) r.unregister().catch(() => {});
-            }).catch(() => {});
+          const r = await fetch(u + (u.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
+          if (!r.ok) throw new Error("http " + r.status);
+          const txt = await r.text();
+          if (!txt || txt.length < 400) throw new Error("empty-body " + (txt ? txt.length : 0));
+          if (exp && txt.length !== exp) throw new Error("len " + txt.length + "≠" + exp);
+          return txt;
+        } finally { clearTimeout(t); }
+      };
+      const getValidated = async (path, exp, label) => {
+        let err = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          for (let i = 0; i < ORIGINS.length; i++) {
+            const o = ORIGINS[(i + attempt) % ORIGINS.length];
+            say(label + " من " + hostOf(o) + " (محاولة " + (attempt + 1) + ")");
+            try {
+              return await fetchExact(o + path + "?b=" + Date.now(), exp);
+            } catch (e) { err = e; lastErr = e; }
           }
-        } catch (e) {
-          const s = document.getElementById("splash");
-          if (s) s.textContent = "تعذر تشغيل الإصدار " + build + " — أعد الفتح.";
         }
-      }
+        throw err || new Error("fetch failed: " + path);
+      };
+      (async () => {
+        const builds = await Promise.all([grab(MIRROR), grab(JSR), grab(RAW)]);
+        const cands = [];
+        const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
+        builds.forEach(add);
+        add(localStorage.getItem("rrai-build"));
+        known.forEach(add);
+        let done = false;
+        for (const b of cands) {
+          let uiText = null, uiOrigin = "./";
+          try {
+            uiText = await getValidated("ui." + b + ".html", EXPECT.ui || 0, "الواجهة");
+          } catch (e) { continue; }
+          document.body.innerHTML = uiText;
+          const texts = {};
+          let ok = true;
+          for (const n of TOPO) {
+            const p = n === "decode" ? "codecs/decode." + b + ".js" : n + "." + b + ".js";
+            const exp = b === "v35" && EXPECT[n] ? EXPECT[n] : 0;
+            try {
+              texts[n] = await getValidated(p, exp, "وحدة " + n);
+            } catch (e) { ok = false; break; }
+          }
+          if (!ok) continue;
+          say("تركيب الوحدات داخليًا…");
+          const blobUrls = {};
+          try {
+            for (const n of TOPO) {
+              let txt = texts[n];
+              for (const d of TOPO) {
+                if (d === n || !blobUrls[d]) continue;
+                const rel = d === "decode" ? "./codecs/decode." + b + ".js" : "./" + d + "." + b + ".js";
+                txt = txt.split('"' + rel + '"').join('"' + blobUrls[d] + '"');
+              }
+              blobUrls[n] = URL.createObjectURL(new Blob([txt], { type: "text/javascript" }));
+            }
+            const mod = await import(blobUrls.app);
+            say("بدء التطبيق…");
+            localStorage.setItem("rrai-build", b);
+            await mod.init();
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.register("./sw." + b + ".js?b=" + b).then(async (reg) => {
+                const all = await navigator.serviceWorker.getRegistrations();
+                for (const r of all) if (r !== reg) r.unregister().catch(() => {});
+              }).catch(() => {});
+            }
+            done = true;
+            break;
+          } catch (e) {
+            lastErr = e;
+            say("فشل التركيب الداخلي للإصدار " + b);
+          }
+        }
+        if (!done) failPanel(MARK + " — تعذر تحميل أي إصدار سليم بعد دوران كامل على المرايا." + (lastErr ? "<br>آخر خطأ: " + (lastErr.message || lastErr) : ""));
+      })();
     </script>
   </body>
 </html>
