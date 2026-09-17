@@ -22,7 +22,7 @@
          - Range-chunked reassembly (4 KiB slices under the truncation threshold)
          - blob module assembly: import() never touches the network
          - live log line: stage + host + attempt + seconds + last error */
-      const MARK = "ب2.3";
+      const MARK = "ب2.4";
       const EXPECT = {"consult": [5239, 5341], "decode": [5236, 5236], "dicom": [6129, 6129], "triage": [5206, 5542], "docx": [8654, 8926], "measure": [1650, 1652], "compare": [1442, 1444], "report": [8574, 9460], "app": [46792, 48762], "ui": [7302, 7788]}; /* name -> [chars, bytes] */
       const TOPO = ["consult","decode","dicom","triage","docx","measure","compare","report","app"];
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
@@ -34,6 +34,7 @@
         "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/",
         "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"];
       const WRAP = (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u);
+      const PREFIXES = ["", "r1/", "r2/", "r3/"];
       const known = ["v35", "v34", "v33", "v11"];
       const splash = document.getElementById("splash");
       let logLine = MARK + " — بدء…", lastErr = null;
@@ -93,11 +94,13 @@
       const getValidated = async (path, exp, label) => {
         const expChars = exp ? exp[0] : 0, expBytes = exp ? exp[1] : 0;
         let err = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          for (const px of PREFIXES) {
           for (let i = 0; i < ORIGINS.length; i++) {
             const o = ORIGINS[(i + attempt) % ORIGINS.length];
-            const base = o + path + "?b=" + Date.now() + "-" + i;
-            say(label + " من " + hostOf(o) + " (محاولة " + (attempt + 1) + ")");
+            if (px && o !== "./" && o !== ALIAS) continue; /* prefixes exist only on our Vercel hosts */
+            const base = o + px + path + "?b=" + Date.now() + "-" + i;
+            say(label + " من " + hostOf(o) + (px ? "/" + px.slice(0, 2) : "") + " (محاولة " + (attempt + 1) + ")");
             try {
               const buf = await fetchBuf(base);
               const txt = new TextDecoder().decode(buf);
@@ -108,14 +111,15 @@
               err = e; lastErr = e;
               if (expBytes) {
                 try {
-                  say(label + " — إعادة تجميع شرائح من " + hostOf(o));
-                  const buf = await rangedFetch(o + path, expBytes, label);
+                  say(label + " — إعادة تجميع شرائح من " + hostOf(o) + (px ? "/" + px.slice(0, 2) : ""));
+                  const buf = await rangedFetch(o + px + path, expBytes, label);
                   const txt = new TextDecoder().decode(buf);
                   if (expChars && txt.length !== expChars) throw new Error("ranged-len " + txt.length + "≠" + expChars);
                   return txt;
                 } catch (e2) { err = e2; lastErr = e2; }
               }
             }
+          }
           }
           try {
             say(label + " عبر غلاف خارجي (محاولة " + (attempt + 1) + ")");

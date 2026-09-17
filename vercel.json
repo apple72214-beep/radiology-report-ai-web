@@ -3,9 +3,29 @@
     {
       "source": "/(release\\.json|sw\\.js|sw\\.v[0-9]+\\.js|app\\.v[0-9]+\\.js|ui\\.v[0-9]+\\.html|start\\.html|index\\.html)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, no-transform" },
-        { "key": "CDN-Cache-Control", "value": "no-store" }
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-transform"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "no-store"
+        }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/r1/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r2/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r3/:path*",
+      "destination": "/:path*"
     }
   ]
 }
