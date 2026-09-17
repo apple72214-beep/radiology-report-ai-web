@@ -1,12 +1,12 @@
-const BUILD = "v27";
-const CACHE = "rrai-web-v27";
+const BUILD = "v19";
+const CACHE = "rrai-web-v19";
 const CRITICAL = [
   "./", "./start.html", "./index.html", "./manifest.webmanifest",
-  "./ui.v27.html", "./app.v27.js", "./dicom.v27.js", "./report.v27.js", "./sw.v27.js"
+  "./ui.v19.html", "./app.v19.js", "./dicom.v19.js", "./report.v19.js", "./sw.v19.js"
 ];
 const BEST_EFFORT = [
   "./icons/icon-192.png", "./icons/icon-512.png",
-  "./codecs/decode.v27.js", "./codecs/charlswasm.js", "./codecs/charlswasm.wasm",
+  "./codecs/decode.v19.js", "./codecs/charlswasm.js", "./codecs/charlswasm.wasm",
   "./codecs/openjpegwasm.js", "./codecs/openjpegwasm.wasm", "./codecs/openjphjs.js", "./codecs/openjphjs.wasm"
 ];
 self.addEventListener("install", (e) => {
