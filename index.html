@@ -29,6 +29,12 @@
       const known = ["v35", "v34", "v33", "v11"];
       const splash = document.getElementById("splash");
       const say = (t) => { splash.textContent = t; };
+      const failPanel = (msg) => {
+        const el = document.getElementById("splash") || splash;
+        el.innerHTML = msg + '<br><button id="rrai-retry" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:1rem;border:0;border-radius:.5rem;background:#e2e8f0;color:#0f172a;font-family:inherit">إعادة المحاولة الآن</button>';
+        const btn = document.getElementById("rrai-retry");
+        if (btn) btn.onclick = () => location.reload();
+      };
       const cands = [];
       const add = (b) => { if (b && !cands.includes(b)) cands.push(b); };
       const grab = async (src) => {
@@ -67,7 +73,7 @@
         for (const b of cands) {
           let uiText = null, origin = null;
           for (const o of ORIGINS) {
-            for (let attempt = 0; attempt < 2 && !uiText; attempt++) {
+            for (let attempt = 0; attempt < 3 && !uiText; attempt++) {
               try {
                 uiText = await fetchText(o + "ui." + b + ".html?b=" + b, 800);
                 origin = o;
@@ -85,19 +91,27 @@
           const urls = ORIGINS.map((o) => o + "app." + b + ".js");
           if (origin !== "./") urls.unshift(origin + "app." + b + ".js");
           let mod = null, lastErr = null;
-          for (let attempt = 0; attempt < 3 && !mod; attempt++) {
+          let hbText = "";
+          const t0 = Date.now();
+          const hb = setInterval(() => {
+            const secs = Math.round((Date.now() - t0) / 1000);
+            if (hbText) say2(hbText + " — " + secs + "ث");
+          }, 2000);
+          for (let attempt = 0; attempt < 4 && !mod; attempt++) {
             for (const u of urls) {
               try {
-                say2("Radiology report AI — تحميل الوحدة… محاولة " + (attempt + 1));
-                mod = await importRace(u, 12000);
+                hbText = "Radiology report AI — تحميل الوحدة… محاولة " + (attempt + 1);
+                say2(hbText);
+                mod = await importRace(u, 30000);
                 if (mod && mod.init) { origin = u.startsWith("http") ? u.slice(0, u.indexOf("app.")) : "./"; break; }
                 mod = null;
               } catch (e) { lastErr = e; }
             }
             if (!mod) await new Promise((r) => setTimeout(r, 800));
           }
+          clearInterval(hb);
           if (!mod) {
-            say2("تعذر تشغيل الإصدار " + b + " بعد 3 محاولات: " + (lastErr && lastErr.message ? lastErr.message : lastErr) + "\nأعد الفتح — المحاولات تدور على أربع مرايا تلقائيًا.");
+            failPanel("تعذر تشغيل الإصدار " + b + " بعد 4 محاولات: " + (lastErr && lastErr.message ? lastErr.message : lastErr) + "<br><span style=\"font-size:.85rem\">المحاولات دارت على أربع مرايا — الزر يعيد الدورة كاملة.</span>");
             done = true;
             break;
           }
@@ -116,7 +130,7 @@
           done = true;
           break;
         }
-        if (!done) say("تعذر تحميل أي إصدار معروف — تحقق من الاتصال ثم أعد الفتح.");
+        if (!done) failPanel("تعذر تحميل أي إصدار معروف — تحقق من الاتصال.");
       })();
     </script>
   </body>
