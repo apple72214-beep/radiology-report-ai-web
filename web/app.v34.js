@@ -2,7 +2,7 @@
 /* v34: dynamic module loading with per-module retry — flaky-network proof. */
 let parseDicom, draftReport, buildSignedDocument, decodeCompressed, triageCtx;
 let buildPackage, validatePackage, downloadJson, buildDocxReport;
-let segMm, angleDeg, ellipseStats, frameStats, normalize01, diffStats, frameGrayFlat;
+let segMm, angleDeg, ellipseStats, cmpFrameStats, normalize01, diffStats, frameGrayFlat;
 const MODULES = [
   ["dicom", "./dicom.v34.js", (m) => { parseDicom = m.parseDicom; }],
   ["report", "./report.v34.js", (m) => { draftReport = m.draftReport; buildSignedDocument = m.buildSignedDocument; }],
@@ -11,7 +11,7 @@ const MODULES = [
   ["consult", "./consult.v34.js", (m) => { buildPackage = m.buildPackage; validatePackage = m.validatePackage; downloadJson = m.downloadJson; }],
   ["docx", "./docx.v34.js", (m) => { buildDocxReport = m.buildDocxReport; }],
   ["measure", "./measure.v34.js", (m) => { segMm = m.segMm; angleDeg = m.angleDeg; ellipseStats = m.ellipseStats; }],
-  ["compare", "./compare.v34.js", (m) => { frameStats = m.frameStats; normalize01 = m.normalize01; diffStats = m.diffStats; frameGrayFlat = m.frameGrayFlat; }],
+  ["compare", "./compare.v34.js", (m) => { cmpFrameStats = m.frameStats; normalize01 = m.normalize01; diffStats = m.diffStats; frameGrayFlat = m.frameGrayFlat; }],
 ];
 async function loadMod(u) {
   let last = null;
@@ -458,7 +458,7 @@ function drawCompare() {
     const r = resampleGray(gb, fb.w, fb.h, wa, ha);
     gb = r.gray;
   }
-  const sa = frameStats(ga), sb = frameStats(gb);
+  const sa = cmpFrameStats(ga), sb = cmpFrameStats(gb);
   const na = normalize01(ga, sa.min, sa.max), nb = normalize01(gb, sb.min, sb.max);
   const ds = diffStats(na, nb, 0.25);
   const put = (id, gray, w, h, tint) => {
