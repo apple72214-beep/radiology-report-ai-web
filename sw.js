@@ -5,6 +5,15 @@ const CRITICAL = [
   "./ui.v35.html", "./app.v35.js", "./dicom.v35.js", "./report.v35.js", "./sw.v35.js",
   "./triage.v35.js", "./consult.v35.js", "./docx.v35.js", "./measure.v35.js", "./compare.v35.js"
 ];
+const LEN = {"consult.v35.js": 5341, "codecs/decode.v35.js": 5236, "dicom.v35.js": 6129, "triage.v35.js": 5542, "docx.v35.js": 8926, "measure.v35.js": 1652, "compare.v35.js": 1444, "report.v35.js": 9460, "app.v35.js": 48762, "ui.v35.html": 7788, "sw.v35.js": 1929};
+const okLen = (u, n) => { for (const k in LEN) if (u.endsWith(k)) return n === LEN[k]; return true; };
+const vPut = async (c, u, res) => {
+  try {
+    const b = await res.arrayBuffer();
+    if (!okLen(u, b.byteLength)) return;
+    await c.put(u, new Response(b, { status: res.status, headers: res.headers }));
+  } catch (e) {}
+};
 const BEST_EFFORT = [
   "./icons/icon-192.png", "./icons/icon-512.png",
   "./codecs/decode.v35.js", "./codecs/charlswasm.js", "./codecs/charlswasm.wasm",
@@ -13,7 +22,9 @@ const BEST_EFFORT = [
 self.addEventListener("install", (e) => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    await Promise.allSettled(CRITICAL.map((u) => c.add(u)));
+    await Promise.allSettled(CRITICAL.map(async (u) => {
+      try { const r = await fetch(u, { cache: "no-store" }); if (!r.ok) return; await vPut(c, u, r); } catch (e) {}
+    }));
     self.skipWaiting();
   })());
 });
@@ -47,7 +58,8 @@ self.addEventListener("fetch", (e) => {
     try {
       if (res.ok && url.origin === location.origin) {
         const c = await caches.open(CACHE);
-        c.put(e.request, res.clone());
+        const bb = await res.clone().arrayBuffer();
+        if (okLen(url.pathname, bb.byteLength)) c.put(e.request, new Response(bb, { status: res.status, headers: res.headers }));
       }
     } catch (err) {}
     return res;

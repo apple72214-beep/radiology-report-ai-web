@@ -21,5 +21,22 @@ const tmp = path.join(os.tmpdir(), `rrai-app-${build}.mjs`);
 fs.writeFileSync(tmp, app);
 const chk = spawnSync(process.execPath, ["--check", tmp]);
 if (chk.status !== 0) { fails++; console.log("FAIL module parse:\n" + chk.stderr.toString().slice(0, 600)); } else console.log("PASS module-parse " + build);
+/* integrity manifest verification: every listed file must match bytes+chars+sha256 on disk */
+import { createHash } from "node:crypto";
+import { readFileSync as rint } from "node:fs";
+const man = JSON.parse(rint(new URL("../integrity.v35.json", import.meta.url)));
+let intOk = 0;
+for (const [name, f] of Object.entries(man.files)) {
+  const raw = rint(new URL("../" + f.path, import.meta.url));
+  const sha = createHash("sha256").update(raw).digest("hex");
+  const chars = raw.toString("utf-8").length;
+  if (raw.byteLength !== f.bytes || chars !== f.chars || sha !== f.sha256) {
+    console.error("INTEGRITY MISMATCH: " + name + " bytes=" + raw.byteLength + "/" + f.bytes + " chars=" + chars + "/" + f.chars + " sha=" + sha.slice(0, 8) + "/" + f.sha256.slice(0, 8));
+    process.exit(1);
+  }
+  intOk++;
+}
+console.log("integrity: " + intOk + " files match manifest (build " + man.build + ", pinned " + man.pinned_commit.slice(0, 10) + ")");
 console.log(fails ? "STATIC TEST FAIL " + fails : "STATIC TEST PASS (" + build + ", " + needIds.length + " ids wired)");
 process.exit(fails ? 1 : 0);
+
