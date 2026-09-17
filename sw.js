@@ -5,7 +5,7 @@ const CRITICAL = [
   "./ui.v35.html", "./app.v35.js", "./dicom.v35.js", "./report.v35.js", "./sw.v35.js",
   "./triage.v35.js", "./consult.v35.js", "./docx.v35.js", "./measure.v35.js", "./compare.v35.js"
 ];
-const LEN = {"consult.v35.js": 5341, "codecs/decode.v35.js": 5236, "dicom.v35.js": 6129, "triage.v35.js": 5542, "docx.v35.js": 8926, "measure.v35.js": 1652, "compare.v35.js": 1444, "report.v35.js": 9460, "app.v35.js": 48762, "ui.v35.html": 7788, "sw.v35.js": 1929};
+const LEN = {"consult.v35.js": 5341, "codecs/decode.v35.js": 5236, "dicom.v35.js": 6129, "triage.v35.js": 5542, "docx.v35.js": 8926, "measure.v35.js": 1652, "compare.v35.js": 1444, "report.v35.js": 9460, "app.v35.js": 48762, "ui.v35.html": 7787, "sw.v35.js": 2789};
 const okLen = (u, n) => { for (const k in LEN) if (u.endsWith(k)) return n === LEN[k]; return true; };
 const vPut = async (c, u, res) => {
   try {

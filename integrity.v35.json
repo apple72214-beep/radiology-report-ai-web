@@ -59,15 +59,15 @@
     },
     "ui": {
       "path": "ui.v35.html",
-      "chars": 7303,
-      "bytes": 7788,
-      "sha256": "7d692338f5da331988b734c85e6e246fc46973935c06482268d9d58a70572dcd"
+      "chars": 7302,
+      "bytes": 7787,
+      "sha256": "12a8716050f3d01bedc39160aa1b8f7a3122d175003a457748e9ee2af480284a"
     },
     "sw": {
       "path": "sw.v35.js",
       "chars": 2789,
       "bytes": 2789,
-      "sha256": "911c94f83a737b5d6c7a292c8c762b6253e5ede03ce4e853fc47bb02ae2d4ff4"
+      "sha256": "40cf06ecf5de97f1f9203a2459fed957fe0ee2213021158a86e4065104df640d"
     }
   }
 }
