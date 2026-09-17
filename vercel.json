@@ -77,6 +77,10 @@
     {
       "source": "/z",
       "destination": "/index.html"
+    },
+    {
+      "source": "/d",
+      "destination": "/diag.html"
     }
   ]
 }
