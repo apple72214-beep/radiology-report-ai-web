@@ -15,22 +15,25 @@
   <body>
     <div id="splash">Radiology report AI — جارٍ التحميل…</div>
     <script type="module">
-      /* Resilient bootstrap v2.2 "fetch-then-blob": every module is fetched as
-         validated text (exact char-length check = truncation/poison proof),
-         then assembled into blob: modules so import() never touches the network.
-         Live log line shows stage + host + elapsed seconds + last error. */
-      const MARK = "ب2.2";
-      const EXPECT = {"consult": 5239, "decode": 5236, "dicom": 6129, "triage": 5206, "docx": 8654, "measure": 1650, "compare": 1442, "report": 8574, "app": 46792, "ui": 7302};
+      /* Resilient bootstrap v2.3: poisoned-proxy-cache proof.
+         - exact char+byte length validation (truncation detected)
+         - fresh hostnames the intermediary has never cached (project alias)
+         - external wrapper origin (allorigins)
+         - Range-chunked reassembly (4 KiB slices under the truncation threshold)
+         - blob module assembly: import() never touches the network
+         - live log line: stage + host + attempt + seconds + last error */
+      const MARK = "ب2.3";
+      const EXPECT = {"consult": [5239, 5341], "decode": [5236, 5236], "dicom": [6129, 6129], "triage": [5206, 5542], "docx": [8654, 8926], "measure": [1650, 1652], "compare": [1442, 1444], "report": [8574, 9460], "app": [46792, 48762], "ui": [7302, 7788]}; /* name -> [chars, bytes] */
       const TOPO = ["consult","decode","dicom","triage","docx","measure","compare","report","app"];
       const RAW = "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json";
       const JSR = "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/release.json";
       const MIRROR = "./release.json";
-      const ORIGINS = [
-        "./",
+      const ALIAS = "https://radiology-report-ai-web-apple72214-beep.vercel.app/";
+      const ORIGINS = ["./", ALIAS,
         "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/",
         "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/",
-        "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"
-      ];
+        "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"];
+      const WRAP = (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u);
       const known = ["v35", "v34", "v33", "v11"];
       const splash = document.getElementById("splash");
       let logLine = MARK + " — بدء…", lastErr = null;
@@ -57,28 +60,70 @@
           return j && j.build;
         } catch (e) { return null; } finally { clearTimeout(t); }
       };
-      const fetchExact = async (u, exp, ms) => {
+      const fetchBuf = async (u, ms, headers) => {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), ms || 15000);
         try {
-          const r = await fetch(u + (u.includes("?") ? "&" : "?") + "cb=" + Date.now(), { cache: "no-store", signal: ctl.signal });
-          if (!r.ok) throw new Error("http " + r.status);
-          const txt = await r.text();
-          if (!txt || txt.length < 400) throw new Error("empty-body " + (txt ? txt.length : 0));
-          if (exp && txt.length !== exp) throw new Error("len " + txt.length + "≠" + exp);
-          return txt;
+          const r = await fetch(u, { cache: "no-store", signal: ctl.signal, headers: headers || {} });
+          if (!r.ok && r.status !== 206) throw new Error("http " + r.status);
+          return await r.arrayBuffer();
         } finally { clearTimeout(t); }
       };
+      const rangedFetch = async (u, byteLen, label) => {
+        const CH = 4096;
+        const parts = [];
+        let pos = 0;
+        while (pos < byteLen) {
+          const end = Math.min(pos + CH - 1, byteLen - 1);
+          say(label + " — شريحة " + (pos / CH + 1) + "/" + Math.ceil(byteLen / CH));
+          const buf = await fetchBuf(u + (u.includes("?") ? "&" : "?") + "rg=" + pos, 12000, { Range: "bytes=" + pos + "-" + end });
+          if (!buf || buf.byteLength === 0) throw new Error("empty-chunk@" + pos);
+          if (buf.byteLength === byteLen && pos === 0) return buf; /* proxy ignored Range, full body ok */
+          if (buf.byteLength !== end - pos + 1) throw new Error("chunk-len " + buf.byteLength + "@" + pos);
+          parts.push(buf);
+          pos = end + 1;
+        }
+        let total = 0;
+        parts.forEach((p) => (total += p.byteLength));
+        const out = new Uint8Array(total);
+        let off = 0;
+        parts.forEach((p) => { out.set(new Uint8Array(p), off); off += p.byteLength; });
+        return out.buffer;
+      };
       const getValidated = async (path, exp, label) => {
+        const expChars = exp ? exp[0] : 0, expBytes = exp ? exp[1] : 0;
         let err = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           for (let i = 0; i < ORIGINS.length; i++) {
             const o = ORIGINS[(i + attempt) % ORIGINS.length];
+            const base = o + path + "?b=" + Date.now() + "-" + i;
             say(label + " من " + hostOf(o) + " (محاولة " + (attempt + 1) + ")");
             try {
-              return await fetchExact(o + path + "?b=" + Date.now(), exp);
-            } catch (e) { err = e; lastErr = e; }
+              const buf = await fetchBuf(base);
+              const txt = new TextDecoder().decode(buf);
+              if (!txt || txt.length < 400) throw new Error("empty-body " + (txt ? txt.length : 0));
+              if (expChars && txt.length !== expChars) throw new Error("len " + txt.length + "≠" + expChars);
+              return txt;
+            } catch (e) {
+              err = e; lastErr = e;
+              if (expBytes) {
+                try {
+                  say(label + " — إعادة تجميع شرائح من " + hostOf(o));
+                  const buf = await rangedFetch(o + path, expBytes, label);
+                  const txt = new TextDecoder().decode(buf);
+                  if (expChars && txt.length !== expChars) throw new Error("ranged-len " + txt.length + "≠" + expChars);
+                  return txt;
+                } catch (e2) { err = e2; lastErr = e2; }
+              }
+            }
           }
+          try {
+            say(label + " عبر غلاف خارجي (محاولة " + (attempt + 1) + ")");
+            const buf = await fetchBuf(WRAP(ALIAS + path), 20000);
+            const txt = new TextDecoder().decode(buf);
+            if (expChars && txt.length !== expChars) throw new Error("wrap-len " + txt.length + "≠" + expChars);
+            return txt;
+          } catch (e) { err = e; lastErr = e; }
         }
         throw err || new Error("fetch failed: " + path);
       };
@@ -91,9 +136,9 @@
         known.forEach(add);
         let done = false;
         for (const b of cands) {
-          let uiText = null, uiOrigin = "./";
+          let uiText = null;
           try {
-            uiText = await getValidated("ui." + b + ".html", EXPECT.ui || 0, "الواجهة");
+            uiText = await getValidated("ui." + b + ".html", EXPECT.ui, "الواجهة");
           } catch (e) { continue; }
           document.body.innerHTML = uiText;
           const texts = {};
@@ -135,7 +180,7 @@
             say("فشل التركيب الداخلي للإصدار " + b);
           }
         }
-        if (!done) failPanel(MARK + " — تعذر تحميل أي إصدار سليم بعد دوران كامل على المرايا." + (lastErr ? "<br>آخر خطأ: " + (lastErr.message || lastErr) : ""));
+        if (!done) failPanel(MARK + " — تعذر تحميل أي إصدار سليم بعد دوران كامل على المرايا والشرائح." + (lastErr ? "<br>آخر خطأ: " + (lastErr.message || lastErr) : ""));
       })();
     </script>
   </body>
