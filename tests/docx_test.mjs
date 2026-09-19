@@ -1,5 +1,5 @@
-import { buildDocxReport, crc32 } from "../docx.v29.js";
-import { signedDocHash } from "../report.v33.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v36.js";
+import { signedDocHash } from "../report.v36.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -20,5 +20,23 @@ const h1 = await signedDocHash(study, draft, { signer: "د. أ", at: m.at });
 const h2 = await signedDocHash(study, draft, { signer: "د. أ", at: m.at });
 if (h1 === h2 && /^[0-9a-f]{64}$/.test(h1)) console.log("PASS hash-stable"); else { fails++; console.log("FAIL hash"); }
 fs.writeFileSync("/tmp/rrai-test.docx", bytes);
-console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7)");
+/* EN clinical template assertions */
+const enBytes = buildDocxReportEn(study, draft, m);
+const enBuf = Buffer.from(enBytes);
+const enXml = enBuf.toString("utf8");
+let enFails = 0;
+const enCheck = (cond, name) => { if (cond) console.log("PASS en-" + name); else { enFails++; console.log("FAIL en-" + name); } };
+enCheck(enXml.includes("MEDICAL RADIOLOGY REPORT"), "title");
+enCheck(enXml.includes('w:color w:val="1F3864"'), "navy-title-color");
+enCheck(enXml.includes("TECHNIQUE:") && enXml.includes("FINDINGS:") && enXml.includes("IMPRESSION:"), "sections");
+enCheck(enXml.includes('w:fill="EDE9F3"'), "impression-shaded-box");
+enCheck(enXml.includes("Reported by:") && enXml.includes('w:jc w:val="right"'), "right-signature");
+enCheck(enXml.includes("Patient Name:") && enXml.includes("Exam Date:"), "demographics");
+enCheck(enXml.includes("Document SHA-256: " + m.hash), "en-fingerprint");
+const enTail = Buffer.from(enBytes.slice(enBytes.length - 22));
+enCheck(enTail.readUInt32LE(0) === 0x06054b50, "zip-eocd");
+if (enBuf.includes(Buffer.from("word/document.xml"))) console.log("PASS en-entries"); else { enFails++; console.log("FAIL en-entries"); }
+fails += enFails;
+fs.writeFileSync("/tmp/rrai-test-en.docx", enBytes);
+console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 EN template)");
 process.exit(fails ? 1 : 0);

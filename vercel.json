@@ -81,6 +81,22 @@
     {
       "source": "/d",
       "destination": "/diag.html"
+    },
+    {
+      "source": "/q",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/w",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/e",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/t",
+      "destination": "/start.html"
     }
   ]
 }

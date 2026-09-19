@@ -24,7 +24,7 @@ if (chk.status !== 0) { fails++; console.log("FAIL module parse:\n" + chk.stderr
 /* integrity manifest verification: every listed file must match bytes+chars+sha256 on disk */
 import { createHash } from "node:crypto";
 import { readFileSync as rint } from "node:fs";
-const man = JSON.parse(rint(new URL("../integrity.v35.json", import.meta.url)));
+const man = JSON.parse(rint(new URL("../integrity." + build + ".json", import.meta.url)));
 let intOk = 0;
 for (const [name, f] of Object.entries(man.files)) {
   const raw = rint(new URL("../" + f.path, import.meta.url));
