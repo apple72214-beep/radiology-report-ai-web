@@ -1,5 +1,5 @@
 const BUILD = "v41";
-const CACHE = "rrai-web-v41";
+const CACHE = "rrai-web-v42";
 const CRITICAL = [
   "./", "./start.html", "./index.html", "./manifest.webmanifest",
   "./ui.v41.html", "./app.v41.js", "./dicom.v41.js", "./report.v41.js", "./sw.v41.js",

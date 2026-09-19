@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-python-multipart
-pydicom
-numpy
-Pillow
-pytest
-httpx
