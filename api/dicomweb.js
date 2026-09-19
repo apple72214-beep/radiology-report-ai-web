@@ -8,13 +8,25 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "*");
   if (req.method === "OPTIONS") { res.status(204).end(); return; }
+  const method = req.method === "POST" ? "POST" : "GET";
   if (!target || !/^https?:\/\//i.test(target)) {
     res.status(400).json({ error: "url query parameter with http(s) target required" });
     return;
   }
   try {
+    let body = undefined;
+    if (method === "POST") {
+      const chunks = [];
+      for await (const c of req) chunks.push(c);
+      body = Buffer.concat(chunks);
+    }
     const r = await fetch(target, {
-      headers: { Accept: req.headers.accept || "application/dicom+json, application/json, multipart/related, application/octet-stream" },
+      method,
+      body,
+      headers: {
+        Accept: req.headers.accept || "application/dicom+json, application/json, multipart/related, application/octet-stream",
+        ...(method === "POST" ? { "Content-Type": req.headers["content-type"] || "application/json" } : {}),
+      },
       redirect: "follow",
     });
     const buf = Buffer.from(await r.arrayBuffer());
