@@ -4,14 +4,14 @@ let parseDicom, draftReport, buildSignedDocument, signedDocHash, decodeCompresse
 let buildPackage, validatePackage, downloadJson, buildDocxReport, buildDocxReportEn;
 let segMm, angleDeg, ellipseStats, cmpFrameStats, normalize01, diffStats, frameGrayFlat;
 const MODULES = [
-  ["dicom", "./dicom.v36.js", (m) => { parseDicom = m.parseDicom; }],
-  ["report", "./report.v36.js", (m) => { draftReport = m.draftReport; buildSignedDocument = m.buildSignedDocument; signedDocHash = m.signedDocHash; }],
-  ["decode", "./codecs/decode.v36.js", (m) => { decodeCompressed = m.decodeCompressed; }],
-  ["triage", "./triage.v36.js", (m) => { triageCtx = m.triage; }],
-  ["consult", "./consult.v36.js", (m) => { buildPackage = m.buildPackage; validatePackage = m.validatePackage; downloadJson = m.downloadJson; }],
+  ["dicom", "./dicom.v37.js", (m) => { parseDicom = m.parseDicom; }],
+  ["report", "./report.v37.js", (m) => { draftReport = m.draftReport; buildSignedDocument = m.buildSignedDocument; signedDocHash = m.signedDocHash; }],
+  ["decode", "./codecs/decode.v37.js", (m) => { decodeCompressed = m.decodeCompressed; }],
+  ["triage", "./triage.v37.js", (m) => { triageCtx = m.triage; }],
+  ["consult", "./consult.v37.js", (m) => { buildPackage = m.buildPackage; validatePackage = m.validatePackage; downloadJson = m.downloadJson; }],
   ["docx", "./docx.v36.js", (m) => { buildDocxReport = m.buildDocxReport; buildDocxReportEn = m.buildDocxReportEn; }],
-  ["measure", "./measure.v36.js", (m) => { segMm = m.segMm; angleDeg = m.angleDeg; ellipseStats = m.ellipseStats; }],
-  ["compare", "./compare.v36.js", (m) => { cmpFrameStats = m.frameStats; normalize01 = m.normalize01; diffStats = m.diffStats; frameGrayFlat = m.frameGrayFlat; }],
+  ["measure", "./measure.v37.js", (m) => { segMm = m.segMm; angleDeg = m.angleDeg; ellipseStats = m.ellipseStats; }],
+  ["compare", "./compare.v37.js", (m) => { cmpFrameStats = m.frameStats; normalize01 = m.normalize01; diffStats = m.diffStats; frameGrayFlat = m.frameGrayFlat; }],
 ];
 async function loadMod(u) {
   let last = null;
