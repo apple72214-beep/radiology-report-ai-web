@@ -1,4 +1,4 @@
-import { frameStats, normalize01, diffStats, frameGrayFlat } from "../compare.v39.js";
+import { frameStats, normalize01, diffStats, frameGrayFlat } from "../compare.v40.js";
 let fails = 0;
 const ok = (n, c) => { if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
 const a = new Float32Array([0, 50, 100, 150]);
