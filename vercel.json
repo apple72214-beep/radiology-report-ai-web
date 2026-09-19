@@ -1,0 +1,102 @@
+{
+  "headers": [
+    {
+      "source": "/(release\\.json|sw\\.js|sw\\.v[0-9]+\\.js|app\\.v[0-9]+\\.js|ui\\.v[0-9]+\\.html|start\\.html|index\\.html)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-transform"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/r1/sw.v35.js",
+      "headers": [
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-transform"
+        }
+      ]
+    },
+    {
+      "source": "/r2/sw.v35.js",
+      "headers": [
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-transform"
+        }
+      ]
+    },
+    {
+      "source": "/r3/sw.v35.js",
+      "headers": [
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-transform"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/r1/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r2/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r3/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/x",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/y",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/z",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/d",
+      "destination": "/diag.html"
+    },
+    {
+      "source": "/q",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/w",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/e",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/t",
+      "destination": "/start.html"
+    }
+  ]
+}
