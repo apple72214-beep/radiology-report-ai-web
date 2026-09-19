@@ -42,3 +42,162 @@
 - ما نجا: github.com، google.com، jsdelivr (text/plain + nosniff ⇒ لا يصلح وثيقة عليا)، facebook/youtube.
 - الهندسة المضادة المنشورة: v12 (نسخ المخزن المؤقت عند الاستقبال + قياس رسم= + مسار مباشر ذاتي التبني) وv13 (تثبيت SW متسامح مع النقص + قاذفة تجلب الأصول من 4 أصول: محلي/jsdelivr/rawcdn/raw.githack).
 - خطة الصباح: (ب) أول فتح ناجح على أي شبكة بديلة (واي فاي مستشفى/منزل/شريحة أخرى) يثبّت الصدفة للأبد عبر SW v13؛ (أ) احتياط: بوتستراب Blogger (نطاق google 도달) يحمّل الأصول من jsdelivr.
+
+## ✅ 2026-09-16 00:56 — إغلاق v0.4 رسميًّا (نصر العرض على الجهاز)
+- البوابة الدائمة النهائية: **https://radiology-report-ai-web.vercel.app** (Vercel ← نشر تلقائي من المستودع العام عند كل دفعة؛ بلا بطاقة؛ يعمل على شبكة المستخدم المحجوبة).
+- لقطة النصر: J2K-512 = شريحة CT صدر حقيقية (cornerstone CT1) معروضة بالكامل؛ JLS-256 = الصدر التركيبي بالكتلة المضيئة؛ الميتا: `[2000-2187] حجم=512x512/512x512 رسم=233` و`[0-255] حجم=256x256/256x256 رسم=242`.
+- سبب السواد التاريخي: أغطية CSS/تحويل فوق الكانفس (v15 سحبها قسرًا: transform none + width 100% + خلفيات شفافة) — البكسلات كانت مضيئة دائمًا (رسم=233/242 قبل الإصلاح).
+- خريطة النشر المختبرة: Vercel ✔ دائم | Cloudflare Pages مشروع radreport-ye منشور لكن طابوره تعلّق (احتياط) | githack/rawcdn/github.io/raw.githubusercontent محجوبة وطنيًا عند المستخدم | jsdelivr ✔ للأصول الثنائية لكن text/plain للhtml | Render ✔ متاح لكنه يشترط بطاقة (مرفوض) | Netlify ✗ (api.netlify.com محجوب) | Blogger ✔ نطاقًا لكن محرر السمة_mobile_ غير عملي.
+- مفتاح CF API محفوظ لدى الوكيل للجلسات القادمة حتى يقول المستخدم «أوقف المفتاح»؛ رمز GitHub الكلاسيكي 7 أيام لنفس الغرض.
+
+## v0.5.1 — فرز واعٍ بنوع الفحص (2026-09-16)
+- وحدة جديدة web/triage.v18.js: سياقات brain/chest/bone/unknown؛ الدماغ: قناع داخل-قحفي (نصف قطر 0.62) + كشف بؤر عالية الكثافة (نزف)، مناطق منخفضة واسعة (وذمة/احتشاء)، عدم تناصف نصفي (انزياح خط منتصف)؛ الصدر: تناظر ساحتي الرئتين؛ العظم: بدون معيار حاد بعد (موسوم صراحة)؛ غير المحدد: قاعدة عامة محافظة بعتبة أعلى (0.03).
+- كل نتيجة تحمل reasons عربية تظهر تحت شارة الصف وفي مسودة التقرير (AR+EN).
+- اختبارات دائمة web/tests/triage_test.mjs: 7 فحوص PASS (نزف دماغي=حرج، دماغ سليم=روتيني، آفة صدر=حرج، صدر سليم=روتيني، CT صدر متناظر=روتيني [إصلاح إنذار J2K الكاذب عند وجود وسوم الصدر]، عام=روتيني، كشف السياق).
+- عينتا قبول جديدتان: samples/brain_hemo.dcm + brain_clean.dcm (CT رأس تركيبي 256×256، وسوم HEAD).
+
+## v0.5.2 — تيليراديولوجي بلا خادم (حزم استشارة موقّعة)
+- وحدة web/consult.v19.js: مخططان rrai-consult/1 وrrai-consult-reply/1؛ بصمة SHA-256 على الحمولة؛ تحقق فشل-مغلق (مخطط مجهول/بصمة مختلة/رد بلا مرجعية/لقطة مفقودة = رفض).
+- التدفق: تصدير (لقطة PNG + فرز + تقرير + قياسات + ملاحظة + اسم) ← إرسال بأي قناة ← استيراد عند المستشار = دراسة «استشارة» بشارة زرقاء ← ردّ المستشار بحزمة reply ← الاستيراد عند المحيل يرفق الرد وسجل التدقيق بالدراسة الأصل.
+- سجل تدقيق consultLog لكل حدث (تصدير/استيراد/رد) بأسماء وأوقات وبصمات؛ أسطره تدخل مسودة التقرير AR.
+- اختبارات دائمة tests/consult_test.mjs: 5/5 PASS (roundtrip، كشف عبث، رفض مخطط، رد سليم، رد بلا مرجعية مرفوض).
+
+## v0.5.3 — حزمة Docker للحافة + توقيع يعمل على LAN
+- docker/: Dockerfile (nginx:alpine ثابت، healthcheck)، nginx.conf (no-store لـrelease/sw، immutable لملفات vNN)، compose بحدود 128MB/0.5cpu، build-bundle.sh لنقل بلا إنترنت (docker save/load)، README عربي.
+- consult.v20.js: بديل SHA-256 خالص JS عند حجب crypto.subtle (سياقات http:// غير الآمنة على LAN) + إصلاح refUid في حمولة الحزمة (كان يُمرر ولا يُخزن).
+- اختبارات consult موسعة 9/9 PASS: متجهات SHA-256 قياسية (فارغ/abc/مليون حرف)، تطابق subtle==fallback، roundtrip، كشف عبث، رفض مخطط، رد+refUid، رد بلا مرجعية مرفوض. اختبارات الفرز 7/7.
+
+## ✅ 2026-09-16 23:02–23:04 — جهاز ميداني: v20 (تصدير استشارة + قياس)
+- 23:02: نافذة prompt «ملاحظتك السريرية أو سؤالك للمستشار:» من radiology-report-ai-web.vercel.app مع حسناً/إلغاء — مسار التصدير يعمل على الجهاز (docs/screenshots/v20-consult-prompt-device.jpg).
+- 23:04: J2K-512 معروض بالكامل، خط قياس أزرق والمسافة 54، أزرار [قياس][تصدير حزمة استشارة][1:1] ظاهرة، window [2000-1187] وحجم 512² (docs/screenshots/v20-measure-device.jpg).
+- متبقٍ للقبول الكامل: لقطة صف «استشارة» بالشارة الزرقاء بعد الاستيراد + دورة الرد.
+
+## v21 — تقوية مسار الاستيراد (بلاغ ميداني: تعذر الاستيراد)
+- قناة ثانية: نسخ الحزمة للحافظة عند التصدير + زر «استيراد من الحافظة».
+- إزالة فلتر accept من input الملف؛ رسائل حالة مرحلية؛ اسم الملف ضمن رسالة التصدير.
+
+## v22 — قناة استيراد ثالثة بلا منتقي ملفات (تشخيص ميداني 01:12–01:13)
+- التشخيص: منتقي أندرويد فتح على مجلد العينات (arena/*.dcm) فاختير ملف DICOM بالخطأ → «المحتوى ليس JSON صالحًا»؛ الحزمة المصدّرة تكون في Downloads خارج ذلك المجلد.
+- زر «استيراد آخر حزمة مصدّرة»: يخزن التصدير حزمةً في localStorage ويعيد إدخالها بضغطة (يلف المنتقي والحافظة معًا).
+- رسالة الرفض صارت تميّز DICOM (بادئة DICM/محرف صفري) وتدّل على Downloads والقناتين الأخريين، وإلا تعرض أول 40 محرفًا للتشخيص.
+
+## v1.0.1 (v23) — التقرير الموقّع PDF
+- report.v23.js: buildSignedDocument — مستند AR/EN بترويسة مؤسسة (localStorage rrai-org)، جدول meta، نصا التقرير، سجل الاستشارة، كتلة توقيع (اسم+ترخيص+إقرار)، بصمة SHA-256Canonical(uid,patient,modality,ar,en,signer,license,at) داخل المستند وفي study.docHash + signedHistory[].
+- الطباعة عبر window.print() مع CSS @media print يعزل #print-root — بلا مكتبات، يعمل offline؛ «حفظ كـPDF» من حوار الطباعة.
+- فشل مغلق: توقيع بلا اسم طبيب = رفض. هروب HTML مُختبر.
+- اختبارات tests/report_test.mjs: 7/7 (بصمة 64، محتوى، إخلاء مسؤولية، حتمية، حساسية للموقّع/النص، هروب).
+
+## v1.0.2 (v24) — تصدير Word (.docx) بلا مكتبات
+- docx.v24.js: كاتب ZIP مصغّر (store+CRC32) + OOXMLdocument.xml (فقرات RTL/LTR، هروب XML) — يفتح في Word/LibreOffice/Google Docs، يعمل offline تمامًا.
+- زر «توقيع وتصدير Word» بجانب PDF؛ نفس البصمة canonical عبر signedDocHash المشترك؛ التنزيل rrai-report-<patient>.docx.
+- إصلاح حرج: كتلة sign-extra كانت غائبة في ui.v23 (لا يوجد </body> في الملف — النهاية </main>) فكان setupSignExport يرمي عند الإقلاع؛ أُضيفت الكتلة لنهايتة الملف في v24 مع زر Word.
+- اختبارات tests/docx_test.mjs 7/7 + تحقق python (zipfile.testzip + XML parse)؛ عينة دائمة docs/rrai-report-sample.docx.
+
+## v25 — إصلاح انزلاق v24 الصامت + حارس ساكن دائم
+- بلاغ ميداني: «قائمة توليد تقرير لا تعمل» = جهاز عالق على v23 (init كان يرمي لغياب كتلة sign-extra) + app.v24 المنشور كان v23 مُعاد تسميته (patch لم يُطبق لأن grep -c أعاد 1 تحت set -e فأجهض السكربت).
+- v25: تطبيق فعلي لوiring Word (signCurrent مشترك + مستمع sign-export-word + استيراد buildSignedDocument/buildDocxReport) + حرس في setupSignExport: إن نقصت عناصر الواجهة يعطي رسالة واضحة بدل رمي عند الإقلاع.
+- اختبارات دائمة جديدة tests/static_test.mjs: لكل إصدار من release.json تتحقق أن كل ids المطلوبة موجودة في ui وي_refer إليها app، وأن الوحدات المستوردة موجودة على القرص — يمنع تكرار الانزلاق الصامت.
+
+## ✅ 2026-09-17 01:51–02:00 — جهاز ميداني v25: واجهة التوقيع كاملة + مستند PDF موقّع
+- 01:51: «توليد التقرير» يعمل: مسودتا AR/EN + اعتماد مراجعة الأخصائي (Dr abdullah Hagar) + حقل الترخيص + زرا PDF/Word + إعدادات الترويسة (docs/screenshots/v25-report-ui-device.jpg).
+- 02:00: المستند الموقّع مفتوح في Xodo: ترويسة، جدول meta، نصا التقرير، سجل الاستشارة، كتلة توقيع (اسم+ترخيص 11010099622+إقرار) وبصمة SHA-256 كاملة (docs/screenshots/v25-signed-pdf-xodo.jpg).
+- مفتوح للتوضيح: بلاغ «لم يفتح pdf» رغم لقطة Xodo — يُحسم بسؤال المستخدم (أي زر/أي ملف تحديدًا).
+
+## v26 — حزمة docx أكمل + إرشاد فتح على الهاتف
+- بلاغ: ملف Word سليم لكنه لا يفتح على الهاتف (لا تطبيق Office). الحزمة صارت 7 أجزاء: styles.xml + word/_rels/document.xml.rels + docProps/core+app (توافق أعلى مع العارضات الانتقائية).
+- رسالة ما بعد التنزيل صارت ترشد: نقل لحاسوب فيه Word أو عرض PDF على الهاتف.
+- عينة Workspace أُعيد توليدها بالحزمة الموسعة docs/rrai-report-sample.docx.
+
+## v1.0.3 (v27) — suite قياس متعدد
+- measure.v27.js وحدة رياضية نقية: segMm بتباعد غير متساوٍ (row/col)، angleDeg، ellipseStats (متوسط/σ/min/max/n بوحدة HU عند وجود وسوم Rescale وإلا gray)، grayAt لـRGB.
+- ثلاثة أنماط عبر قائمة ديناميكية بجانب زر قياس: قطع متعددة مرقّمة، زاوية (3 نقرات)، ROI بيضاوي (مركز+حافة) — كلها تُرسم مرقّمة على الـoverlay وتُحفظ في study.measurements (تبقى بعد إعادة الفتح).
+- القياسات تدخل مسودة التقرير AR (أسطر قياس/زاوية/ROI) وبالتالي المستند الموقّع PDF/Word، وتُسافر داخل حزم الاستشارة (حقل measurements في الحمولة).
+- dicom.v27: وسم pixels.hu عند وجود slope/intercept لتظهر وحدة HU صحيحة.
+- اختبارات tests/measure_test.mjs 12/12؛ الإجمالي الدائم 43.
+
+## ✅ 2026-09-17 03:48–04:14 — قبول ميداني كامل لثلاثية v1.0
+- 03:48: ملف rrai-report-J2K-512.docx مفتوح على الهاتف عبر WPS Office Lite: ترويسة، meta، نصان AR/EN، توقيع+ترخيص 11010099622، بصمة SHA-256 كاملة (docs/screenshots/v26-word-opened-wps-device.jpg) — يُغلق v1.0.2.
+- 03:48: واجهة التوقيع v27 مع سطر «بصمة آخر توقيع» داخل المسودة وإعدادات ترويسة محفوظة (docs/screenshots/v27-sign-ui-letterhead-device.jpg).
+- 04:14: suite القياس v27 على الجهاز: [مسح القياسات][قطع][قياس] بجانب تصدير الاستشارة (docs/screenshots/v27-measure-ui-device.jpg).
+- الحصيلة: v1.0.1 PDF ✅، v1.0.2 Word ✅ (WPS)، v1.0.3 قياس متعدد ✅ واجهةً؛ الاختبارات الدائمة 43.
+
+## v1.1.1 (v28) — مقارنة دراسة سابقة
+- compare.v28.js وحدة نقية: frameStats/normalize01/diffStats(عتبة+قناع)/frameGrayFlat — مختبرة 7/7.
+- زر «مقارنة» ديناميكي + قائمة دراسات الجهاز؛ ثلاثة ألواح: الحالية/الأخرى/خريطة الفرق (أحمر=ساخن) بنفس نسبة الشريحة؛ إحصاءات متوسط الفرق والنقاط الساخنة بعد التطبيع.
+- إعادة تحجيم عند اختلاف الأبعاد عبر canvas؛ resultado يُحفظ في study.compare ويدخل مسودة التقرير (وبالتالي PDF/Word).
+- الإجمالي الدائم 50 اختبارًا.
+
+## v29 — إغلاق ثغرة قائمة SW (بلاغ: «لم يفتح»)
+- السبب المرجح: قائمتا CRITICAL في sw.v28 لم تضمنا triage/consult/docx/measure/compare — عند اهتزاز الشبكة (حصار) يفشل استيراد الوحدة ويبقى التطبيق على splash «تعذر تشغيل الإصدار»، وبلا نسخة offline منها.
+- v29: CRITICAL تشمل كل وحدات v29 الأربع عشرة؛ الاختبارات 50/50.
+
+## ✅ 2026-09-17 22:01 — v29 يفتح طبيعيًا على الجهاز
+- بعد إصلاح قائمة CRITICAL في SW: الإقلاع سليم، بطاقة الرفع وقائمة العمل الفارغة و«العارض» ظاهرون (docs/screenshots/v29-opens-clean-device.jpg).
+- ملاحظة: قائمة العمل فارغة (بيانات الموقع صُفّرت أثناء تجريب الأعطال) — «توليد ديمو» يعيد دراستي الاختبار.
+
+## v30 — فشل صامت → تشخيص مرئي + ذاكرة جلسة بديلة
+- بلاغ: «غير قادر على توليد ديمو أو تحميل ملفات» = tx() يرمي TypeError متزامنًا عند db=null (فشل فتح IndexedDB) فيُرفض وعدا seedDemo/ingestFiles بلا رسالة.
+- v30: memStudies بديل عند غياب DB (تحذير واضح أن البيانات غير دائمة)، catch مرئي لفشل openDb، try/catch حول ديمو/رفع، ومستمعا unhandledrejection/error يحوّلان أي خطأ مستقبلي إلى رسالة حمراء قابلة للتصوير ميدانيًا.
+
+## v31 — جذر «مازال»: init يموت متزامنًا + ديمو معطوب
+- سببان: (أ) indexedDB.open يرمي متزامنًا عند حجب التخزين (وضع خاص/إعدادات Chrome Beta) فيموت init قبل تسجيل أي مستمع = واجهة زومبي بلا رسائل؛ (ب) seedDemo كان يشير إلى متغير parsed غير المعرف في نطاقه (ReferenceError) منذ إدخال الفرز السياقي.
+- v31: مستمعا الأخطاء أول init، try/catch حول إقلاع التخزين، حرس داخل openDb (رفض نظيف إن غاب indexedDB)، وإصلاح ديمو بmeta صريحة {bodyPart:"CHEST"}.
+
+## v32 — استحالة الصمت: لافتة إقلاع تشخيصية
+- bootstrap immutable يبتلع استثناء init بلا رسالة (لا يوجد #splash في ui)؛ v32 يضيف div#splash في ui.v32 ليظهر نص فشل الاستيراد/الإقلاع هناك، ويغلّف init كاملًا بtry/catch مع لافتة حمراء ثابتة أعلى الشاشة تحمل مرحلة الإقلاع (rrai-boot-stage في localStorage) وسطر المكدس.
+- مراحل: error-listeners → storage-boot → viewer-listeners → upload-demo-listeners → setups → update-sw → ready؛ رسالة نجاح الديمو صارت خضراء «ديمو جاهز».
+
+## v34 — تحميل وحدات ديناميكي بإعادة محاولة (حصانة الشبكة المتقطعة)
+- بلاغا 22:25/22:35: «تعذر تشغيل الإصدار v32/v33» = استيراد ساكن لتسع وحدات دفعة واحدة؛ سقوط ملف واحد يقتل الإقلاع.
+- v34: app بلا استيرادات ساكنة؛ loadAllModules() داخل init يستورد كل وحدة بـ4 محاولات وتراجع زمني، والمرحلة module:<name> تُسمّي الوحدة المتعثرة في اللافتة؛ bootstrap يستورد ملفًا واحدًا فقط (احتمال نجاحه = احتمال نجاح ui الذي ينجح فعلًا).
+
+## ✅ جذر انهيارات v32–v34 مكتشف ومُصلح موضعياً في v34
+- سطر innerHTML في setupCompareUI حمل علامات-double غير مهربة → SyntaxError يلغي الوحدة كاملة عند الربط = «تعذر تشغيل الإصدار» المتكرر؛ أصلح موضعياً + تعارض اسم frameStats حُل بـcmpFrameStats.
+- الاختبار الساكن صار يفحص ربط الوحدة كما يفعله المتصفح (node --check على نسخة .mjs) — يمنع شحن وحدة معطوبة مستقبلاً.
+
+## v35 — تجاوز الكاش المسموم
+- SW القديم خزّن نسخة app.v34 المعطوبة لحظة أول فشل (put عند res.ok قبل فشل الربط) فصار يخدمها من الكاش — الإصلاح الموضعي لا يصل عبر نفس الرابط.
+- v35 بروابط جديدة كاملة (app/ui/وحدات) =_miss_ حتمي في الكاش القديم؛ وعند الإقلاع يسجّل SW v35 ويمسح كل الكاشات الأخرى (activate) فيُطهّر السم.
+- سُدد دين consult.v23: report.v35 يستورد consult.v35.
+
+## 2026-09-18 02:14–02:16 — v1.1 door 1 FIELD ACCEPTED (compare with prior study)
+Device: Android Chrome Beta, LTE mobile data (Wi-Fi blockade proxy bypassed), Vercel production.
+Flow witnessed on-device: full UI boot (bootstrap v2.5 fetch-then-blob over LTE) → «توليد ديمو»
+→ «ديمو جاهز: دراستان في القائمة.» (DEMO-0001 حرج 6 شرائح / DEMO-0002 روتيني 4) → viewer opens
+J2K-512 CR study → «مقارنة» → three-panel compare (الحالية / السابقة الأخرى / خريطة الفرق أحمر=ساخن)
++ stats line «مقارنة مع J2K-512: متوسط الفرق 0.154 والنقاط الساخنة 0.0% (عتبة 0.25 بعد التطبيع).»
++ slice slider (الشريحة) synced. Worklist badges حرج/استشارة/روتيني rendered.
+Evidence: docs/screenshots/v35-field-ui-worklist.jpg, v35-field-demo-ready.jpg, v35-field-ui-top2.jpg,
+v35-field-controls-import.jpg, v35-field-viewer-j2k.jpg, v35-field-compare-3panel.jpg (KEY),
+v35-field-worklist-after.jpg.
+Boot-chain root causes conquered this night (all reproduced on-device, all fixed):
+ (a) blockade intermediary returns 200 with empty/truncated bodies → payload exact char+byte+sha256
+     validation (integrity.v35.json) + reject&rotate; (b) intermediary caches per PATH ignoring query
+     strings → poisoned keys served forever → fresh path rewrites r1/r2/r3, x/y/z, d + project alias +
+     pinned-commit jsdelivr + allorigins wrap + 4KiB Range reassembly; (c) cached old bootstrap docs
+     (ب2.2) rejected PERFECT files due to codepoint-vs-UTF-16 length counting (astral 💾) → BMP-safe ui
+     (⚙) aligning all counters at 7302; (d) bootstrap page CSS restyled ui #splash into a full-screen
+     cover hiding a successfully booted app → v2.6 removes the overlay post-init + 90s init watchdog
+     naming the boot stage; (e) SW v35 now length-guards every cache put (no poisoned cache possible).
+Diagnostics page live at /d (reads rrai-boot-stage/error + SW list, rescue buttons).
+
+## 2026-09-18 02:32 — v1.1 door 1 CLINICALLY CLOSED: compare line inside signed PDF on device
+Signed PDF for DEMO-0001 opened on-phone (PDF viewer): letterhead, signed-report table
+(DEMO-0001 / CR / 6 شرائح / urgent-chest / توقيع 2026-09-17T23:30:09.772Z), Arabic draft containing
+«مقارنة مع DEMO-0002: متوسط فرق 0.049 ونقاط ساخنة 0.0%.», English section, clinical e-signature block
+«Dr abdullah Hagar — الترخيص 11010099622», Document SHA-256
+7e5fc5e3a9edced532997c1a8ddf7bd11712107470e1fe6d8e754d2dbd04faacc, disclaimer footer.
+Compare result therefore persists study.compare → AR report draft → signed PDF end-to-end on device.
+Evidence: docs/screenshots/v35-field-signed-pdf-compare-line.jpg.
+v1.1 door 1 status: DEPLOYED + FIELD ACCEPTED + CLINICALLY CLOSED (2026-09-18).
+
+## 2026-09-19 23:30 — v37 EN clinical-template Word export FIELD VERIFIED
+Device: Android WPS Office Lite, opened rrai-report-EN-*.docx generated on-device by v37.
+Rendered exactly per the hospital template requested by the user: navy centered
+"MEDICAL RADIOLOGY REPORT", demographics block (Patient Name/Sex/Age/Exam Date/Exam/
+Clinical Indication), blue TECHNIQUE/FINDINGS/IMPRESSION headings, shaded impression
+bullet box, right-aligned "Reported by:" block with name + "License: … — Consultant
+Radiologist", gray SHA-256 + signed-at + disclaimer footer. Placeholders "—" shown for
+DICOM tags absent in the source file (by design). Draft button auto-download + standalone
+"تصدير Word (قالب EN)" button both live since v37.
+Evidence: docs/screenshots/v37-field-en-template-wps.jpg.
