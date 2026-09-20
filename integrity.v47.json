@@ -1,0 +1,67 @@
+{
+  "build": "v47",
+  "pinned_commit": "7105e2b1d64302c93e5464893222b24f1e881ab2",
+  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@7105e2b1d64302c93e5464893222b24f1e881ab2/",
+  "files": {
+    "consult": {
+      "path": "consult.v47.js",
+      "chars": 5239,
+      "bytes": 5341,
+      "sha256": "729d62402ecb1ccc2959c7f55fc55f5141c5f088f4881bf8aa378bc565daf8ec"
+    },
+    "decode": {
+      "path": "codecs/decode.v47.js",
+      "chars": 5236,
+      "bytes": 5236,
+      "sha256": "f2b87411b1e3c14edc6b0815a16cb775dffccdffa078d946968db818e1f9abd2"
+    },
+    "dicom": {
+      "path": "dicom.v47.js",
+      "chars": 7420,
+      "bytes": 7420,
+      "sha256": "caa2012696c8af3e71e79644e205b939774b9d1913c7b4827b86b80df4d34438"
+    },
+    "triage": {
+      "path": "triage.v47.js",
+      "chars": 5206,
+      "bytes": 5542,
+      "sha256": "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"
+    },
+    "docx": {
+      "path": "docx.v47.js",
+      "chars": 17330,
+      "bytes": 17622,
+      "sha256": "e8c85cc7cd7502a202d0ed61436d3a8931c946ef5a58f804bac952ca9453dc66"
+    },
+    "measure": {
+      "path": "measure.v47.js",
+      "chars": 1650,
+      "bytes": 1652,
+      "sha256": "39044eae7274081becae2478481b4eace4ed9d8bfa5063e0d9c9513c33bd667f"
+    },
+    "compare": {
+      "path": "compare.v47.js",
+      "chars": 1442,
+      "bytes": 1444,
+      "sha256": "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"
+    },
+    "report": {
+      "path": "report.v47.js",
+      "chars": 8574,
+      "bytes": 9460,
+      "sha256": "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"
+    },
+    "app": {
+      "path": "app.v47.js",
+      "chars": 71830,
+      "bytes": 75812,
+      "sha256": "71bd3c5d6a71bc9328568fab37e93d6e7919c9cc5efa4b1ec15aa76cda0babed"
+    },
+    "ui": {
+      "path": "ui.v47.html",
+      "chars": 16925,
+      "bytes": 17780,
+      "sha256": "f088c30b53cf51eb8f0b58070bd1a4a7fcdfdf14e4b066eb51d6ba7df7fc3e3e"
+    }
+  }
+}

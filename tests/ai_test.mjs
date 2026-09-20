@@ -1,0 +1,10 @@
+import { aiRequestFor } from "../app.v47.js";
+let fails = 0;
+const ck = (c, n) => { if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
+const parts = [{ text: "prompt" }, { inline_data: { mime_type: "image/png", data: "QUJD" } }];
+const rq = aiRequestFor("AIza test key", "gemini-2.5-flash", parts);
+ck(rq.url.startsWith("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="), "url-model");
+ck(rq.url.includes("AIza%20test%20key"), "key-encoded");
+ck(rq.body.generationConfig.responseMimeType === "application/json", "json-mode");
+ck(rq.body.contents[0].parts.length === 2 && rq.body.contents[0].parts[1].inline_data.mime_type === "image/png", "multimodal-parts");
+console.log(fails ? "AI TEST FAIL " + fails : "AI TEST PASS (4)");
