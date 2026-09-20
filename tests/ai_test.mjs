@@ -1,4 +1,4 @@
-import { aiRequestFor } from "../app.v48.js";
+import { aiRequestFor, aiProviderForKey } from "../app.v49.js";
 let fails = 0;
 const ck = (c, n) => { if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
 const pay = { text: "prompt", images: ["QUJD"] };
@@ -13,4 +13,6 @@ ck(o.url === "https://openrouter.ai/api/v1/chat/completions" && o.headers["X-Tit
 const gm = aiRequestFor("gemini", "AIza z", "gemini-2.5-flash", pay);
 ck(gm.url.includes("generativelanguage.googleapis.com") && gm.url.includes("key=AIza%20z") && gm.body.contents[0].parts.length === 2, "gemini-native");
 ck(g.body.response_format.type === "json_object" && o.body.response_format.type === "json_object", "json-mode");
-console.log(fails ? "AI TEST FAIL " + fails : "AI TEST PASS (7)");
+ck(aiProviderForKey("gsk_abc") === "groq" && aiProviderForKey("sk-or-x") === "openrouter" && aiProviderForKey("AIza1") === "gemini", "key-shapes");
+ck(aiProviderForKey("sk-proj-JG4t") === "openai-unsupported" && aiProviderForKey("sk-plain") === "openai-unsupported", "openai-rejected");
+console.log(fails ? "AI TEST FAIL " + fails : "AI TEST PASS (9)");

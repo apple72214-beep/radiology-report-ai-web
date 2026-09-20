@@ -1,0 +1,67 @@
+{
+  "build": "v49",
+  "pinned_commit": "7105e2b1d64302c93e5464893222b24f1e881ab2",
+  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@7105e2b1d64302c93e5464893222b24f1e881ab2/",
+  "files": {
+    "consult": {
+      "path": "consult.v49.js",
+      "chars": 5239,
+      "bytes": 5341,
+      "sha256": "729d62402ecb1ccc2959c7f55fc55f5141c5f088f4881bf8aa378bc565daf8ec"
+    },
+    "decode": {
+      "path": "codecs/decode.v49.js",
+      "chars": 5236,
+      "bytes": 5236,
+      "sha256": "f2b87411b1e3c14edc6b0815a16cb775dffccdffa078d946968db818e1f9abd2"
+    },
+    "dicom": {
+      "path": "dicom.v49.js",
+      "chars": 7420,
+      "bytes": 7420,
+      "sha256": "caa2012696c8af3e71e79644e205b939774b9d1913c7b4827b86b80df4d34438"
+    },
+    "triage": {
+      "path": "triage.v49.js",
+      "chars": 5206,
+      "bytes": 5542,
+      "sha256": "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"
+    },
+    "docx": {
+      "path": "docx.v49.js",
+      "chars": 17404,
+      "bytes": 17696,
+      "sha256": "18131fc60b0b7223a0d4fadf6415c652d970a52ec8fd31823b49b2ec048de3c7"
+    },
+    "measure": {
+      "path": "measure.v49.js",
+      "chars": 1650,
+      "bytes": 1652,
+      "sha256": "39044eae7274081becae2478481b4eace4ed9d8bfa5063e0d9c9513c33bd667f"
+    },
+    "compare": {
+      "path": "compare.v49.js",
+      "chars": 1442,
+      "bytes": 1444,
+      "sha256": "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"
+    },
+    "report": {
+      "path": "report.v49.js",
+      "chars": 8574,
+      "bytes": 9460,
+      "sha256": "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"
+    },
+    "app": {
+      "path": "app.v49.js",
+      "chars": 75082,
+      "bytes": 79227,
+      "sha256": "52fcd6ad1ca7f4277cd7960dd4b81ce039a360399569fc3da2639e3984a76e82"
+    },
+    "ui": {
+      "path": "ui.v49.html",
+      "chars": 17547,
+      "bytes": 18492,
+      "sha256": "b0bf90794f445a11b23b162ed878c18802aa7acef2ea5d8becf85f81b3526fff"
+    }
+  }
+}

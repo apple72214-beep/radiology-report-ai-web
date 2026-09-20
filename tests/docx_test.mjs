@@ -1,5 +1,5 @@
-import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v48.js";
-import { signedDocHash } from "../report.v48.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v49.js";
+import { signedDocHash } from "../report.v49.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -38,7 +38,7 @@ enCheck(enTail.readUInt32LE(0) === 0x06054b50, "zip-eocd");
 if (enBuf.includes(Buffer.from("word/document.xml"))) console.log("PASS en-entries"); else { enFails++; console.log("FAIL en-entries"); }
 fails += enFails;
 fs.writeFileSync("/tmp/rrai-test-en.docx", enBytes);
-/* composer override assertions (v48) */
+/* composer override assertions (v49) */
 const comp = { exam: "MRI Lumbosacral Spine with IV Contrast", indication: "History of lumbar fixation 6 years ago.", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "The **conus medullaris** terminates at a normal level."], impression: ["Post-operative changes of lower lumbar laminectomy.", "No evidence of pseudomeningocele."] };
 const cBytes = buildDocxReportEn(study, draft, m, comp);
 const cXml = Buffer.from(cBytes).toString("utf8");
@@ -50,6 +50,10 @@ cCheck(cXml.includes("performed per the department standard protocol with intrav
 cCheck(cXml.includes("<w:b/>") && cXml.includes("lumbar spine</w:t>"), "bold-runs");
 cCheck(cXml.includes("• Post-operative changes of lower lumbar laminectomy.") && cXml.includes("• No evidence of pseudomeningocele."), "impression-bullets");
 cCheck(cXml.includes("this draft is not a diagnosis"), "disclaimer-kept");
+const compDup = { exam: "MR Study", indication: "", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "Post-operative changes are noted in the lower **lumbar spine**.", "Second line."], impression: ["Dup bullet.", "Dup bullet."] };
+const dXml = Buffer.from(buildDocxReportEn(study, draft, m, compDup)).toString("utf8");
+cCheck((dXml.match(/Post-operative changes are noted/g) || []).length === 1 && (dXml.match(/Dup bullet\./g) || []).length === 1, "dedupe-consecutive");
+fails += 0;
 fails += cFails;
-console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 template+6 composer)");
+console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 template+7 composer)");
 process.exit(fails ? 1 : 0);
