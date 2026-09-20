@@ -8,7 +8,7 @@ const build = JSON.parse(fs.readFileSync(path.join(root, "release.json"), "utf8"
 let fails = 0;
 const app = fs.readFileSync(path.join(root, `app.${build}.js`), "utf8");
 const ui = fs.readFileSync(path.join(root, `ui.${build}.html`), "utf8");
-const needIds = ["slice","preset","upload","files","demo","gen-report","report-ar","report-en","sign-row","signoff","signer","copy-report","clear-all","worklist","measure","zoom-reset","frame","sign-extra","signer-license","sign-export","sign-export-word","org-save","org-ar","org-en","print-root", "lang-toggle", "pacs-url", "pacs-pull", "pacs-dl", "pacs-dl-url", "lbl-dl-url", "pacs-dl-hint", "files-dir", "pick-dir", "pick-hint", "rep-exam", "rep-indication", "rep-findings", "rep-impression", "ai-key", "ai-gen", "ai-provider"];
+const needIds = ["slice","preset","upload","files","demo","gen-report","report-ar","report-en","sign-row","signoff","signer","copy-report","clear-all","worklist","measure","zoom-reset","frame","sign-extra","signer-license","sign-export","sign-export-word","org-save","org-ar","org-en","print-root", "lang-toggle", "pacs-url", "pacs-pull", "pacs-dl", "pacs-dl-url", "lbl-dl-url", "pacs-dl-hint", "files-dir", "pick-dir", "pick-hint", "rep-exam", "rep-indication", "rep-findings", "rep-impression", "ai-key", "ai-gen", "ai-provider", "rep-notes"];
 for (const id of needIds) {
   if (!ui.includes(`id="${id}"`)) { fails++; console.log("FAIL ui missing #" + id); }
   if (!app.includes(`$("${id}")`) && !app.includes(`#${id}`) && !app.includes(`"${id}":`)) { fails++; console.log("FAIL app never refs #" + id); }

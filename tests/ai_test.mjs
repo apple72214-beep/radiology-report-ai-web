@@ -1,4 +1,4 @@
-import { aiRequestFor, aiProviderForKey } from "../app.v50.js";
+import { aiRequestFor, aiProviderForKey, aiPromptText } from "../app.v51.js";
 let fails = 0;
 const ck = (c, n) => { if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
 const pay = { text: "prompt", images: ["QUJD"] };
@@ -15,4 +15,8 @@ ck(gm.url.includes("generativelanguage.googleapis.com") && gm.url.includes("key=
 ck(g.body.response_format.type === "json_object" && o.body.response_format.type === "json_object", "json-mode");
 ck(aiProviderForKey("gsk_abc") === "groq" && aiProviderForKey("sk-or-x") === "openrouter" && aiProviderForKey("AIza1") === "gemini", "key-shapes");
 ck(aiProviderForKey("sk-proj-JG4t") === "openai-unsupported" && aiProviderForKey("sk-plain") === "openai-unsupported", "openai-rejected");
-console.log(fails ? "AI TEST FAIL " + fails : "AI TEST PASS (9)");
+const stN = { modality: "MR", frames: [1], meta: {}, report: { notes: "post-op lumbar fixation 6y, LBP + right radiculopathy" }, triage: { score: 0.001, priority: "routine", context: "unknown", reasons: [] } };
+const pt = aiPromptText(stN);
+ck(pt.includes("RAW CLINICAL NOTES") && pt.includes("post-op lumbar fixation 6y"), "notes-in-prompt");
+ck(pt.includes("<anat></anat>") && pt.includes("do not repeat any finding"), "prompt-rules");
+console.log(fails ? "AI TEST FAIL " + fails : "AI TEST PASS (11)");
