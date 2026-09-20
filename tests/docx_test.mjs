@@ -1,5 +1,5 @@
-import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v45.js";
-import { signedDocHash } from "../report.v45.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v46.js";
+import { signedDocHash } from "../report.v46.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -38,5 +38,18 @@ enCheck(enTail.readUInt32LE(0) === 0x06054b50, "zip-eocd");
 if (enBuf.includes(Buffer.from("word/document.xml"))) console.log("PASS en-entries"); else { enFails++; console.log("FAIL en-entries"); }
 fails += enFails;
 fs.writeFileSync("/tmp/rrai-test-en.docx", enBytes);
-console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 EN template)");
+/* composer override assertions (v46) */
+const comp = { exam: "MRI Lumbosacral Spine with IV Contrast", indication: "History of lumbar fixation 6 years ago.", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "The **conus medullaris** terminates at a normal level."], impression: ["Post-operative changes of lower lumbar laminectomy.", "No evidence of pseudomeningocele."] };
+const cBytes = buildDocxReportEn(study, draft, m, comp);
+const cXml = Buffer.from(cBytes).toString("utf8");
+let cFails = 0;
+const cCheck = (cond, name) => { if (cond) console.log("PASS comp-" + name); else { cFails++; console.log("FAIL comp-" + name); } };
+cCheck(cXml.includes("Exam: MRI Lumbosacral Spine with IV Contrast"), "exam");
+cCheck(cXml.includes("Clinical Indication: History of lumbar fixation 6 years ago."), "indication");
+cCheck(cXml.includes("performed per the department standard protocol with intravenous contrast."), "technique-contrast");
+cCheck(cXml.includes("<w:b/>") && cXml.includes("lumbar spine</w:t>"), "bold-runs");
+cCheck(cXml.includes("• Post-operative changes of lower lumbar laminectomy.") && cXml.includes("• No evidence of pseudomeningocele."), "impression-bullets");
+cCheck(cXml.includes("this draft is not a diagnosis"), "disclaimer-kept");
+fails += cFails;
+console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 template+6 composer)");
 process.exit(fails ? 1 : 0);
