@@ -1,4 +1,4 @@
-import { triage, detectContext } from "../triage.v47.js";
+import { triage, detectContext } from "../triage.v48.js";
 const W = 256, H = 256;
 const gray = (fn) => { const data = new Uint8Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) data[y * W + x] = fn(x, y); return { kind: "gray", w: W, h: H, data }; };
 const R = 128;
