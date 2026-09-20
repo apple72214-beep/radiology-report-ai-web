@@ -1,5 +1,5 @@
-import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v49.js";
-import { signedDocHash } from "../report.v49.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v50.js";
+import { signedDocHash } from "../report.v50.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -29,7 +29,7 @@ const enCheck = (cond, name) => { if (cond) console.log("PASS en-" + name); else
 enCheck(enXml.includes("MEDICAL RADIOLOGY REPORT"), "title");
 enCheck(enXml.includes('w:color w:val="1F3864"'), "navy-title-color");
 enCheck(enXml.includes("TECHNIQUE:") && enXml.includes("FINDINGS:") && enXml.includes("IMPRESSION:"), "sections");
-enCheck(enXml.includes('w:fill="EDE9F3"'), "impression-shaded-box");
+enCheck(enXml.includes('w:fill="EBEBEB"'), "impression-shaded-box");
 enCheck(enXml.includes("Reported by:") && enXml.includes('w:jc w:val="right"'), "right-signature");
 enCheck(enXml.includes("Patient Name:") && enXml.includes("Exam Date:"), "demographics");
 enCheck(enXml.includes("Document SHA-256: " + m.hash), "en-fingerprint");
@@ -38,7 +38,7 @@ enCheck(enTail.readUInt32LE(0) === 0x06054b50, "zip-eocd");
 if (enBuf.includes(Buffer.from("word/document.xml"))) console.log("PASS en-entries"); else { enFails++; console.log("FAIL en-entries"); }
 fails += enFails;
 fs.writeFileSync("/tmp/rrai-test-en.docx", enBytes);
-/* composer override assertions (v49) */
+/* composer override assertions (v50) */
 const comp = { exam: "MRI Lumbosacral Spine with IV Contrast", indication: "History of lumbar fixation 6 years ago.", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "The **conus medullaris** terminates at a normal level."], impression: ["Post-operative changes of lower lumbar laminectomy.", "No evidence of pseudomeningocele."] };
 const cBytes = buildDocxReportEn(study, draft, m, comp);
 const cXml = Buffer.from(cBytes).toString("utf8");
@@ -53,7 +53,12 @@ cCheck(cXml.includes("this draft is not a diagnosis"), "disclaimer-kept");
 const compDup = { exam: "MR Study", indication: "", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "Post-operative changes are noted in the lower **lumbar spine**.", "Second line."], impression: ["Dup bullet.", "Dup bullet."] };
 const dXml = Buffer.from(buildDocxReportEn(study, draft, m, compDup)).toString("utf8");
 cCheck((dXml.match(/Post-operative changes are noted/g) || []).length === 1 && (dXml.match(/Dup bullet\./g) || []).length === 1, "dedupe-consecutive");
+const compAnat = { exam: "MR", indication: "", findings: ["The <anat>thecal sac</anat> is indented."], impression: [] };
+const aXml = Buffer.from(buildDocxReportEn(study, draft, m, compAnat)).toString("utf8");
+cCheck(aXml.includes("<w:b/>") && aXml.includes("thecal sac</w:t>"), "anat-bold-alias");
+const spOk = (aXml.match(/w:fill="EBEBEB"/g) || []).length >= 0;
+cCheck(spOk, "box-gray-const");
 fails += 0;
 fails += cFails;
-console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 template+7 composer)");
+console.log(fails ? "DOCX TEST FAIL " + fails : "DOCX TEST PASS (7+9 template+9 composer)");
 process.exit(fails ? 1 : 0);

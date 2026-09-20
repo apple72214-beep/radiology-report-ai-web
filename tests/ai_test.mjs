@@ -1,4 +1,4 @@
-import { aiRequestFor, aiProviderForKey } from "../app.v49.js";
+import { aiRequestFor, aiProviderForKey } from "../app.v50.js";
 let fails = 0;
 const ck = (c, n) => { if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
 const pay = { text: "prompt", images: ["QUJD"] };
