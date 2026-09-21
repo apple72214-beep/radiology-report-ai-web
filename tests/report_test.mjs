@@ -1,4 +1,4 @@
-import { buildSignedDocument } from "../report.v51.js";
+import { buildSignedDocument } from "../report.v52.js";
 const study = { uid: "S1", patient: "P1", modality: "CT", frames: [{}], triage: { context: "chest", priority: "routine", reasons: ["x"] }, consultLog: [] };
 const draft = { ar: "نص التقرير", en: "report text" };
 const opts = { signer: "د. أحمد", license: "Y-123", at: "2026-09-17T00:00:00Z", org: { ar: "مستشفى الثورة", en: "Al-Thawra Hospital" } };

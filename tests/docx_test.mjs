@@ -1,5 +1,5 @@
-import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v51.js";
-import { signedDocHash } from "../report.v51.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v52.js";
+import { signedDocHash } from "../report.v52.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -38,7 +38,7 @@ enCheck(enTail.readUInt32LE(0) === 0x06054b50, "zip-eocd");
 if (enBuf.includes(Buffer.from("word/document.xml"))) console.log("PASS en-entries"); else { enFails++; console.log("FAIL en-entries"); }
 fails += enFails;
 fs.writeFileSync("/tmp/rrai-test-en.docx", enBytes);
-/* composer override assertions (v51) */
+/* composer override assertions (v52) */
 const comp = { exam: "MRI Lumbosacral Spine with IV Contrast", indication: "History of lumbar fixation 6 years ago.", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "The **conus medullaris** terminates at a normal level."], impression: ["Post-operative changes of lower lumbar laminectomy.", "No evidence of pseudomeningocele."] };
 const cBytes = buildDocxReportEn(study, draft, m, comp);
 const cXml = Buffer.from(cBytes).toString("utf8");
