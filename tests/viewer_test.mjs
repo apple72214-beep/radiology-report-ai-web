@@ -1,4 +1,4 @@
-import { drawFrame } from "../app.v56.js";
+import { drawFrame } from "../app.v57.js";
 let fails = 0;
 const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
 function fakeCanvas() {
@@ -17,7 +17,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v56.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v57.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -27,8 +27,8 @@ ck(src.includes("if (ov.width !== f0.w)"), "overlay resize guarded");
 ck(!src.includes("vpR.addEventListener"), "conflicting dblclick listener removed");
 ck(src.includes("if (vk <= 1.01) { vx = 0; vy = 0; }"), "no floating pan offset below zoom 1");
 ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
-ck(src.includes("• v56"), "build tag in meta line");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v56.html", import.meta.url), "utf-8"));
+ck(src.includes("• v57"), "build tag in meta line");
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v57.html", import.meta.url), "utf-8"));
 ck(!ui.includes("image-rendering:pixelated"), "nearest-neighbor shimmer removed from viewer");
 ck(src.includes("cv.style.width = Math.round(f.w * fitK)"), "explicit fit width (no layout/scale mismatch crop)");
 ck(ui.includes("transform-origin:center"), "center-origin user zoom (symmetric crop)");
