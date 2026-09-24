@@ -55,18 +55,6 @@
   ],
   "rewrites": [
     {
-      "source": "/r1/:path*",
-      "destination": "/:path*"
-    },
-    {
-      "source": "/r2/:path*",
-      "destination": "/:path*"
-    },
-    {
-      "source": "/r3/:path*",
-      "destination": "/:path*"
-    },
-    {
       "source": "/x",
       "destination": "/start.html"
     },
@@ -97,6 +85,32 @@
     {
       "source": "/t",
       "destination": "/start.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/r1/",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/r2/",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/r3/",
+      "destination": "/start.html"
+    },
+    {
+      "source": "/r1/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r2/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r3/:path*",
+      "destination": "/:path*"
     }
   ]
 }
