@@ -1,0 +1,182 @@
+
+<div id="splash" style="color:#fca5a5;padding:.5rem 1rem;font-size:.9rem;"></div><style>
+      :root { --bg:#0f172a; --panel:#1e293b; --line:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#34d399; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; background:var(--bg); color:var(--text); }
+      header { display:flex; align-items:baseline; gap:.8rem; padding:1rem 1.4rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+      header h1 { font-size:1.15rem; margin:0; }
+      header span { color:var(--muted); font-size:.8rem; }
+      main { display:grid; grid-template-columns:minmax(280px,400px) 1fr; gap:1rem; padding:1rem 1.4rem; }
+      @media (max-width:820px){ main { grid-template-columns:1fr; } }
+      section { background:var(--panel); border:1px solid var(--line); border-radius:.6rem; padding:1rem; }
+      h2 { font-size:.95rem; margin:0 0 .8rem; color:var(--accent); }
+      button, select, input[type=file] { font:inherit; }
+      button { background:var(--accent); color:#082f49; border:0; border-radius:.4rem; padding:.45rem .9rem; cursor:pointer; font-weight:600; }
+      button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+      table { width:100%; border-collapse:collapse; font-size:.85rem; }
+      th, td { text-align:right; padding:.4rem .3rem; border-bottom:1px solid var(--line); }
+      th { color:var(--muted); font-weight:500; }
+      .badge { padding:.1rem .55rem; border-radius:1rem; font-size:.72rem; font-weight:600; }
+      .badge.urgent { background:#7f1d1d; color:#fecaca; }
+      .badge.routine { background:#14532d; color:#bbf7d0; }
+      .viewer { display:flex; flex-direction:column; gap:.7rem; align-items:center; }
+      .viewer canvas { max-width:100%; background:#000; border-radius:.4rem;  }
+      .controls { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; justify-content:center; color:var(--muted); font-size:.85rem; }
+      input[type=range] { width:min(320px,70vw); accent-color:var(--accent); }
+      .meta { color:var(--muted); font-size:.8rem; text-align:center; }
+      .empty { color:var(--muted); font-size:.85rem; text-align:center; padding:1.5rem 0; }
+      .hint { color:var(--muted); font-size:.72rem; }
+    .treason{font-size:.65rem;color:#94a3b8;margin-top:.2rem;max-width:10rem;line-height:1.3;}
+.badge.consult{background:#0ea5e9;}
+#print-root{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #print-root,#print-root *{visibility:visible;}
+  #print-root{display:block !important;position:absolute;inset:0;width:100%;}
+}
+#viewer-card:fullscreen { overflow:hidden; background:#000; padding:0; max-width:none; display:flex; flex-direction:column; justify-content:flex-end; gap:0; align-items:stretch; }
+#viewer-card:fullscreen #viewport { position:absolute; inset:0; width:100%; height:100%; border-radius:0; }
+#viewer-card:fullscreen h2, #viewer-card:fullscreen p { display:none; }
+#viewer-card:fullscreen .controls { position:relative; z-index:5; background:rgba(15,23,42,.85); margin:0; padding:.35rem .6rem; transition:opacity .25s; }
+#viewer-card:fullscreen.fs-hide .controls { opacity:0; pointer-events:none; }
+.fs-fake { position:fixed !important; inset:0 !important; z-index:60; overflow:hidden !important; background:#000; margin:0 !important; max-width:none !important; padding:0; border-radius:0 !important; display:flex !important; flex-direction:column !important; justify-content:flex-end; gap:0; align-items:stretch; }
+.fs-fake #viewport { position:absolute !important; inset:0; width:100%; height:100%; }
+.fs-fake h2, .fs-fake p { display:none; }
+.fs-fake .controls { position:relative; z-index:5; background:rgba(15,23,42,.85); margin:0; padding:.35rem .6rem; transition:opacity .25s; }
+.fs-fake.fs-hide .controls { opacity:0; pointer-events:none; }
+</style>
+<header>
+      <h1>Radiology report AI <button id="lang-toggle" class="ghost" style="font-size:.7rem;padding:.2rem .6rem;">EN</button></h1>
+      <span id="subtitle">نسخة المتصفح — تعمل Offline بالكامل، بياناتك تبقى على جهازك</span>
+    </header>
+    <p id="update-banner" class="hint" style="display:none; color:#fcd34d; padding:0 1.4rem;"></p>
+    <main>
+      <section>
+        <h2 id="h-upload">رفع دراسات DICOM</h2>
+        <input id="files" type="file" multiple />
+        <input id="files-dir" type="file" webkitdirectory directory multiple style="display:none;" />
+        <p style="margin:.3rem 0 .3rem;"><button id="pick-dir" class="ghost">اختيار مجلد DICOM كامل بدل اختيار الملفات واحدًا واحدًا</button></p>
+        <p class="hint" id="pick-hint" style="margin:0 0 .6rem;"></p>
+        <p>
+          <button id="upload">رفع وتحليل</button>
+          <button id="demo" class="ghost">توليد ديمو</button>
+        </p>
+        <p class="hint" id="ingest-status"></p>
+        <details id="pacs-set" style="margin:1rem 0;">
+        <summary id="pacs-sum" style="cursor:pointer;opacity:.85;">سحب من PACS (DICOMweb)</summary>
+        <p style="margin:.6rem 0 .3rem;"><input id="pacs-url" type="text" placeholder="https://pacs.hospital.local/dicom-web" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+        <p style="margin:.3rem 0 .6rem;"><input id="pacs-q" type="text" placeholder="معرف المريض (اختياري)" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+        <p style="margin:.6rem 0 .3rem;"><label id="lbl-dl-url" for="pacs-dl-url" style="opacity:.85;">رابط التنزيل (WeTransfer / ZIP / DICOM)</label></p>
+        <p style="margin:.3rem 0 .6rem;"><input id="pacs-dl-url" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://we.tl/t-… أو https://…/study.zip أو https://…/study.dcm" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+        <button id="pacs-pull" class="ghost">سحب أول دراسة مطابقة</button>
+        <button id="pacs-dl" class="ghost" style="margin-inline-start:.5rem;">سحب من رابط تنزيل (WeTransfer/ZIP/DICOM)</button>
+        <p class="hint" id="pacs-status"></p>
+        <p class="hint" id="pacs-dl-hint"></p>
+      </details>
+      <h2 id="h-worklist">قائمة العمل (الحرج أولًا)</h2>
+        <table id="worklist">
+          <thead><tr><th id="th-patient">المريض</th><th id="th-mod">النوع</th><th id="th-pri">الأولوية</th><th id="th-slices">الشرائح</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty" id="empty">لا توجد دراسات — ارفع DICOM أو اضغط "توليد ديمو".</p>
+        <p><button id="clear-all" class="ghost">تفريغ القائمة من الجهاز</button></p>
+        <p class="hint" id="hint-main">⚙ كل المعالجة تحدث داخل متصفحك: لا سيرفر، لا إنترنت مطلوب بعد التثبيت، ولا بيانات تغادر جهازك. من قائمة المتصفح ⋮ ← "إضافة إلى الشاشة الرئيسية" لتثبيتها كتطبيق.</p>
+      </section>
+      <section class="viewer" id="viewer-card">
+        <h2 id="h-viewer">العارض</h2>
+        <div id="viewport" style="display:none; position:relative; overflow:hidden; width:100%; background:#000; border-radius:.4rem; touch-action:none;">
+          <div id="vwrap" style="transform-origin:center; position:relative; width:max-content; margin:0 auto;">
+            <canvas id="frame" style="display:none; "></canvas>
+            <canvas id="overlay" style="position:absolute; inset:0; pointer-events:none;"></canvas>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="zoom-reset" class="ghost">ملاءمة</button>
+          <span id="zscale" class="meta" style="margin-inline-start:.5rem"></span>
+          <button id="fs-toggle" class="ghost">ملء الشاشة</button>
+          <button id="measure" class="ghost">قياس</button>
+          <span id="measure-out"></span>
+        </div>
+        <div class="controls">
+          <label id="lbl-slice">الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
+          <label>النافذة:
+            <select id="preset">
+              <option value="auto">تلقائي</option>
+              <option value="lung">رئة</option>
+              <option value="mediastinum">منصف</option>
+              <option value="bone">عظم</option>
+            </select>
+          </label>
+        </div>
+        <p class="meta" id="meta"></p>
+        <p><button id="gen-report" class="ghost">توليد مسودة التقرير (ع/EN)</button></p>
+        <details id="composer-set" style="margin:1rem 0;">
+          <summary id="composer-sum" style="cursor:pointer;opacity:.85;">تأليف التقرير التشخيصي (نمط تقرير المستشفى)</summary>
+          <p style="margin:.6rem 0 .3rem;"><label id="lbl-ai-provider" for="ai-provider" style="opacity:.85;">المزوّد (كلها بلا بطاقة ائتمان)</label></p>
+          <p style="margin:.3rem 0 .3rem;"><select id="ai-provider" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;">
+            <option value="groq">Groq — مجاني بلا بطاقة (افتراضي)</option>
+            <option value="openrouter">OpenRouter — نماذج :free بلا بطاقة</option>
+            <option value="gemini">Google Gemini — إن قبل حسابك التسجيل بلا فوترة</option>
+            <option value="server">سيرفر المؤسسة (Vercel) — المفتاح عند القسم لا على الجهاز</option>
+          </select></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-ai-key" for="ai-key" style="opacity:.85;">مفتاح API (يُحفظ على جهازك فقط)</label></p>
+          <p style="margin:.3rem 0 .3rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+            <input id="ai-key" type="password" autocomplete="off" placeholder="gsk_… (Groq) أو sk-or-… (OpenRouter) أو AIza… (Gemini)" style="flex:1; min-width:12rem; padding:.5rem; border-radius:.4rem; border:1px solid #334155; background:#0b1220; color:#e2e8f0;" />
+            <button id="ai-gen" class="ghost">توليد بمساعدة AI (مسودة للمراجعة)</button>
+          </p>
+          <p class="hint" id="ai-hint"></p>
+          <p style="margin:.6rem 0 .3rem;"><label id="lbl-rep-exam" for="rep-exam" style="opacity:.85;">اسم الفحص (Exam)</label></p>
+          <p style="margin:.3rem 0 .6rem;"><input id="rep-exam" type="text" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-indication" for="rep-indication" style="opacity:.85;">الدلالة السريرية (Clinical Indication)</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-indication" rows="2" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"></textarea></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-notes" for="rep-notes" style="opacity:.85;">ملاحظات خام / إملاء (مصدر أولي للتحويل إلى تقرير)</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-notes" rows="3" placeholder="مثال: مريض بعد تثبيت قطني قبل 6 سنوات، ألم أسفل الظهر مع اعتلال جذري أيمن…" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"></textarea></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-findings" for="rep-findings" style="opacity:.85;">الوصف (FINDINGS) — سطر لكل جملة</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-findings" rows="6" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;"></textarea></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-impression" for="rep-impression" style="opacity:.85;">الانطباع (IMPRESSION) — سطر لكل نقطة</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-impression" rows="4" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;"></textarea></p>
+          <details id="bank-set" style="margin:.6rem 0;">
+            <summary id="bank-sum" style="cursor:pointer;opacity:.85;">بنك الصياغات المهنية — اضغط الجملة لإدراجها</summary>
+            <p style="margin:.5rem 0 .3rem;opacity:.7;">MRI العمود الفقري القطني / ما بعد الجراحة:</p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="Post-operative changes are noted in the lower **lumbar spine**, consistent with previous laminectomy and posterior instrumentation (pedicle screws/rods) at the L4–L5–S1 levels, associated with susceptibility artifacts." style="white-space:normal;text-align:left;direction:ltr;">Post-operative changes … laminectomy and posterior instrumentation (L4–L5–S1) with susceptibility artifacts.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="Evaluation of all lumbar **intervertebral discs** reveals multi-level disc desiccation (loss of normal T2 hyperintense signal)." style="white-space:normal;text-align:left;direction:ltr;">Multi-level lumbar disc desiccation (loss of normal T2 signal).</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="At the L4–L5 and L5–S1 levels, there are residual posterior **disc bulges** indenting the ventral **thecal sac**." style="white-space:normal;text-align:left;direction:ltr;">Residual posterior disc bulges indenting the ventral thecal sac (L4–L5, L5–S1).</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="Enhancing **epidural fibrosis**/scar tissue is noted at the surgical bed, wrapping around the **nerve roots** and contributing to **neural foraminal narrowing**." style="white-space:normal;text-align:left;direction:ltr;">Enhancing epidural fibrosis at the surgical bed with neural foraminal narrowing.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="The **conus medullaris** terminates at a normal level and shows no abnormal signal." style="white-space:normal;text-align:left;direction:ltr;">Conus medullaris normal in level and signal.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="The posterior **paraspinal soft tissues** are unremarkable; there is no evidence of a post-operative fluid collection, seroma, or pseudomeningocele." style="white-space:normal;text-align:left;direction:ltr;">Paraspinal soft tissues unremarkable; no fluid collection/seroma/pseudomeningocele.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="i" data-sent="Post-operative changes of lower lumbar laminectomy and posterior fixation (L4–S1) with enhancing epidural fibrosis at the surgical bed." style="white-space:normal;text-align:left;direction:ltr;">IMPRESSION: post-op changes + enhancing epidural fibrosis.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="i" data-sent="No evidence of post-operative fluid collection or pseudomeningocele." style="white-space:normal;text-align:left;direction:ltr;">IMPRESSION: no fluid collection or pseudomeningocele.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="i" data-sent="Multi-level lumbar **disc** desiccation with residual posterior **disc bulges** at the L4–L5 and L5–S1 levels." style="white-space:normal;text-align:left;direction:ltr;">IMPRESSION: multi-level desiccation + residual disc bulges.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="i" data-sent="Given the clinical presentation, the differential diagnosis (DDx) primarily includes recurrent/residual mechanical discogenic pain versus radiculopathy secondary to the prominent epidural fibrosis. Clinical correlation is recommended." style="white-space:normal;text-align:left;direction:ltr;">IMPRESSION: DDx discogenic pain vs radiculopathy; clinical correlation.</button></p>
+            <p style="margin:.5rem 0 .3rem;opacity:.7;">عام / طبيعي:</p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="No focal lesion, abnormal signal intensity, or mass effect is identified." style="white-space:normal;text-align:left;direction:ltr;">No focal lesion / abnormal signal / mass effect.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="i" data-sent="Unremarkable study; no acute abnormality identified." style="white-space:normal;text-align:left;direction:ltr;">IMPRESSION: unremarkable; no acute abnormality.</button></p>
+            <p style="margin:.5rem 0 .3rem;opacity:.7;">صدر (CXR):</p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="f" data-sent="The **lungs** are clear with no focal consolidation, mass, or pleural effusion. The **cardiomediastinal silhouette** is within normal limits." style="white-space:normal;text-align:left;direction:ltr;">Lungs clear; cardiomediastinal silhouette normal.</button></p>
+            <p style="margin:0 0 .3rem;"><button class="ghost" data-bank="i" data-sent="No acute cardiopulmonary process." style="white-space:normal;text-align:left;direction:ltr;">IMPRESSION: no acute cardiopulmonary process.</button></p>
+          </details>
+          <p class="hint" id="composer-hint"></p>
+        </details>
+        <pre id="report-ar" style="display:none; white-space:pre-wrap; text-align:right; color:var(--text); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.82rem;"></pre>
+        <pre id="report-en" style="display:none; white-space:pre-wrap; text-align:left; direction:ltr; color:var(--muted); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.78rem;"></pre>
+        <p class="controls" id="sign-row" style="display:none">
+          <label><input type="checkbox" id="signoff" /> اعتماد مراجعة الأخصائي</label>
+          <input id="signer" placeholder="اسم الأخصائي" style="background:#0b1220; color:var(--text); border:1px solid var(--line); border-radius:.4rem; padding:.3rem .5rem;" />
+          <button id="copy-report" class="ghost">نسخ المسودة</button>
+        </p>
+      </section>
+    </main>
+<div id="sign-extra" style="display:none;margin-top:.6rem;gap:.5rem;flex-wrap:wrap;align-items:center;">
+  <input id="signer-license" placeholder="رقم الترخيص/النقابة" style="flex:1;min-width:10rem;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:.4rem;padding:.3rem .5rem;" />
+  <button id="sign-export" class="primary">توقيع وتصدير PDF</button>
+  <button id="sign-export-word" class="ghost">توقيع وتصدير Word</button>
+  <details id="org-set" style="width:100%;">
+    <summary id="org-sum" style="cursor:pointer;opacity:.85;">إعدادات ترويسة المؤسسة</summary>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;">
+      <input id="org-ar" placeholder="اسم المستشفى (عربي)" style="flex:1;min-width:9rem;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:.4rem;padding:.3rem .5rem;" />
+      <input id="org-en" placeholder="Hospital name (EN)" dir="ltr" style="flex:1;min-width:9rem;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:.4rem;padding:.3rem .5rem;" />
+      <button id="org-save" class="ghost">حفظ الترويسة</button>
+    </div>
+  </details>
+</div>
+<div id="print-root"></div>
