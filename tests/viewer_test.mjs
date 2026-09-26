@@ -1,4 +1,4 @@
-import { drawFrame } from "../app.v69.js";
+import { drawFrame } from "../app.v70.js";
 let fails = 0;
 const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
 function fakeCanvas() {
@@ -17,7 +17,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v69.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v70.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -30,9 +30,9 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v69.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v70.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
-ck(sws.includes("app.v69.js"), "SW precache list matches current build");
+ck(sws.includes("app.v70.js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
 ck(!src.includes("for (const fr of current.frames) { if (fr.w > maxW)"), "no series-wide scaling (was shrinking mixed-dim slices)");
 ck(src.includes("function releaseWatch()"), "stale tabs auto-reload via release watchdog");
@@ -46,6 +46,9 @@ ck(src.includes("Math.min(cw / (f.w || 1), chh / (f.h || 1))"), "fullscreen CONT
 ck(src.includes("function fsArm()") && !src.includes("fsBarShow(false); }, 3000)"), "fullscreen controls stay visible (no auto-hide)");
 ck(src.includes("qwen/qwen3.8-27b"), "groq list uses live Sep-2026 free models (retired llama ids removed)");
 ck(src.includes("new AbortController()"), "AI requests time out at 45s instead of hanging");
+ck(src.includes("const provName = provider === \"groq\" ? \"Groq\""), "consent dialog names the ACTUAL provider (no stale Gemini wording)");
+ck(!src.includes("to Google Gemini for this one request?"), "hardcoded Gemini consent text removed");
+ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance points to card-free Groq");
 ck(src.includes("function clampPan()"), "drag pan clamped so image cannot be lost");
 ck(src.includes("vk <= 1.01 && fsNow()"), "vertical swipe scrolls slices inside fullscreen");
 ck(src.includes("let pinch0 = 0, k0 = 1, moved = false, swAccum = 0;"), "swipe accumulator reset per gesture");
@@ -54,7 +57,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v69.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v70.html", import.meta.url), "utf-8"));
 ck(ui.includes('id="zoom-reset" class="ghost">\u0645\u0644\u0627\u0621\u0645\u0629</button>'), "fit button labeled clearly (was cryptic 1:1)");
 ck(ui.includes('id="zscale"'), "live zoom scale indicator present");
 ck(ui.includes('id="fs-toggle"'), "fullscreen button present in viewer controls");
@@ -68,4 +71,4 @@ ck(src.includes("cv.style.width = Math.round(f.w * fitK)"), "explicit fit width 
 ck(ui.includes("transform-origin:center"), "center-origin user zoom (symmetric crop)");
 ck(src.includes("const Ox = r.width / (2 * vk)"), "centroid anchor for center origin");
 ck(src.includes("const s = (f0 && r.width / f0.w) || vk"), "measure math uses true display scale");
-console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (56)");
+console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (59)");
