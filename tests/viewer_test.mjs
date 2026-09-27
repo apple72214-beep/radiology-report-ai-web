@@ -1,4 +1,4 @@
-import { drawFrame } from "../app.v76.js";
+import { drawFrame } from "../app.v77.js";
 let fails = 0;
 const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
 function fakeCanvas() {
@@ -17,7 +17,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v76.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v77.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -30,9 +30,9 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v76.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v77.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
-ck(sws.includes("app.v76.js"), "SW precache list matches current build");
+ck(sws.includes("app.v77.js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
 ck(!src.includes("for (const fr of current.frames) { if (fr.w > maxW)"), "no series-wide scaling (was shrinking mixed-dim slices)");
 ck(src.includes("function releaseWatch()"), "stale tabs auto-reload via release watchdog");
@@ -52,7 +52,7 @@ ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance
 ck(src.includes("You are a CONSULTANT RADIOLOGIST assistant"), "prompt demands consultant-grade structured draft");
 ck(src.includes("c.toDataURL(\"image/jpeg\", 0.9)"), "renders sent at 768px JPEG (sharper vision input)");
 ck(src.includes("technique: String(obj.technique || \"\").trim()"), "AI technique stored with the report");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v76.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v77.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
 ck(src.includes("fileToJpegB64") && src.includes(".concat(aiExtraImgs).slice(0, 5)"), "physician screenshots join the request (max 5 images)");
 ck(src.includes("attached screenshot(s)"), "consent names attached screenshots");
 ck(src.includes("EQUAL weight to the slice renders"), "prompt gives attached screenshots primary-evidence weight");
@@ -66,7 +66,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v76.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v77.html", import.meta.url), "utf-8"));
 const startHtml = (await import("node:fs")).readFileSync(new URL("../start.html", import.meta.url), "utf-8");
 ck(startHtml.includes("ev.persisted") && startHtml.includes("rrai-sw-updated"), "bootstrap reloads on bfcache restore and on SW update");
 ck(src.includes("if (useImages && !cfg.vision[model]) continue;"), "images never silently dropped: text-only models skipped while images pending");
@@ -77,6 +77,7 @@ ck(src.includes("or any adequacy comment anywhere including IMPRESSION"), "promp
 ck(src.includes("while (totalB64 > 3500000 && images.length > 3)"), "oversized payloads shed extra screenshots before sending");
 ck(src.includes("سبب الفشل: "), "blind fallback shows the actual vision failure reason");
 ck(src.includes("prefillComposer(current);\n    renderBank(current);"), "phrase bank populated at boot for restored study");
+ck(src.includes(") + \" — \" + APP_BUILD;"), "bank header shows region + build marker for field proof");
 ck(ui.includes("id=\"ai-extra\"") && ui.includes("id=\"ai-extra-count\""), "UI exposes the extra-screenshot input");
 ck(ui.includes('id="zoom-reset" class="ghost">\u0645\u0644\u0627\u0621\u0645\u0629</button>'), "fit button labeled clearly (was cryptic 1:1)");
 ck(ui.includes('id="zscale"'), "live zoom scale indicator present");
@@ -91,4 +92,4 @@ ck(src.includes("cv.style.width = Math.round(f.w * fitK)"), "explicit fit width 
 ck(ui.includes("transform-origin:center"), "center-origin user zoom (symmetric crop)");
 ck(src.includes("const Ox = r.width / (2 * vk)"), "centroid anchor for center origin");
 ck(src.includes("const s = (f0 && r.width / f0.w) || vk"), "measure math uses true display scale");
-console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (78)");
+console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (79)");
