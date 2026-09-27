@@ -37,6 +37,15 @@ for (const [name, f] of Object.entries(man.files)) {
   intOk++;
 }
 console.log("integrity: " + intOk + " files match manifest (build " + man.build + ", pinned " + man.pinned_commit.slice(0, 10) + ")");
+/* every shipped module must parse as ESM (catches silent syntax damage like the v71/v72 docx paren bug) */
+for (const m of ["dicom","triage","docx","measure","compare","report","consult","codecs/decode"]) {
+  const srcM = fs.readFileSync(path.join(root, `${m}.${build}.js`), "utf8");
+  const t2 = path.join(os.tmpdir(), `rrai-mod-${build}-${m.replace("/", "-")}.mjs`);
+  fs.writeFileSync(t2, srcM);
+  const c2 = spawnSync(process.execPath, ["--check", t2]);
+  if (c2.status !== 0) { fails++; console.log("FAIL parse " + m + ":\n" + c2.stderr.toString().slice(0, 400)); }
+}
+console.log("PASS all-modules ESM parse");
 console.log(fails ? "STATIC TEST FAIL " + fails : "STATIC TEST PASS (" + build + ", " + needIds.length + " ids wired)");
 process.exit(fails ? 1 : 0);
 
