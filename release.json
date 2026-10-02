@@ -1,1 +1,11 @@
-{"build": "v95"}
+{
+  "build": "v96",
+  "version": "v96",
+  "channel": "stable",
+  "minVersion": "v96",
+  "updatedAt": "2026-10-02T21:45:00Z",
+  "notes": {
+    "ar": "إعدادات موسعة بعشرة أقسام: لغة+مظهر، شبكة وPACS، تفضيلات العارض والقياس، الذكاء الاصطناعي، قائمة العمل، اختصارات لوحة المفاتيح، الخصوصية ومدد الحذف، الاستيراد/التصدير مع ضغط gzip، الأداء، وحول التطبيق — ب2.68 بدون بطاقات.",
+    "en": "Ten-section expanded settings: language+theme, network & PACS, viewer & measurement prefs, AI, worklist, customizable keyboard shortcuts, privacy & retention, import/export with gzip, performance, and About — ب2.68 card-free."
+  }
+}
