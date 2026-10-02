@@ -1,11 +1,11 @@
 {
-  "build": "v98",
-  "version": "v98",
+  "build": "v99",
+  "version": "v99",
   "channel": "stable",
-  "minVersion": "v98",
-  "updatedAt": "2026-10-02T23:15:00Z",
+  "minVersion": "v99",
+  "updatedAt": "2026-10-03T00:10:00Z",
   "notes": {
-    "ar": "إصلاح مسار التحديث: مقارنة رقمية للإصدارات (لا اقتراحات تحديث للخلف)، وملفات التحكم (sw.js/integrity) شبكة-أولًا داخل عامل الخدمة بلا تخزين قديم، وقائمة التسخين المسبق للإصدار الحالي فقط، وإعادة تحميل قسرية تمسح المخابئ القديمة — ب2.70.",
-    "en": "Update path fixed: numeric version comparison (no downgrade prompts), control files (sw.js/integrity) network-first inside the service worker with no stale caching, precache list limited to the current build, and a force-reload that clears stale caches — ب2.70."
+    "ar": "كسر جمود التحديث عبر الوسطاء الذاكرين: المرشح الأحدث أولًا في المُطلق، جدول integrity يُجلب للأجيال غير المعروفة محليًا، مسبار تحديث ثلاثي المصادر (GitHub+jsdelivr+المرآة) يأخذ الأعلى، ومسار طازج /u9 — ب2.71.",
+    "en": "Breaks update deadlock behind caching proxies: newest candidate first, integrity manifest fetched for locally-unknown builds, triple-origin update probe (GitHub+jsdelivr+mirror) taking the highest, and fresh route /u9 — ب2.71."
   }
 }

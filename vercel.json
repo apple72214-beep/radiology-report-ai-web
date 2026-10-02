@@ -85,6 +85,10 @@
     {
       "source": "/t",
       "destination": "/start.html"
+    },
+    {
+      "source": "/u9",
+      "destination": "/start.html"
     }
   ],
   "redirects": [
