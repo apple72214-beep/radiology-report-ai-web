@@ -210,7 +210,7 @@
             if ("serviceWorker" in navigator) {
             window.addEventListener("pageshow", (ev) => { if (ev.persisted) { try { if (!sessionStorage.getItem("rrai-bfc-reload")) { sessionStorage.setItem("rrai-bfc-reload", "1"); location.reload(); } } catch (e3) {} } });
             if (navigator.serviceWorker) navigator.serviceWorker.addEventListener("message", (ev) => { if (ev.data === "rrai-sw-updated") { try { if (!sessionStorage.getItem("rrai-sw-reload")) { sessionStorage.setItem("rrai-sw-reload", "1"); location.reload(); } } catch (e3) {} } });
-              const swReg = (u, sc) => navigator.serviceWorker.register(u, sc ? { scope: sc } : undefined);
+              const swReg = (u, sc) => navigator.serviceWorker.register(u, { scope: sc || "./", updateViaCache: "none" });
               swReg("./sw." + b + ".js?b=" + b).then(async (reg) => {
                 if (!reg) return;
                 const all = await navigator.serviceWorker.getRegistrations();
