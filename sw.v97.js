@@ -1,5 +1,5 @@
-const BUILD = "v95";
-const CACHE = "rrai-web-v95";
+const BUILD = "v97";
+const CACHE = "rrai-web-v97";
 const CRITICAL = [
   "./", "./start.html", "./index.html", "./manifest.webmanifest",
   "./ui.v97.html", "./app.v96.js", "./dicom.v96.js", "./report.v96.js", "./sw.v96.js",

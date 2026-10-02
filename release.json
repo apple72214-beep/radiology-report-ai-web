@@ -1,11 +1,11 @@
 {
-  "build": "v96",
-  "version": "v96",
+  "build": "v97",
+  "version": "v97",
   "channel": "stable",
-  "minVersion": "v96",
-  "updatedAt": "2026-10-02T21:45:00Z",
+  "minVersion": "v97",
+  "updatedAt": "2026-10-02T22:30:00Z",
   "notes": {
-    "ar": "إعدادات موسعة بعشرة أقسام: لغة+مظهر، شبكة وPACS، تفضيلات العارض والقياس، الذكاء الاصطناعي، قائمة العمل، اختصارات لوحة المفاتيح، الخصوصية ومدد الحذف، الاستيراد/التصدير مع ضغط gzip، الأداء، وحول التطبيق — ب2.68 بدون بطاقات.",
-    "en": "Ten-section expanded settings: language+theme, network & PACS, viewer & measurement prefs, AI, worklist, customizable keyboard shortcuts, privacy & retention, import/export with gzip, performance, and About — ب2.68 card-free."
+    "ar": "اختصارات لوحة مفاتيح مكتملة: تكبير/تصغير بمفاتيح قابلة للتخصيص (‎+/−) مع توسيط الصورة، وتبديل التباين (c) يدور نوافذ العارض — ب2.69 بدون بطاقات.",
+    "en": "Complete keyboard shortcuts: customizable zoom in/out (+/−) with image re-centering, and contrast cycling (c) through viewer windows — ب2.69 card-free."
   }
 }
