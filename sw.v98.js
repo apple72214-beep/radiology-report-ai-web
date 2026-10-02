@@ -1,9 +1,9 @@
-const BUILD = "v95";
-const CACHE = "rrai-web-v95";
+const BUILD = "v98";
+const CACHE = "rrai-web-v98";
 const CRITICAL = [
   "./", "./start.html", "./index.html", "./manifest.webmanifest",
-  "./ui.v98.html", "./app.v96.js", "./dicom.v96.js", "./report.v96.js", "./sw.v96.js",
-  "./triage.v86.js", "./consult.v86.js", "./docx.v86.js", "./measure.v86.js", "./compare.v85.js", "./codecs/decode.v95.js",
+  "./ui.v98.html", "./app.v98.js", "./dicom.v98.js", "./report.v98.js", "./sw.v98.js",
+  "./triage.v98.js", "./consult.v98.js", "./docx.v98.js", "./measure.v98.js", "./compare.v98.js", "./codecs/decode.v98.js",
   "./icons/logo.png"
 ];
 const LEN = {"consult.v98.js": 5341, "codecs/decode.v98.js": 5236, "dicom.v98.js": 7420, "triage.v98.js": 5542, "docx.v98.js": 20498, "measure.v98.js": 1652, "compare.v98.js": 1444, "report.v98.js": 9460, "app.v98.js": 184292, "ui.v98.html": 41098};;
@@ -60,6 +60,19 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   if (url.pathname.endsWith("/release.json")) return;
+  if (/\/(sw\.js|sw\.v\d+\.js|integrity\.v\d+\.json)$/.test(url.pathname)) {
+    e.respondWith((async () => {
+      try {
+        const r = await fetch(e.request, { cache: "no-store" });
+        if (r.ok) return r;
+      } catch (e2) {}
+      const c = await caches.open(CACHE);
+      const hit = await c.match(url.pathname) || await c.match(e.request, { ignoreSearch: true });
+      if (hit) return hit;
+      return new Response("offline", { status: 503 });
+    })());
+    return;
+  }
   e.respondWith((async () => {
     const hit = await caches.match(e.request, { ignoreSearch: true });
     if (hit) return hit;

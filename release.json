@@ -1,11 +1,11 @@
 {
-  "build": "v97",
-  "version": "v97",
+  "build": "v98",
+  "version": "v98",
   "channel": "stable",
-  "minVersion": "v97",
-  "updatedAt": "2026-10-02T22:30:00Z",
+  "minVersion": "v98",
+  "updatedAt": "2026-10-02T23:15:00Z",
   "notes": {
-    "ar": "اختصارات لوحة مفاتيح مكتملة: تكبير/تصغير بمفاتيح قابلة للتخصيص (‎+/−) مع توسيط الصورة، وتبديل التباين (c) يدور نوافذ العارض — ب2.69 بدون بطاقات.",
-    "en": "Complete keyboard shortcuts: customizable zoom in/out (+/−) with image re-centering, and contrast cycling (c) through viewer windows — ب2.69 card-free."
+    "ar": "إصلاح مسار التحديث: مقارنة رقمية للإصدارات (لا اقتراحات تحديث للخلف)، وملفات التحكم (sw.js/integrity) شبكة-أولًا داخل عامل الخدمة بلا تخزين قديم، وقائمة التسخين المسبق للإصدار الحالي فقط، وإعادة تحميل قسرية تمسح المخابئ القديمة — ب2.70.",
+    "en": "Update path fixed: numeric version comparison (no downgrade prompts), control files (sw.js/integrity) network-first inside the service worker with no stale caching, precache list limited to the current build, and a force-reload that clears stale caches — ب2.70."
   }
 }
