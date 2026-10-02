@@ -28,6 +28,42 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().the
 document.getElementById("b1").onclick = () => location.replace("./r2/start.html");
 document.getElementById("b2").onclick = () => navigator.serviceWorker.getRegistrations().then((all) => Promise.all(all.map((r) => r.unregister()))).then(() => { document.getElementById("swc").textContent = "أُلغيت كلها — أعد فتح التطبيق"; });
 document.getElementById("b3").onclick = () => location.reload();
+const ORIGINS = [
+  ["./ (الخادم الأساسي)", "./"],
+  ["raw.githubusercontent", "https://raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/"],
+  ["cdn.jsdelivr.net", "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@main/"],
+  ["rawcdn.githack", "https://rawcdn.githack.com/apple72214-beep/radiology-report-ai-web/main/"],
+  ["raw.githack", "https://raw.githack.com/apple72214-beep/radiology-report-ai-web/main/"],
+  ["api.allorigins (الغلاف الخارجي)", "https://api.allorigins.win/raw?url=https%3A%2F%2Fraw.githubusercontent.com%2Fapple72214-beep%2Fradiology-report-ai-web%2Fmain%2F"]
+];
+const probe = document.createElement("div");
+probe.innerHTML = "<h4 style='margin:.8rem 0 .3rem'>فحص المصادر (release.json)</h4><div id='pr'>جارٍ الفحص…</div>";
+document.body.insertBefore(probe, document.querySelector("script"));
+const rows = [];
+(async () => {
+  for (const [label, base] of ORIGINS) {
+    const t0 = Date.now();
+    let res = "—";
+    try {
+      const ctl = new AbortController();
+      const tm = setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch(base + "release.json" + (base.startsWith("http") ? "?cb=" + Date.now() : ""), { cache: "no-store", signal: ctl.signal });
+      clearTimeout(tm);
+      const txt = await r.text();
+      let b = "?";
+      try { b = JSON.parse(txt).build; } catch (e) { b = "رد غير JSON (" + txt.slice(0, 40).replace(/</g, "") + ")"; }
+      res = r.status + " — build " + b + " — " + (Date.now() - t0) + "ms";
+    } catch (e) {
+      res = "فشل: " + ((e && e.name) || e) + " — " + (Date.now() - t0) + "ms";
+    }
+    rows.push(label + ": <b>" + res + "</b>");
+    document.getElementById("pr").innerHTML = rows.join("<br>");
+  }
+  const solo = document.createElement("div");
+  solo.innerHTML = "<h4 style='margin:.8rem 0 .3rem'>الملاذ المضمون</h4>" +
+    "<a href='./standalone.html' style='color:#38bdf8'>فتح نسخة الملف الواحد</a> — كل الوحدات مضمّنة داخل الصفحة، لا تحتاج أي مصدر خارجي.";
+  document.body.insertBefore(solo, document.querySelector("script"));
+})();
 </script>
 </body>
 </html>

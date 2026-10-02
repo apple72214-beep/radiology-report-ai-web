@@ -47,5 +47,16 @@ cks(retired > 50, "every retired build is pilled (found " + retired + ")");
 const boot = readFileSync(new URL("../sw.js", import.meta.url), "utf-8").trim();
 cks(/importScripts\("\.\/sw\.v99\.js"\);/.test(boot) && boot.split("\n").filter((l) => l && !l.startsWith("/*")).length === 1, "sw.js is a pure relay to the current build");
 c("service-worker graveyard: " + retired + " retired builds neutralised, sw.js relays to v99");
-console.log(fails ? "STANDALONE TEST FAIL " + fails : "STANDALONE TEST PASS");
+/* the launcher must never dead-end: single-file escape hatch on any boot failure */
+for (const f of ["start.html", "index.html"]) {
+  const t = readFileSync(new URL("../" + f, import.meta.url), "utf-8");
+  cks(t.includes('id="rrai-solo"') && t.includes('location.replace("./standalone.html?f=1")'), f + ": boot failure offers/auto-opens the single-file edition");
+  cks(t.includes("rrai-solo-try") && t.includes("./diag.html"), f + ": escape hatch is once-per-session and points at diagnostics");
+}
+const ui = readFileSync(new URL("../ui.v99.html", import.meta.url), "utf-8");
+cks(ui.includes('href="./standalone.html"') && ui.includes('href="./diag.html"'), "ui: permanent standalone + diagnostics links in About");
+const dg = readFileSync(new URL("../diag.html", import.meta.url), "utf-8");
+cks(dg.includes("raw.githubusercontent") && dg.includes("cdn.jsdelivr.net") && dg.includes("allorigins"), "diag: probes every external origin the launcher depends on");
+c("escape hatches wired in launcher, ui and diagnostics");
+console.log(fails ? "STANDALONE TEST FAIL " + fails : "STANDALONE TEST PASS (with escape hatches)");
 process.exit(fails ? 1 : 0);
