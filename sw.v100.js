@@ -7,6 +7,16 @@ const CRITICAL = [
 ];
 const LEN = {"consult.v100.js": 5341, "codecs/decode.v100.js": 5236, "dicom.v100.js": 7895, "triage.v100.js": 5542, "docx.v100.js": 20498, "measure.v100.js": 1652, "compare.v100.js": 1444, "report.v100.js": 9460, "mpr.v100.js": 8058, "app.v100.js": 193450, "ui.v100.html": 42601};;
 const okLen = (u, n) => { for (const k in LEN) if (u.endsWith(k)) return n === LEN[k]; return true; };
+/* a cached body that does not match this build's byte table is poison (old build, proxy
+   injection, partial download): refuse it and go to the network instead. */
+const trustedHit = async (hit, pathname) => {
+  if (!hit) return null;
+  try {
+    const buf = await hit.clone().arrayBuffer();
+    if (okLen(pathname, buf.byteLength)) return hit;
+  } catch (e) {}
+  return null;
+};
 const vPut = async (c, u, res) => {
   try {
     const b = await res.arrayBuffer();
@@ -73,7 +83,8 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   e.respondWith((async () => {
-    const hit = await caches.match(e.request, { ignoreSearch: true });
+    const hit0 = await caches.match(e.request, { ignoreSearch: true });
+    const hit = await trustedHit(hit0, url.pathname);
     if (hit) return hit;
     try {
       const res = await fetch(e.request);
@@ -87,7 +98,8 @@ self.addEventListener("fetch", (e) => {
       return res;
     } catch (err) {
       const c = await caches.open(CACHE);
-      const fall = await c.match(url.pathname) || await c.match(e.request, { ignoreSearch: true });
+      const fall0 = await c.match(url.pathname) || await c.match(e.request, { ignoreSearch: true });
+      const fall = await trustedHit(fall0, url.pathname);
       if (fall) return fall;
       throw err;
     }

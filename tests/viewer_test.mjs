@@ -189,4 +189,10 @@ ck(src.includes("mprApi.volumeFromFrames(current.frames") && src.includes("maxVo
 ck(src.includes("mprApi.pointToVolume") && src.includes("mprApi.volumeToPlanePixel"), "MPR click↔crosshair mapping is wired");
 ck(src.includes('k === (map.next || "ArrowRight")) {\n        if (mprOn)'), "keyboard slice keys drive the focused MPR pane");
 ck(sws.includes("./mpr.v100.js"), "MPR module is precached by the service worker");
-console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (177)");
+/* self-healing when a stale service worker poisons the update */
+ck(sth.includes("function nukeStaleWorker") || sth.includes("const nukeStaleWorker"), "launcher can evict a stale service worker");
+ck(sth.includes("rrai-swnuke") && sth.includes("navigator.serviceWorker.controller"), "eviction runs once per session and only when a worker is in control");
+ck(sth.includes("errLen.__bad") && sth.includes("healing()"), "a body that fails length validation triggers the eviction + reload");
+ck(sws.includes("const trustedHit") && sws.includes("await trustedHit(hit0"), "service worker refuses cached bodies that do not match this build");
+ck(sws.includes("if (okLen(pathname, buf.byteLength)) return hit;"), "cached entries are size-checked against the LEN table before use");
+console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (182)");

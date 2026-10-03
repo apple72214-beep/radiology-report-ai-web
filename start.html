@@ -46,6 +46,29 @@
         el.textContent = logLine + " — " + Math.round((Date.now() - t0) / 1000) + "ث" + (lastErr ? "\nآخر خطأ: " + (lastErr.message || lastErr) : "");
       }, 1000);
       const say = (t) => { logLine = MARK + " — " + t; };
+      /* A response that fails length/sha validation while an old service worker is in
+         control is almost always that worker serving a stale body. Evict it once per
+         session and reload, so the next boot talks to the network directly. */
+      const nukeStaleWorker = async () => {
+        let done = false;
+        try { done = sessionStorage.getItem("rrai-swnuke") === "1"; } catch (e) {}
+        if (done) return false;
+        try { sessionStorage.setItem("rrai-swnuke", "1"); } catch (e) {}
+        try {
+          if (navigator.serviceWorker) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) { try { await r.unregister(); } catch (e2) {} }
+          }
+        } catch (e) {}
+        try { const ks = await caches.keys(); for (const k of ks) { await caches.delete(k); } } catch (e) {}
+        return true;
+      };
+      const healing = async () => {
+        if (!(navigator.serviceWorker && navigator.serviceWorker.controller)) return false;
+        const ok = await nukeStaleWorker();
+        if (ok) { say("عامل خدمة قديم يعترض التحديث — إعادة التشغيل من الشبكة…"); setTimeout(() => location.reload(), 400); }
+        return ok;
+      };
       const failPanel = (msg) => {
         const el = document.getElementById("splash") || splash;
         el.innerHTML = msg +
@@ -86,7 +109,9 @@
           throw e;
         } finally { clearTimeout(t); }
       };
+      let rangeBroken = false; /* some proxies answer a Range request with the whole file */
       const rangedFetch = async (u, byteLen, label) => {
+        if (rangeBroken) throw new Error("range-unsupported");
         const CH = 4096;
         const parts = [];
         let pos = 0;
@@ -131,11 +156,21 @@
               const buf = await fetchBuf(base);
               const txt = new TextDecoder().decode(buf);
               if (!txt || txt.length < 400) throw new Error("empty-body " + (txt ? txt.length : 0));
-              if (expChars && txt.length !== expChars) throw new Error("len " + txt.length + "≠" + expChars);
+              if (expChars && txt.length !== expChars) {
+                const errLen = new Error("len " + txt.length + "≠" + expChars);
+                errLen.__bad = true;
+                throw errLen;
+              }
               await checkSha(buf, exp);
               return txt;
             } catch (e) {
               err = e; lastErr = e;
+              if (e && e.__bad) { const healed = await healing(); if (healed) { err = new Error("healing"); throw err; } }
+              try {
+                const ck = await caches.open("rrai-boot");
+                const keys = await ck.keys();
+                for (const rq of keys) if (rq.url.split("?")[0].endsWith(path)) await ck.delete(rq);
+              } catch (e3) {}
               if (expBytes) {
                 try {
                   say(label + " — إعادة تجميع شرائح من " + hostOf(o) + (px ? "/" + px.slice(0, 2) : ""));
@@ -169,6 +204,7 @@
         known.forEach(add);
         const verL = (v) => parseInt(String(v).replace(/\D/g, ""), 10) || 0;
         cands.sort((x, y) => verL(y) - verL(x));
+        let newerFailed = "";
         let done = false;
         for (const b of cands) {
           if (!EXPECT[b]) {
@@ -229,9 +265,21 @@
               }).catch(() => {});
             }
             done = true;
+            if (newerFailed && verL(newerFailed) > verL(b)) {
+              /* we booted an older build because the newest one could not be verified here:
+                 hand over to the single-file edition, which needs no ranged fetching. */
+              say("تعذّر تحميل " + newerFailed + " — فتح نسخة الملف الواحد…");
+              try {
+                if (!sessionStorage.getItem("rrai-newer-fail")) {
+                  sessionStorage.setItem("rrai-newer-fail", "1");
+                  setTimeout(() => location.replace("./standalone.html?f=1"), 1200);
+                }
+              } catch (e) {}
+            }
             break;
           } catch (e) {
             lastErr = e;
+            if (!newerFailed || verL(b) > verL(newerFailed)) newerFailed = b;
             const st = localStorage.getItem("rrai-boot-stage") || "غير معروف";
             say("توقف الإصدار " + b + " عند مرحلة: " + st);
           }
