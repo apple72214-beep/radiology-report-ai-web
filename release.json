@@ -1,12 +1,12 @@
 {
-  "build": "v101",
-  "version": "v101",
-  "mark": "ب2.73",
+  "build": "v102",
+  "version": "v102",
+  "mark": "ب2.74",
   "channel": "stable",
-  "minVersion": "v101",
-  "updatedAt": "2026-10-04T18:52:06Z",
+  "minVersion": "v102",
+  "updatedAt": "2026-10-04T20:10:59Z",
   "notes": {
-    "ar": "إظهار تاريخ الدراسة في قائمة العمل مع بدائل للوسوم الناقصة وفرز حسب التاريخ — ب2.73",
-    "en": "Study date column in the worklist, with fallbacks for missing DICOM date tags and date sorting — ب2.73"
+    "ar": "طبقة معلومات على الصورة: نوع الفحص والتسلسل (T1/T2/FLAIR/DWI) مع تمييز المشتق، وإصلاح خطأ الرسم — ب2.74",
+    "en": "On-image annotation layer: study/sequence label with derived-labelling marker, plus a draw-error fix — ب2.74"
   }
 }
