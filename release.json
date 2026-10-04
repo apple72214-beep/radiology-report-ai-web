@@ -1,12 +1,12 @@
 {
-  "build": "v104",
-  "version": "v104",
-  "mark": "ب2.76",
+  "build": "v105",
+  "version": "v105",
+  "mark": "ب2.77",
   "channel": "stable",
-  "minVersion": "v104",
-  "updatedAt": "2026-10-04T22:06:41Z",
+  "minVersion": "v105",
+  "updatedAt": "2026-10-04T22:41:31Z",
   "notes": {
-    "ar": "لا شاشات سوداء صامتة: تشخيص بيانات البكسل، وتصحيح تلقائي لترتيب البايتات، ولوحة سبب مرئية بدل المستطيل الأسود، وأداة فحص ملف DICOM — ب2.76",
-    "en": "No silent black frames: pixel-data diagnostics, automatic byte-order repair, a visible reason plate instead of a black rectangle, and a DICOM file probe — ب2.76"
+    "ar": "نافذة ذكية تتجاهل خلفية الصورة المهيمنة، وكشف تلقائي للرسم الفارغ مع لوحة سبب، وشارة الإصدار في رأس العارض — ب2.77",
+    "en": "Background-aware windowing, automatic blank-render detection with a reason plate, and a build badge in the viewer header — ب2.77"
   }
 }
