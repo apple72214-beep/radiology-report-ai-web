@@ -1,12 +1,12 @@
 {
-  "build": "v100",
-  "version": "v100",
+  "build": "v101",
+  "version": "v101",
+  "mark": "ب2.73",
   "channel": "stable",
-  "minVersion": "v100",
-  "updatedAt": "2026-10-03T22:29:38Z",
+  "minVersion": "v101",
+  "updatedAt": "2026-10-04T18:52:06Z",
   "notes": {
-    "ar": "العارض متعدد النوافذ: محوري وإكليلي وسهمي (MPR) مع تصالب إحداثيات متزامن — ب2.72",
-    "en": "Multi-planar viewer: axial, coronal and sagittal (MPR) with a synchronised crosshair — ب2.72"
-  },
-  "mark": "ب2.72"
+    "ar": "إظهار تاريخ الدراسة في قائمة العمل مع بدائل للوسوم الناقصة وفرز حسب التاريخ — ب2.73",
+    "en": "Study date column in the worklist, with fallbacks for missing DICOM date tags and date sorting — ب2.73"
+  }
 }
