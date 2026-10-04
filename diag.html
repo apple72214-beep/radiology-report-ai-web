@@ -10,7 +10,8 @@
 <h3>تشخيص Radiology report AI</h3>
 <div id="out">جارٍ القراءة…</div>
 <div>
-<button id="b1">فتح التطبيق (مسار طازج)</button>
+<button id="b1" onclick="location.href='./probe.html'">فحص ملف DICOM</button>
+<button id="b1b">فتح التطبيق (مسار طازج)</button>
 <button id="b2">إلغاء كل SW</button>
 <button id="b3">تحديث هذه الصفحة</button>
 </div>
@@ -25,7 +26,7 @@ document.getElementById("out").innerHTML =
 if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then((r) => {
   document.getElementById("swc").textContent = r.length + " → " + r.map((x) => x.active ? x.active.scriptURL.split("/").pop() : "no-active").join(", ");
 }); else document.getElementById("swc").textContent = "غير مدعوم";
-document.getElementById("b1").onclick = () => location.replace("./r2/start.html");
+document.getElementById("b1b").onclick = () => location.replace("./r2/start.html");
 document.getElementById("b2").onclick = () => navigator.serviceWorker.getRegistrations().then((all) => Promise.all(all.map((r) => r.unregister()))).then(() => { document.getElementById("swc").textContent = "أُلغيت كلها — أعد فتح التطبيق"; });
 document.getElementById("b3").onclick = () => location.reload();
 const ORIGINS = [

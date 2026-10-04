@@ -1,6 +1,6 @@
 /* Sequence naming + on-image annotation layer. */
 import { readFileSync } from "node:fs";
-import { seqLabelOf, studyTypeLabel } from "../app.v103.js";
+import { seqLabelOf, studyTypeLabel } from "../app.v104.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -36,9 +36,9 @@ eq(studyTypeLabel({ bodyPart: "BRAIN", frames: [{}], modality: "MR" }), "BRAIN",
 eq(studyTypeLabel(null), "", "no study → empty");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v103.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v103.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v103.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v104.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v104.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v104.js", import.meta.url), "utf-8");
 for (const tag of ["0008,103E", "0018,0024", "0018,1030", "0018,0081", "0018,0080", "0018,9087", "0018,0010", "0020,0011", "0020,1041"]) {
   ck(dcm.includes('"' + tag + '"'), "parser captures DICOM tag " + tag);
 }

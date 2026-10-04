@@ -1,12 +1,12 @@
 {
-  "build": "v103",
-  "version": "v103",
-  "mark": "ب2.75",
+  "build": "v104",
+  "version": "v104",
+  "mark": "ب2.76",
   "channel": "stable",
-  "minVersion": "v103",
-  "updatedAt": "2026-10-04T21:13:22Z",
+  "minVersion": "v104",
+  "updatedAt": "2026-10-04T22:06:41Z",
   "notes": {
-    "ar": "فصل السلاسل (Series): منتقٍ للسلاسل، وMPR داخل السلسلة فقط، وتراجع تلقائي عند تعذّر البناء — ب2.75",
-    "en": "Series awareness: series picker, per-series MPR volume, automatic fallback when a volume cannot be built — ب2.75"
+    "ar": "لا شاشات سوداء صامتة: تشخيص بيانات البكسل، وتصحيح تلقائي لترتيب البايتات، ولوحة سبب مرئية بدل المستطيل الأسود، وأداة فحص ملف DICOM — ب2.76",
+    "en": "No silent black frames: pixel-data diagnostics, automatic byte-order repair, a visible reason plate instead of a black rectangle, and a DICOM file probe — ب2.76"
   }
 }

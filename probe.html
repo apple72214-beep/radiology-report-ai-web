@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>فاحص ملف DICOM — Radiology report AI</title>
+<style>
+  body{margin:0;background:#0f172a;color:#e2e8f0;font-family:system-ui,Tahoma,sans-serif;padding:1rem;line-height:1.9;font-size:1rem}
+  h3{margin:.2rem 0 .6rem}
+  .card{background:#111c30;border:1px solid #22344f;border-radius:.6rem;padding:.8rem .9rem;margin:.6rem 0}
+  b{color:#7dd3fc}
+  .k{color:#93c5fd}
+  button{padding:.6rem 1.1rem;border:0;border-radius:.5rem;background:#e2e8f0;color:#0f172a;font-size:1rem;font-family:inherit;margin:.3rem .25rem}
+  button.ghost{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+  #drop{border:2px dashed #3b82f6;border-radius:.6rem;padding:1.4rem;text-align:center;color:#bfdbfe;margin:.6rem 0}
+  #rep{white-space:pre-wrap;direction:ltr;text-align:left;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;background:#0b1220;border:1px solid #22344f;border-radius:.5rem;padding:.7rem;overflow-x:auto}
+  canvas{max-width:100%;background:#000;border-radius:.4rem;margin-top:.5rem;image-rendering:pixelated}
+  .warn{color:#fde68a}
+  .bad{color:#fca5a5}
+  .ok{color:#86efac}
+</style>
+</head>
+<body>
+<h3>فاحص ملف DICOM</h3>
+<p style="margin:.2rem 0;color:#9fc3e8;font-size:.9rem">
+  كل شيء يحدث داخل متصفحك: الملف لا يُرفع إلى أي سيرفر. اختر ملفًا واحدًا من ملفات دراستك، ثم أرسل لي التقرير.
+</p>
+<div id="drop">اسحب ملف DICOM هنا، أو اضغط للاختيار</div>
+<input id="pick" type="file" style="display:none" />
+<div id="out"></div>
+<button id="copy" class="ghost" style="display:none">نسخ التقرير</button>
+<button id="again" class="ghost" style="display:none">فحص ملف آخر</button>
+<p style="margin-top:1rem"><a href="./" style="color:#7dd3fc">العودة إلى التطبيق</a></p>
+
+<script type="module">
+import { parseDicom } from "./dicom.v104.js";
+
+const TS = {
+  "1.2.840.10008.1.2": "Implicit VR Little Endian",
+  "1.2.840.10008.1.2.1": "Explicit VR Little Endian",
+  "1.2.840.10008.1.2.2": "Explicit VR Big Endian (قديم)",
+  "1.2.840.10008.1.2.4.50": "JPEG Baseline (مضغوط)",
+  "1.2.840.10008.1.2.4.51": "JPEG Extended (مضغوط)",
+  "1.2.840.10008.1.2.4.57": "JPEG Lossless (مضغوط)",
+  "1.2.840.10008.1.2.4.70": "JPEG Lossless SV1 (مضغوط)",
+  "1.2.840.10008.1.2.4.80": "JPEG-LS Lossless (مضغوط)",
+  "1.2.840.10008.1.2.4.81": "JPEG-LS Lossy (مضغوط)",
+  "1.2.840.10008.1.2.4.90": "JPEG 2000 Lossless (مضغوط)",
+  "1.2.840.10008.1.2.4.91": "JPEG 2000 (مضغوط)",
+  "1.2.840.10008.1.2.5": "RLE Lossless (مضغوط)",
+};
+const drop = document.getElementById("drop");
+const pick = document.getElementById("pick");
+const out = document.getElementById("out");
+const copyBtn = document.getElementById("copy");
+const againBtn = document.getElementById("again");
+let lastReport = "";
+
+drop.onclick = () => pick.click();
+againBtn.onclick = () => { out.innerHTML = ""; copyBtn.style.display = "none"; againBtn.style.display = "none"; drop.style.display = "block"; };
+pick.onchange = () => { if (pick.files && pick.files[0]) run(pick.files[0]); };
+drop.ondragover = (e) => { e.preventDefault(); };
+drop.ondrop = (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) run(f); };
+
+function stats(d) {
+  if (!d || !d.length) return { min: 0, max: 0, mean: 0 };
+  let mn = Infinity, mx = -Infinity, sum = 0;
+  const step = Math.max(1, Math.floor(d.length / 40000));
+  let n = 0;
+  for (let i = 0; i < d.length; i += step) { const v = d[i]; if (v < mn) mn = v; if (v > mx) mx = v; sum += v; n++; }
+  return { min: mn, max: mx, mean: Math.round((sum / Math.max(1, n)) * 100) / 100 };
+}
+
+function thumb(pixels) {
+  if (!pixels || !pixels.data || !pixels.data.length) return "";
+  const w = pixels.w, h = pixels.h, d = pixels.data;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext("2d");
+  const img = ctx.createImageData(w, h);
+  if (pixels.kind === "rgb") {
+    for (let i = 0; i < w * h; i++) {
+      img.data[i * 4] = d[i * 3]; img.data[i * 4 + 1] = d[i * 3 + 1]; img.data[i * 4 + 2] = d[i * 3 + 2]; img.data[i * 4 + 3] = 255;
+    }
+  } else {
+    const st = stats(d);
+    const span = (st.max - st.min) || 1;
+    for (let i = 0; i < w * h; i++) {
+      let v = (d[i] - st.min) / span; v = Math.max(0, Math.min(1, v));
+      const g = Math.round(v * 255);
+      img.data[i * 4] = g; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = g; img.data[i * 4 + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return cv.outerHTML;
+}
+
+async function run(file) {
+  drop.style.display = "none";
+  out.innerHTML = "<div class='card'>جارٍ القراءة…</div>";
+  let buf;
+  try { buf = await file.arrayBuffer(); } catch (e) { out.innerHTML = "<div class='card bad'>تعذّر قراءة الملف.</div>"; return; }
+  const u8 = new Uint8Array(buf);
+  const hasDicm = u8.length > 132 && String.fromCharCode(u8[128], u8[129], u8[130], u8[131]) === "DICM";
+  let p = null, err = "";
+  try { p = parseDicom(buf); } catch (e) { err = String((e && e.message) || e); }
+  const L = [];
+  L.push("Radiology report AI — DICOM probe");
+  L.push("file=" + (file.name || "?"));
+  L.push("size=" + u8.length + " bytes");
+  L.push("DICM=" + (hasDicm ? "yes" : "no"));
+  if (err || !p) {
+    L.push("parse=ERROR " + (err || "null"));
+    out.innerHTML = "<div class='card'><span class='bad'>تعذّر تحليل الملف.</span><div id='rep'></div></div>";
+    out.querySelector("#rep").textContent = L.join("\n");
+    lastReport = L.join("\n"); copyBtn.style.display = "inline-block"; againBtn.style.display = "inline-block";
+    return;
+  }
+  const info = p.pixelInfo || {};
+  const st = p.pixels ? stats(p.pixels.data) : { min: 0, max: 0, mean: 0 };
+  L.push("parse=OK");
+  L.push("modality=" + (p.modality || ""));
+  L.push("patient=" + (p.patientName || ""));
+  L.push("studyDate=" + (p.studyDate || "") + " " + (p.studyTime || ""));
+  L.push("seriesDesc=" + ((p.seq && p.seq.seriesDescription) || ""));
+  L.push("seriesUid=" + ((p.seq && p.seq.seriesUid) || ""));
+  L.push("studyUid=" + (p.studyUid || ""));
+  L.push("rows=" + (p.rows || 0) + " cols=" + (p.cols || 0) + " frames=" + (p.numberOfFrames || 1));
+  L.push("bitsAllocated=" + (p.bitsAllocated || 0) + " signed=" + (p.signed || false) + " photometric=" + (p.photometric || ""));
+  L.push("ts=" + (info.tsuid || "?") + "  (" + (TS[info.tsuid] || "غير معروف") + ")");
+  L.push("encapsulated=" + (info.encapsulated || false) + " fragments=" + ((p.compressed && p.compressed.fragments) ? p.compressed.fragments.length : 0));
+  L.push("slope=" + (info.slope == null ? "?" : info.slope) + " intercept=" + (info.intercept == null ? "?" : info.intercept));
+  L.push("pixelBytes=" + (info.have == null ? "?" : info.have) + " need=" + (info.need == null ? "?" : info.need) + " bpp=" + (info.bpp == null ? "?" : info.bpp));
+  L.push("problem=" + ((info.problem || "none")));
+  L.push("min=" + st.min + " max=" + st.max + " mean=" + st.mean);
+  L.push("hasPixels=" + (p.pixels ? "yes" : "no"));
+
+  const prob = info.problem || (st.max > st.min ? "" : "flat");
+  const verdict = prob
+    ? "<span class='bad'>هذا الملف لا يحتوي بيانات بكسل قابلة للعرض (السبب: " + prob + ")</span>"
+    : "<span class='ok'>بيانات البكسل سليمة — الصورة قابلة للعرض</span>";
+  out.innerHTML =
+    "<div class='card'>" + verdict +
+    "<div id='rep'></div>" +
+    (p.pixels ? "<div style='margin-top:.5rem;color:#9fc3e8;font-size:.85rem'>معاينة مصغّرة (بأقصى تباين):</div>" + thumb(p.pixels) : "") +
+    "</div>";
+  out.querySelector("#rep").textContent = L.join("\n");
+  lastReport = L.join("\n");
+  copyBtn.style.display = "inline-block";
+  againBtn.style.display = "inline-block";
+  copyBtn.onclick = () => {
+    const done = () => { copyBtn.textContent = "تم النسخ ✓"; setTimeout(() => { copyBtn.textContent = "نسخ التقرير"; }, 1800); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(lastReport).then(done, () => prompt("انسخ هذا:", lastReport)); return; }
+    } catch (e) {}
+    prompt("انسخ هذا:", lastReport);
+  };
+}
+</script>
+</body>
+</html>
