@@ -1,12 +1,12 @@
 {
-  "build": "v105",
-  "version": "v105",
-  "mark": "ب2.77",
+  "build": "v106",
+  "version": "v106",
+  "mark": "ب2.78",
   "channel": "stable",
-  "minVersion": "v105",
-  "updatedAt": "2026-10-04T22:41:31Z",
+  "minVersion": "v106",
+  "updatedAt": "2026-10-04T23:34:15Z",
   "notes": {
-    "ar": "نافذة ذكية تتجاهل خلفية الصورة المهيمنة، وكشف تلقائي للرسم الفارغ مع لوحة سبب، وشارة الإصدار في رأس العارض — ب2.77",
-    "en": "Background-aware windowing, automatic blank-render detection with a reason plate, and a build badge in the viewer header — ب2.77"
+    "ar": "تثبيت فهرسة السلاسل في العرض والملاءمة والتعليقات، ونافذة احتياطية بمدى القيم، وفاحص DICOM يطبع المدرّج التكراري والنافذة المحسوبة — ب2.78",
+    "en": "Series-index fixes in show/fit/annotations, a value-range fallback window, and a probe that prints the histogram and the computed window — ب2.78"
   }
 }

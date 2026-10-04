@@ -33,7 +33,7 @@
 <p style="margin-top:1rem"><a href="./" style="color:#7dd3fc">العودة إلى التطبيق</a></p>
 
 <script type="module">
-import { parseDicom } from "./dicom.v105.js";
+import { parseDicom } from "./dicom.v106.js";
 
 const TS = {
   "1.2.840.10008.1.2": "Implicit VR Little Endian",
@@ -61,6 +61,69 @@ againBtn.onclick = () => { out.innerHTML = ""; copyBtn.style.display = "none"; a
 pick.onchange = () => { if (pick.files && pick.files[0]) run(pick.files[0]); };
 drop.ondragover = (e) => { e.preventDefault(); };
 drop.ondrop = (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) run(f); };
+
+/* Mirrors the viewer: 2/98 percentile window, then the same two rescues. */
+function windowReport(d) {
+  if (!d || !d.length) return null;
+  let mn = Infinity, mx = -Infinity;
+  for (let i = 0; i < d.length; i++) { const v = d[i]; if (v < mn) mn = v; if (v > mx) mx = v; }
+  const span = (mx - mn) || 1;
+  const hist = new Uint32Array(256);
+  for (let i = 0; i < d.length; i++) {
+    let b = (((d[i] - mn) / span) * 255) | 0;
+    if (b < 0) b = 0; else if (b > 255) b = 255;
+    hist[b]++;
+  }
+  const pct = (q) => {
+    const target = d.length * q; let acc = 0;
+    for (let b = 0; b < 256; b++) { acc += hist[b]; if (acc >= target) return mn + (b / 255) * span; }
+    return mx;
+  };
+  let mode = 0;
+  for (let b = 1; b < 256; b++) if (hist[b] > hist[mode]) mode = b;
+  const spreadFor = (lo, hi) => {
+    const sp = (hi - lo) || 1;
+    let gmn = 255, gmx = 0;
+    for (let i = 0; i < d.length; i += Math.max(1, (d.length / 20000) | 0)) {
+      let v = (d[i] - lo) / sp;
+      v = v < 0 ? 0 : (v > 1 ? 1 : v);
+      const g = (v * 255) | 0;
+      if (g < gmn) gmn = g; if (g > gmx) gmx = g;
+    }
+    return gmx - gmn;
+  };
+  let lo = pct(0.02), hi = pct(0.98);
+  if (!(hi > lo)) hi = lo + 1;
+  const spread1 = spreadFor(lo, hi);
+  let lo2 = null, hi2 = null, spread2 = null;
+  if (spread1 < 2) {
+    if (hist[mode] / d.length >= 0.5) {
+      let a = Infinity, b2 = -Infinity, cnt = 0;
+      for (let i = 0; i < d.length; i++) {
+        let bb = (((d[i] - mn) / span) * 255) | 0;
+        if (bb < 0) bb = 0; else if (bb > 255) bb = 255;
+        if (bb === mode) continue;
+        const v = d[i];
+        if (v < a) a = v; if (v > b2) b2 = v; cnt++;
+      }
+      if (cnt >= 8 && b2 > a) { lo2 = a; hi2 = b2; spread2 = spreadFor(lo2, hi2); }
+    }
+    if (!(spread2 >= 2)) { lo2 = mn; hi2 = mx; spread2 = spreadFor(mn, mx); }
+  }
+  const h16 = new Array(16).fill(0);
+  for (let i = 0; i < d.length; i++) {
+    let b = (((d[i] - mn) / span) * 15.999) | 0;
+    if (b < 0) b = 0; else if (b > 15) b = 15;
+    h16[b]++;
+  }
+  return {
+    min: mn, max: mx, lo, hi, spread: spread1,
+    rescueLo: lo2, rescueHi: hi2, rescueSpread: spread2,
+    modeShare: Math.round((hist[mode] / d.length) * 1000) / 1000,
+    p50: pct(0.5),
+    hist16: h16.map((c) => Math.round((c / d.length) * 1000) / 10).join(","),
+  };
+}
 
 function stats(d) {
   if (!d || !d.length) return { min: 0, max: 0, mean: 0 };
@@ -134,11 +197,31 @@ async function run(file) {
   L.push("problem=" + ((info.problem || "none")));
   L.push("min=" + st.min + " max=" + st.max + " mean=" + st.mean);
   L.push("hasPixels=" + (p.pixels ? "yes" : "no"));
+  const wr = p.pixels ? windowReport(p.pixels.data) : null;
+  if (wr) {
+    L.push("window lo=" + wr.lo + " hi=" + wr.hi + " greySpread=" + wr.spread + (wr.spread < 2 ? "  <-- BLANK RENDER" : ""));
+    L.push("modeShare=" + wr.modeShare + " p50=" + wr.p50);
+    L.push("hist16%=" + wr.hist16);
+    if (wr.rescueSpread != null) {
+      L.push("rescue lo=" + wr.rescueLo + " hi=" + wr.rescueHi + " greySpread=" + wr.rescueSpread +
+        (wr.rescueSpread >= 2 ? "  (rescued)" : "  (still blank)"));
+    }
+  }
 
   const prob = info.problem || (st.max > st.min ? "" : "flat");
-  const verdict = prob
-    ? "<span class='bad'>هذا الملف لا يحتوي بيانات بكسل قابلة للعرض (السبب: " + prob + ")</span>"
-    : "<span class='ok'>بيانات البكسل سليمة — الصورة قابلة للعرض</span>";
+  const wr0 = p.pixels ? windowReport(p.pixels.data) : null;
+  let verdict;
+  if (prob) {
+    verdict = "<span class='bad'>هذا الملف لا يحتوي بيانات بكسل قابلة للعرض (السبب: " + prob + ")</span>";
+  } else if (wr0 && wr0.spread < 2) {
+    verdict = "<span class='warn'>⚠ النافذة التلقائية ستنهار: الصورة ستظهر <b>فارغة (سوداء)</b> في الإصدارات قبل v105 — " +
+      "القيمة المهيمنة تشغل " + Math.round(wr0.modeShare * 100) + "% من الإطار. " +
+      (wr0.rescueSpread >= 2 ? "التراجع التلقائي (v105+) يستعيدها: تباين " + wr0.rescueSpread + "." : "حتى التراجع التلقائي لا يستعيدها.") + "</span>";
+  } else if (wr0) {
+    verdict = "<span class='ok'>بيانات البكسل سليمة — النافذة التلقائية تعطي تباين " + wr0.spread + "</span>";
+  } else {
+    verdict = "<span class='warn'>لا توجد بيانات بكسل غير مضغوطة لفحصها.</span>";
+  }
   out.innerHTML =
     "<div class='card'>" + verdict +
     "<div id='rep'></div>" +
