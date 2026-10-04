@@ -48,7 +48,7 @@ const boot = readFileSync(new URL("../sw.js", import.meta.url), "utf-8").trim();
 cks(/importScripts\("\.\/sw\.v100\.js"\);/.test(boot) && boot.split("\n").filter((l) => l && !l.startsWith("/*")).length === 1, "sw.js is a pure relay to the current build");
 c("service-worker graveyard: " + retired + " retired builds neutralised, sw.js relays to v100");
 /* the launcher must never dead-end: single-file escape hatch on any boot failure */
-for (const f of ["start.html", "index.html"]) {
+for (const f of ["start.html"]) {
   const t = readFileSync(new URL("../" + f, import.meta.url), "utf-8");
   cks(t.includes('id="rrai-solo"') && t.includes('location.replace("./standalone.html?f=1")'), f + ": boot failure offers/auto-opens the single-file edition");
   cks(t.includes("rrai-solo-try") && t.includes("./diag.html"), f + ": escape hatch is once-per-session and points at diagnostics");

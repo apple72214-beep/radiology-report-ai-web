@@ -43,6 +43,24 @@
     await mod.init();
     const sp = document.getElementById("splash");
     if (sp) sp.remove();
+    /* offline + updates: register this build's worker, evict older ones, reload on update */
+    try {
+      if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+        const reg = await navigator.serviceWorker.register("./sw.v100.js?b=v100", { scope: "./", updateViaCache: "none" });
+        try {
+          const all = await navigator.serviceWorker.getRegistrations();
+          for (const r of all) if (r !== reg) { r.unregister().catch(() => {}); }
+        } catch (e) {}
+        navigator.serviceWorker.addEventListener("message", (ev) => {
+          if (ev.data !== "rrai-sw-updated") return;
+          try {
+            if (sessionStorage.getItem("rrai-sw-reload")) return;
+            sessionStorage.setItem("rrai-sw-reload", "1");
+            location.reload();
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
   } catch (e) {
     say("تعذّر التشغيل — " + (e && e.message ? e.message : e));
     const d = document.createElement("div");
