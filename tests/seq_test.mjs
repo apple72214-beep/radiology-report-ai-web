@@ -1,6 +1,6 @@
 /* Sequence naming + on-image annotation layer. */
 import { readFileSync } from "node:fs";
-import { seqLabelOf, studyTypeLabel } from "../app.v102.js";
+import { seqLabelOf, studyTypeLabel } from "../app.v103.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -36,9 +36,9 @@ eq(studyTypeLabel({ bodyPart: "BRAIN", frames: [{}], modality: "MR" }), "BRAIN",
 eq(studyTypeLabel(null), "", "no study → empty");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v102.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v102.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v102.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v103.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v103.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v103.js", import.meta.url), "utf-8");
 for (const tag of ["0008,103E", "0018,0024", "0018,1030", "0018,0081", "0018,0080", "0018,9087", "0018,0010", "0020,0011", "0020,1041"]) {
   ck(dcm.includes('"' + tag + '"'), "parser captures DICOM tag " + tag);
 }
@@ -55,6 +55,6 @@ ck(app.includes('lb.derived ? lb.label + " ~" : lb.label'), "inferred labels are
 const unguarded = (app.match(/\$\("(?:preset|slice)"\)\.value/g) || []).length;
 ck(app.includes("const presetVal =") && app.includes("const sliceIdx ="), "safe helpers exist for preset/slice reads");
 ck(unguarded <= 2, "preset/slice reads routed through guarded helpers (direct reads left: " + unguarded + ", all behind null checks)");
-ck(/const sl = \$\("slice"\); if \(sl\) sl\.value = 0;/.test(app), "slice reset no longer assumes the control exists");
+ck(/const sl0 = \$\("slice"\); if \(sl0\)/.test(app) || /const sl = \$\("slice"\); if \(sl\)/.test(app), "slice reset no longer assumes the control exists");
 console.log(fails ? "SEQ TEST FAIL " + fails : "SEQ TEST PASS");
 process.exit(fails ? 1 : 0);

@@ -1,12 +1,12 @@
 {
-  "build": "v102",
-  "version": "v102",
-  "mark": "ب2.74",
+  "build": "v103",
+  "version": "v103",
+  "mark": "ب2.75",
   "channel": "stable",
-  "minVersion": "v102",
-  "updatedAt": "2026-10-04T20:10:59Z",
+  "minVersion": "v103",
+  "updatedAt": "2026-10-04T21:13:22Z",
   "notes": {
-    "ar": "طبقة معلومات على الصورة: نوع الفحص والتسلسل (T1/T2/FLAIR/DWI) مع تمييز المشتق، وإصلاح خطأ الرسم — ب2.74",
-    "en": "On-image annotation layer: study/sequence label with derived-labelling marker, plus a draw-error fix — ب2.74"
+    "ar": "فصل السلاسل (Series): منتقٍ للسلاسل، وMPR داخل السلسلة فقط، وتراجع تلقائي عند تعذّر البناء — ب2.75",
+    "en": "Series awareness: series picker, per-series MPR volume, automatic fallback when a volume cannot be built — ب2.75"
   }
 }

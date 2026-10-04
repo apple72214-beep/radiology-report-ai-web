@@ -1,4 +1,4 @@
-import { drawFrame } from "../app.v102.js";
+import { drawFrame } from "../app.v103.js";
 let fails = 0;
 const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
 function fakeCanvas() {
@@ -17,7 +17,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v102.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v103.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -30,9 +30,9 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v102.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v103.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
-ck(sws.includes("app.v102.js"), "SW precache list matches current build");
+ck(sws.includes("app.v103.js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
 ck(!src.includes("for (const fr of current.frames) { if (fr.w > maxW)"), "no series-wide scaling (was shrinking mixed-dim slices)");
 ck(src.includes("function releaseWatch()"), "stale tabs auto-reload via release watchdog");
@@ -52,7 +52,7 @@ ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance
 ck(src.includes("You are a CONSULTANT RADIOLOGIST assistant"), "prompt demands consultant-grade structured draft");
 ck(src.includes("c.toDataURL(\"image/jpeg\", 0.9)"), "renders sent at 768px JPEG (sharper vision input)");
 ck(src.includes("technique: String(obj.technique || \"\").trim()"), "AI technique stored with the report");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v102.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v103.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
 ck(src.includes("fileToJpegB64") && src.includes(".concat(aiExtraImgs).slice(0, 8)"), "physician screenshots join the request (max 8 images)");
 ck(src.includes("attached screenshot(s)"), "consent names attached screenshots");
 ck(src.includes("EQUAL weight to the slice renders"), "prompt gives attached screenshots primary-evidence weight");
@@ -66,7 +66,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v102.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v103.html", import.meta.url), "utf-8"));
 const startHtml = (await import("node:fs")).readFileSync(new URL("../start.html", import.meta.url), "utf-8");
 ck(startHtml.includes("ev.persisted") && startHtml.includes("rrai-sw-updated"), "bootstrap reloads on bfcache restore and on SW update");
 ck(src.includes("if (useImages && !cfg.vision[model] && !cfg.native) continue;"), "images never silently dropped: text-only models skipped while images pending");
@@ -82,10 +82,10 @@ ck(src.includes("/^(AIza|AQ\\.)/i.test(k)"), "new AQ-format Gemini keys auto-det
 ck(src.includes("!cfg.vision[model] && !cfg.native"), "Gemini native models treated as vision-capable");
 ck(src.includes("Send up to 6 slice renders") && src.includes("while (totalB64 > 3500000 && images.length > 6)"), "six evenly spaced renders, 8-image cap with size shedding");
 ck(src.includes("function setupTemplates") && ui.includes("id=\"tpl-list\""), "settings icon with normal/pathology template library");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v102.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v103.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
 ck(src.includes("function techniqueFor"), "deterministic TECHNIQUE generator with sequence catalog");
 ck(src.includes('technique: String(obj.technique || "").trim() || techniqueFor(study)'), "AI draft never leaves technique empty");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v102.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v103.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
 ck(ui.includes("id=\"app-logo\"") && ui.includes("./icons/logo.png"), "brand logo rendered in the header");
 ck(sws.includes("./icons/logo.png"), "logo precached for offline branding");
 ck(src.includes("const lat = /RIGHT|"), "technique names the correct side (right/left) from exam fields");
@@ -105,7 +105,7 @@ ck(ui.includes("id=\"prior-line\""), "prior-studies banner above viewer");
 ck(ui.includes("id=\"export-csv\"") && src.includes("text/csv"), "on-device CSV export of the worklist");
 ck(ui.includes(".badge.signed"), "signed badge chip in worklist name cell");
 ck((sws.match(/ignoreSearch: true/g) || []).length >= 3, "SW matches cache entries despite ?cb= cache-busters");
-ck(/"app\.v102\.js": \d+,/.test(sws) && !/"app\.v98\.js"/.test(sws), "SW LEN table holds BYTE counts for current build only");
+ck(/"app\.v103\.js": \d+,/.test(sws) && !/"app\.v98\.js"/.test(sws), "SW LEN table holds BYTE counts for current build only");
 ck(startHtml.includes("caches.match(u, { ignoreSearch: true })"), "boot falls back to SW cache when a fetch throws (offline)");
 ck(src.includes("const allNow = await allStudies();") && !/const others = studies\.filter/.test(src), "prior-studies banner reads via allStudies() (no out-of-scope studies ref)");
 ck(src.includes("const list = await allStudies();"), "CSV export reads via allStudies()");
@@ -171,11 +171,11 @@ ck(src.includes('map.zoomOut || "-"') && src.includes("vk = Math.max(0.5, vk / 1
 ck(src.includes('map.contrast || "c"') && src.includes("ps.selectedIndex = (ps.selectedIndex + 1) % ps.options.length") && src.includes('["ks-zoom-in", "+"], ["ks-zoom-out", "-"], ["ks-contrast", "c"]') && ui.includes('id="ks-contrast"'), "v97: contrast cycling shortcut + 3 new key recorders");
 ck(src.includes("function verNum") && src.includes("best > verNum(APP_BUILD)") && !src.includes("m[1] !== APP_BUILD"), "v98: numeric version gate — never prompts downgrades");
 ck(src.includes("async function forceUpdateReload") && src.includes("reg.waiting.postMessage") && src.includes('id="upd-go"'), "v98: force-reload clears caches + wakes waiting SW");
-ck(/const CRITICAL = \[[^\]]*"\.\/app\.v102\.js"[^\]]*\]/.test(sws) && !/app\.v86\.js|triage\.v86/.test(sws) && /sw\\.js\|sw\\.v\\d\+\\.js\|integrity/.test(sws), "v98: CRITICAL list current-only + control files network-first");
+ck(/const CRITICAL = \[[^\]]*"\.\/app\.v103\.js"[^\]]*\]/.test(sws) && !/app\.v86\.js|triage\.v86/.test(sws) && /sw\\.js\|sw\\.v\\d\+\\.js\|integrity/.test(sws), "v98: CRITICAL list current-only + control files network-first");
 const sth = await import("node:fs").then((fs) => fs.readFileSync(new URL("../start.html", import.meta.url), "utf-8"));
-ck(sth.includes("cands.sort((x, y) => verL(y) - verL(x))") && sth.includes('fetch("./integrity." + b + ".json'), "v102: launcher tries newest build first + integrity-driven validation for unknown builds");
-ck(src.includes("raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json") && src.includes("best > verNum(APP_BUILD)") && src.includes("function showUpdateBanner"), "v102: triple-origin update probe takes highest version only");
-ck(await import("node:fs").then((fs) => fs.readFileSync(new URL("../../docker/vercel.public.json", import.meta.url), "utf-8")).then((x) => x.includes('"/u9"')), "v102: fresh proxy-busting route /u9 wired in Vercel config");
+ck(sth.includes("cands.sort((x, y) => verL(y) - verL(x))") && sth.includes('fetch("./integrity." + b + ".json'), "v103: launcher tries newest build first + integrity-driven validation for unknown builds");
+ck(src.includes("raw.githubusercontent.com/apple72214-beep/radiology-report-ai-web/main/release.json") && src.includes("best > verNum(APP_BUILD)") && src.includes("function showUpdateBanner"), "v103: triple-origin update probe takes highest version only");
+ck(await import("node:fs").then((fs) => fs.readFileSync(new URL("../../docker/vercel.public.json", import.meta.url), "utf-8")).then((x) => x.includes('"/u9"')), "v103: fresh proxy-busting route /u9 wired in Vercel config");
 /* MPR — three linked viewports (axial / coronal / sagittal) */
 for (const id of ["mpr-bar", "mpr-toggle", "mpr-note", "mpr-grid", "mpr-c-axial", "mpr-c-coronal", "mpr-c-sagittal", "mpr-lab-axial", "mpr-lab-coronal", "mpr-lab-sagittal"]) {
   ck(ui.includes('id="' + id + '"'), "MPR: " + id + " present in the viewer UI");
@@ -185,10 +185,11 @@ for (const fn of ["function mprVolume", "function mprRender", "function mprToggl
   ck(src.includes(fn), "MPR viewer: " + fn + "() implemented in the app");
 }
 ck(src.includes('["mpr", "./mpr.v59.js"') && src.includes('if (name === "mpr") { mprApi = null;'), "MPR module is loaded but never allowed to block the app");
-ck(src.includes("mprApi.volumeFromFrames(current.frames") && src.includes("maxVoxels"), "MPR builds the volume lazily with a memory cap");
+ck(src.includes("mprApi.volumeFromFrames(frames") && src.includes("maxVoxels"), "MPR builds the volume lazily with a memory cap");
+ck(!src.includes("volumeFromFrames(current.frames"), "MPR never mixes sequences: the volume comes from the selected series, not the whole study");
 ck(src.includes("mprApi.pointToVolume") && src.includes("mprApi.volumeToPlanePixel"), "MPR click↔crosshair mapping is wired");
 ck(src.includes('k === (map.next || "ArrowRight")) {\n        if (mprOn)'), "keyboard slice keys drive the focused MPR pane");
-ck(sws.includes("./mpr.v102.js"), "MPR module is precached by the service worker");
+ck(sws.includes("./mpr.v103.js"), "MPR module is precached by the service worker");
 /* self-healing when a stale service worker poisons the update */
 ck(sth.includes("function nukeStaleWorker") || sth.includes("const nukeStaleWorker"), "launcher can evict a stale service worker");
 ck(sth.includes("rrai-swnuke") && sth.includes("navigator.serviceWorker.controller"), "eviction runs once per session and only when a worker is in control");
