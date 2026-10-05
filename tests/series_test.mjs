@@ -1,6 +1,6 @@
 /* Series awareness: an MR study is several sequences, never one mixed stack. */
 import { readFileSync } from "node:fs";
-import { groupSeries, seriesSummary } from "../app.v111.js";
+import { groupSeries, seriesSummary } from "../app.v112.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -43,9 +43,9 @@ const many = { series: [1, 2, 3, 4, 5, 6].map((n) => ({ number: n, label: "Se" +
 eq(seriesSummary(many).endsWith("+2"), true, "long summaries are truncated with a count");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v111.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v111.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v111.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v112.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v112.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v112.js", import.meta.url), "utf-8");
 ck(dcm.includes('"0020,000E"'), "parser captures SeriesInstanceUID");
 ck(app.includes("px.seriesUid = parsed.seriesUid"), "series identity kept on every frame");
 ck(app.includes("study.series = groupSeries(study.frames, study.modality)"), "series computed at ingest");

@@ -8,8 +8,8 @@ const html = readFileSync(new URL("../standalone.html", import.meta.url), "utf-8
 const mj = html.match(/<script type="application\/json" id="rrai-src">([\s\S]*?)<\/script>/);
 cks(!!mj, "standalone: embedded payload present");
 const P = JSON.parse(mj[1].replace(/<\\\//g, "</"));
-cks(P.build === "v111", "standalone: build v111");
-cks(P.mark === "ب2.83", "standalone: mark ب2.83");
+cks(P.build === "v112", "standalone: build v112");
+cks(P.mark === "ب2.84", "standalone: mark ب2.84");
 const S = P.src;
 const TOPO = ["consult", "decode", "dicom", "triage", "docx", "measure", "compare", "report", "mpr", "app", "ui"];
 for (const n of TOPO) cks(typeof S[n] === "string" && S[n].length > 400, "standalone: module " + n + " embedded");
@@ -35,7 +35,7 @@ c("checked " + TOPO.length + " embedded units; 0 network references remain");
 
 /* retired service workers must self-destruct, current one must not */
 const sws = readdirSync(new URL("../", import.meta.url)).filter((f) => /^sw\.v\d+\.js$/.test(f));
-const cur = "sw.v111.js";
+const cur = "sw.v112.js";
 let retired = 0;
 for (const f of sws) {
   const t = readFileSync(new URL("../" + f, import.meta.url), "utf-8");
@@ -45,15 +45,15 @@ for (const f of sws) {
 }
 cks(retired > 50, "every retired build is pilled (found " + retired + ")");
 const boot = readFileSync(new URL("../sw.js", import.meta.url), "utf-8").trim();
-cks(/importScripts\("\.\/sw\.v111\.js"\);/.test(boot) && boot.split("\n").filter((l) => l && !l.startsWith("/*")).length === 1, "sw.js is a pure relay to the current build");
-c("service-worker graveyard: " + retired + " retired builds neutralised, sw.js relays to v111");
+cks(/importScripts\("\.\/sw\.v112\.js"\);/.test(boot) && boot.split("\n").filter((l) => l && !l.startsWith("/*")).length === 1, "sw.js is a pure relay to the current build");
+c("service-worker graveyard: " + retired + " retired builds neutralised, sw.js relays to v112");
 /* the launcher must never dead-end: single-file escape hatch on any boot failure */
 for (const f of ["start.html"]) {
   const t = readFileSync(new URL("../" + f, import.meta.url), "utf-8");
   cks(t.includes('id="rrai-solo"') && t.includes('location.replace("./standalone.html?f=1")'), f + ": boot failure offers/auto-opens the single-file edition");
   cks(t.includes("rrai-solo-try") && t.includes("./diag.html"), f + ": escape hatch is once-per-session and points at diagnostics");
 }
-const ui = readFileSync(new URL("../ui.v111.html", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v112.html", import.meta.url), "utf-8");
 cks(ui.includes('href="./standalone.html"') && ui.includes('href="./diag.html"'), "ui: permanent standalone + diagnostics links in About");
 const dg = readFileSync(new URL("../diag.html", import.meta.url), "utf-8");
 cks(dg.includes("raw.githubusercontent") && dg.includes("cdn.jsdelivr.net") && dg.includes("allorigins"), "diag: probes every external origin the launcher depends on");

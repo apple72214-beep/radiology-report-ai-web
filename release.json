@@ -1,12 +1,12 @@
 {
-  "build": "v111",
-  "version": "v111",
-  "mark": "ب2.83",
+  "build": "v112",
+  "version": "v112",
+  "mark": "ب2.84",
   "channel": "stable",
-  "minVersion": "v111",
-  "updatedAt": "2026-10-05T20:06:55Z",
+  "minVersion": "v112",
+  "updatedAt": "2026-10-05T21:27:50Z",
   "notes": {
-    "ar": "المُطلِق ملف تحكّم: لا يُقدَّم من المخبأ إلا بطول يطابق الإصدار — ب2.83",
-    "en": "Launcher is a control file: never served stale from cache — ب2.83"
+    "ar": "رسالة رفض الاستيراد تشرح سببها الحقيقي — ب2.84",
+    "en": "Import refusal now states its real reason — ب2.84"
   }
 }
