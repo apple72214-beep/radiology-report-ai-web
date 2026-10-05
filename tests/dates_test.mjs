@@ -1,6 +1,6 @@
 /* Study dates: DICOM date handling, fallbacks and the worklist column. */
 import { readFileSync } from "node:fs";
-import { fmtDicomDate, dateKey } from "../app.v110.js";
+import { fmtDicomDate, dateKey } from "../app.v111.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -23,7 +23,7 @@ eq(dateKey("2024-05-12"), 20240512, "ISO date keys identically");
 /* --- parser fallbacks --------------------------------------------------- */
 let pick = null;
 try {
-  ({ pickDate: pick } = await import("../dicom.v110.js"));
+  ({ pickDate: pick } = await import("../dicom.v111.js"));
 } catch (e) {
   console.log("  (dicom module not importable in node — fallback rule checked statically)");
 }
@@ -34,14 +34,14 @@ if (pick) {
   eq(pick("20241332"), "", "implausible dates (month 13) are rejected rather than shown");
   eq(pick(), "", "no candidates → empty");
 }
-const dcm = readFileSync(new URL("../dicom.v110.js", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v111.js", import.meta.url), "utf-8");
 ck(/0008,0020[\s\S]{0,120}0008,0021[\s\S]{0,80}0008,0022/.test(dcm), "parser walks the DICOM date fallback chain");
 ck(dcm.includes('"0008,0030"'), "study time is captured as well");
 ck(dcm.includes("export function pickDate"), "the fallback rule is exported and testable");
 
 /* --- worklist ----------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v110.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v110.html", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v111.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v111.html", import.meta.url), "utf-8");
 ck(ui.includes('id="th-date"'), "worklist header has a date column");
 ck(app.includes("for (let i = 0; i < 6; i++)"), "worklist rows build six cells");
 ck(/tr\.children\[2\]\.textContent = dTxt/.test(app), "date cell is filled from the study date");

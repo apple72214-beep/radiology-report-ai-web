@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v110.js";
-import { drawFrame, pixelProblem, pixelProblemText } from "../app.v110.js";
+import { parseDicom } from "../dicom.v111.js";
+import { drawFrame, pixelProblem, pixelProblemText } from "../app.v111.js";
 import fs from "node:fs";
 
 let fails = 0;
@@ -136,18 +136,18 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v110.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v111.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) { bad++"), "ingest counts files with unreadable pixels");
 ck(src.includes("if (!study.frames.length) { bad++; continue; }"), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v110.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v111.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
-ck(probe.includes('from "./dicom.v110.js"'), "DICOM probe page imports the current parser");
+ck(probe.includes('from "./dicom.v111.js"'), "DICOM probe page imports the current parser");
 ck(probe.includes("problem=") && probe.includes("pixelBytes="), "probe reports pixel bytes vs needed bytes");
 ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Arabic UI)");
 
@@ -159,10 +159,10 @@ ck(src.includes("if (autoWin && poorRender(res))"), "only the automatic window g
 ck(src.includes("pixels.__win = { k: ck, lo, hi }"), "a successful rescue is remembered for the next draw");
 
 /* ---- 6. no stale diagnostics pages: control + probe files are never cached ---- */
-const sw = fs.readFileSync(new URL("../sw.v110.js", import.meta.url), "utf-8");
+const sw = fs.readFileSync(new URL("../sw.v111.js", import.meta.url), "utf-8");
 ck(sw.includes("integrity\\.v\\d+\\.json") && sw.includes("/release.json") && sw.includes("sw\\.v\\d+\\.js"), "control + release files bypass the cache");
 ck(sw.includes("release.json\")) return;"), "release.json always comes from the network");
-ck(probe.includes('from "./dicom.v110.js"'), "the probe always parses with the current parser");
+ck(probe.includes('from "./dicom.v111.js"'), "the probe always parses with the current parser");
 
 /* ---- 7. on-image diagnostics layer (v108) ---- */
 ck(src.includes("export function diagLines"), "diagnostics lines are exported for the overlay");

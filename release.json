@@ -1,12 +1,12 @@
 {
-  "build": "v110",
-  "version": "v110",
-  "mark": "ب2.82",
+  "build": "v111",
+  "version": "v111",
+  "mark": "ب2.83",
   "channel": "stable",
-  "minVersion": "v110",
-  "updatedAt": "2026-10-05T15:50:59Z",
+  "minVersion": "v111",
+  "updatedAt": "2026-10-05T20:06:55Z",
   "notes": {
-    "ar": "إصلاح حلقة التحديث: إعادة بناء جدول تحقق المُطلِق — ب2.82",
-    "en": "Update-loop fix: rebuilt launcher verification table — ب2.82"
+    "ar": "المُطلِق ملف تحكّم: لا يُقدَّم من المخبأ إلا بطول يطابق الإصدار — ب2.83",
+    "en": "Launcher is a control file: never served stale from cache — ب2.83"
   }
 }

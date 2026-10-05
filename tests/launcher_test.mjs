@@ -79,5 +79,20 @@ ck(roll.includes('EXPECT holds exactly one entry'), "roll.py --check audits for 
 ck(!/read\(\)\.replace\(old, new\)/.test(roll) || roll.indexOf("fix_launcher(new, exp)") > 0,
    "the roll rebuilds the tables after it rewrites version tokens");
 
+/* ---- 7. the service worker must never serve a stale launcher ---- */
+const sw = rd("sw." + build + ".js");
+ck(sw.includes('const launcher = /\\/(start|index)\\.html$/'), "the service worker recognises a launcher navigation");
+ck(sw.includes('new Request(e.request, { cache: "no-store" })'), "navigations are fetched from the network, not the HTTP cache");
+ck(sw.includes('!launcher || okLen(url.pathname'), "a launcher body is checked against this build's byte table");
+ck(sw.includes('"?swb=" + Date.now()'), "a stale or poisoned launcher gets one cache-busted retry");
+ck(sw.includes('"./standalone.html", "./start.html"'), "offline fallback prefers the self-contained edition");
+const lenm = sw.match(/"start\.html": (\d+)/);
+ck(!!lenm, "start.html has a trusted byte length in the SW table");
+if (lenm) ck(parseInt(lenm[1], 10) === readFileSync(new URL("start.html", W)).length,
+             "the SW's start.html length matches the file on disk (" + lenm[1] + ")");
+const leni = sw.match(/"index\.html": (\d+)/);
+if (leni) ck(parseInt(leni[1], 10) === readFileSync(new URL("index.html", W)).length,
+             "the SW's index.html length matches the file on disk");
+
 console.log(fails ? "LAUNCHER TEST FAIL " + fails : "LAUNCHER TEST PASS");
 process.exit(fails ? 1 : 0);
