@@ -1,12 +1,12 @@
 {
-  "build": "v107",
-  "version": "v107",
-  "mark": "ب2.79",
+  "build": "v108",
+  "version": "v108",
+  "mark": "ب2.80",
   "channel": "stable",
-  "minVersion": "v107",
-  "updatedAt": "2026-10-05T08:41:46Z",
+  "minVersion": "v108",
+  "updatedAt": "2026-10-05T11:31:06Z",
   "notes": {
-    "ar": "صفحات التشخيص لا تُخزَّن أبدًا، والفاحص يطبع رقم الإصدار، وضبط عدم التخزين المؤقت على الاستضافة — ب2.79",
-    "en": "Diagnostics pages are never cached, the probe prints its build, and no-store headers are configured on the host — ب2.79"
+    "ar": "طبقة تشخيص على الصورة (بناءً/شريحة/أبعاد/نافذة/مدى/تباين)، وتكبير نافذة MPR، وتنبيه «غير معتمد للتشخيص» — ب2.80",
+    "en": "On-image diagnostics layer, MPR pane maximise, and a not-certified-for-diagnosis notice — ب2.80"
   }
 }
