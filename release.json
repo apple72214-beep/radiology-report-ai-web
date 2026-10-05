@@ -1,12 +1,12 @@
 {
-  "build": "v108",
-  "version": "v108",
-  "mark": "ب2.80",
+  "build": "v109",
+  "version": "v109",
+  "mark": "ب2.81",
   "channel": "stable",
-  "minVersion": "v108",
-  "updatedAt": "2026-10-05T11:31:06Z",
+  "minVersion": "v109",
+  "updatedAt": "2026-10-05T13:50:01Z",
   "notes": {
-    "ar": "طبقة تشخيص على الصورة (بناءً/شريحة/أبعاد/نافذة/مدى/تباين)، وتكبير نافذة MPR، وتنبيه «غير معتمد للتشخيص» — ب2.80",
-    "en": "On-image diagnostics layer, MPR pane maximise, and a not-certified-for-diagnosis notice — ب2.80"
+    "ar": "تحقق من وصول الرسم إلى الشاشة، وشاردة صحة البكسل في قائمة العمل، وفحص السلسلة بضغطة واحدة — ب2.81",
+    "en": "Paint readback verification, a pixel-health badge in the worklist, and one-tap series scan — ب2.81"
   }
 }

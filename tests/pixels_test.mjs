@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v108.js";
-import { drawFrame, pixelProblem, pixelProblemText } from "../app.v108.js";
+import { parseDicom } from "../dicom.v109.js";
+import { drawFrame, pixelProblem, pixelProblemText, paintReadback } from "../app.v109.js";
 import fs from "node:fs";
 
 let fails = 0;
@@ -142,14 +142,14 @@ const greySpread = (im) => {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v108.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v109.js", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v109.html", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) { bad++"), "ingest counts files with unreadable pixels");
 ck(src.includes("if (!study.frames.length) { bad++; continue; }"), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v108.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 
@@ -203,12 +203,12 @@ ck(src.includes("let mn2 = Infinity, mx2 = -Infinity;"), "full-range window is t
 
 /* ---- 6. diagnostics pages must never be served stale ---- */
 const probeSrc = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
-ck(probeSrc.includes('from "./dicom.v108.js"'), "probe page imports the current parser");
-ck(probeSrc.includes('const PROBE_BUILD = "v108"'), "probe prints its own build (a cached copy is detectable)");
+ck(probeSrc.includes('from "./dicom.v109.js"'), "probe page imports the current parser");
+ck(probeSrc.includes('const PROBE_BUILD = "v109"'), "probe prints its own build (a cached copy is detectable)");
 ck(probeSrc.includes("function windowReport"), "probe recomputes the viewer window");
 ck(probeSrc.includes("greySpread="), "probe reports the grey spread (0 = blank render)");
 ck(probeSrc.includes("hist16%="), "probe prints a 16-bucket histogram");
-const sw = fs.readFileSync(new URL("../sw.v108.js", import.meta.url), "utf-8");
+const sw = fs.readFileSync(new URL("../sw.v109.js", import.meta.url), "utf-8");
 ck(sw.includes("NEVER_CACHED") && sw.includes("(probe|diag)") && sw.includes(".test(url.pathname)"), "service worker never caches the diagnostics pages");
 ck(sw.indexOf("NEVER_CACHED.test(url.pathname)") < sw.indexOf('if (e.request.mode === "navigate")'), "the bypass runs before any cache lookup");
 ck(!sw.includes("(probe|diag|start|index)"), "start/index stay cached: offline escape hatches");
@@ -231,6 +231,22 @@ ck(ui.includes('id="dx-foot"') && ui.includes('id="dx-foot-ok"'), "not-certified
 ck(ui.includes("mpr-pane-axial") && ui.includes(".mpr-pane.max"), "MPR panes can be maximised");
 ck(src.includes("function mprSetMax(pl)") && src.includes("function mprWireMax()"), "pane maximise is wired");
 ck(src.includes('localStorage.setItem("rrai-dx-ack", "1")'), "the notice can be dismissed for good");
+
+/* ---- 8. data vs paint: prove which one failed ---- */
+ck(src.includes("export function paintReadback(canvas"), "canvas readback exists");
+ck(typeof paintReadback === "function", "paintReadback is exported for tests");
+{
+  const rb = paintReadback({ width: 0, height: 0, getContext: () => null });
+  ck(rb && rb.ok === false, "readback reports a canvas it cannot read");
+}
+ck(src.includes("lastPaint = rb;"), "the paint verdict is recorded on every draw when diagnostics are on");
+ck(src.includes('"paint=" + (lastPaint ?'), "diagnostics line carries the paint verdict");
+ck(src.includes("async function scanSeries()"), "one-tap series scan exists");
+ck(src.includes('$("scan-btn")'), "the scan button is wired");
+ck(ui.includes('id="scan-btn"'), "the scan button exists in the UI");
+ck(src.includes("study.pixelBad = badFrames;"), "import remembers how many files carried no pixels");
+ck(src.includes("s.pixelBad = badN;"), "old studies are scanned lazily for the worklist badge");
+ck(src.includes('wb.textContent = (LANG === "en" ? "⚠ "'), "worklist shows a blank-frame badge");
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
 process.exit(fails ? 1 : 0);
