@@ -19,7 +19,11 @@ const probes = [
   ["DECODE_ANCESTOR", "regenerates a vanished codecs/decode.vNN.js"],
   ["self.registration.unregister()", "pills retired service workers"],
   ["make_standalone.py", "rebuilds the single-file edition"],
-  ["json.dumps(exp, ensure_ascii=False), m.group", "writes the launcher EXPECT entry"],
+  ["def fix_launcher(", "rebuilds the launcher known list + EXPECT table from disk"],
+  ["def known_block(", "known list is generated, never string-appended"],
+  ["def expect_block(", "EXPECT holds one fresh entry for the current build"],
+  ["def integrity_builds(", "fallback builds come from the integrity manifests on disk"],
+  ["EXPECT holds exactly one entry", "audits the launcher for duplicate build keys"],
   ["integrity.", "writes the integrity manifest"],
   ["const PIN = ", "refreshes the pinned fallback origin"],
 ];

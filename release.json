@@ -1,12 +1,12 @@
 {
-  "build": "v109",
-  "version": "v109",
-  "mark": "ب2.81",
+  "build": "v110",
+  "version": "v110",
+  "mark": "ب2.82",
   "channel": "stable",
-  "minVersion": "v109",
-  "updatedAt": "2026-10-05T13:50:01Z",
+  "minVersion": "v110",
+  "updatedAt": "2026-10-05T15:50:59Z",
   "notes": {
-    "ar": "تحقق من وصول الرسم إلى الشاشة، وشاردة صحة البكسل في قائمة العمل، وفحص السلسلة بضغطة واحدة — ب2.81",
-    "en": "Paint readback verification, a pixel-health badge in the worklist, and one-tap series scan — ب2.81"
+    "ar": "إصلاح حلقة التحديث: إعادة بناء جدول تحقق المُطلِق — ب2.82",
+    "en": "Update-loop fix: rebuilt launcher verification table — ب2.82"
   }
 }
