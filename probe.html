@@ -21,7 +21,8 @@
 </style>
 </head>
 <body>
-<h3>فاحص ملف DICOM</h3>
+<h3>فاحص ملف DICOM <span id="pb" style="font-size:.7rem;color:#7dd3fc"></span></h3>
+<script>document.getElementById("pb").textContent = "v107";</script>
 <p style="margin:.2rem 0;color:#9fc3e8;font-size:.9rem">
   كل شيء يحدث داخل متصفحك: الملف لا يُرفع إلى أي سيرفر. اختر ملفًا واحدًا من ملفات دراستك، ثم أرسل لي التقرير.
 </p>
@@ -33,7 +34,10 @@
 <p style="margin-top:1rem"><a href="./" style="color:#7dd3fc">العودة إلى التطبيق</a></p>
 
 <script type="module">
-import { parseDicom } from "./dicom.v106.js";
+import { parseDicom } from "./dicom.v107.js";
+
+/* Rolled by tools/roll.py: a probe that reports its build cannot be mistaken for a cached one. */
+const PROBE_BUILD = "v107";
 
 const TS = {
   "1.2.840.10008.1.2": "Implicit VR Little Endian",
@@ -168,7 +172,7 @@ async function run(file) {
   let p = null, err = "";
   try { p = parseDicom(buf); } catch (e) { err = String((e && e.message) || e); }
   const L = [];
-  L.push("Radiology report AI — DICOM probe");
+  L.push("Radiology report AI " + PROBE_BUILD + " — DICOM probe");
   L.push("file=" + (file.name || "?"));
   L.push("size=" + u8.length + " bytes");
   L.push("DICM=" + (hasDicm ? "yes" : "no"));

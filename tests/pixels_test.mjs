@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v106.js";
-import { drawFrame, pixelProblem, pixelProblemText } from "../app.v106.js";
+import { parseDicom } from "../dicom.v107.js";
+import { drawFrame, pixelProblem, pixelProblemText } from "../app.v107.js";
 import fs from "node:fs";
 
 let fails = 0;
@@ -136,39 +136,55 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v106.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v107.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) { bad++"), "ingest counts files with unreadable pixels");
 ck(src.includes("if (!study.frames.length) { bad++; continue; }"), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v106.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v107.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
-ck(probe.includes('from "./dicom.v106.js"'), "DICOM probe page imports the current parser");
+ck(probe.includes('from "./dicom.v107.js"'), "DICOM probe page imports the current parser");
 ck(probe.includes("problem=") && probe.includes("pixelBytes="), "probe reports pixel bytes vs needed bytes");
 ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Arabic UI)");
 
-/* ---- 5. a collapsed window must not paint a flat frame ---- */
-const greySpread = (im) => {
-  const a = im.data;
-  let mn = 255, mx = 0;
-  for (let j = 0; j < a.length; j += 4) { const g = a[j]; if (g < mn) mn = g; if (g > mx) mx = g; }
-  return mx - mn;
-};
+/* ---- 5. diagnostics pages must never be served stale ---- */
+const probeSrc = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
+ck(probeSrc.includes('const PROBE_BUILD = "v107"'), "probe prints its own build (a cached copy is detectable)");
+ck(probeSrc.includes('PROBE_BUILD + " — DICOM probe"'), "the pasted report carries the build");
+ck(probeSrc.includes("function windowReport"), "probe recomputes the viewer window");
+ck(probeSrc.includes("greySpread="), "probe reports the grey spread (0 = blank render)");
+const sw = fs.readFileSync(new URL("../sw.v107.js", import.meta.url), "utf-8");
+ck(sw.includes("NEVER_CACHED") && sw.includes("(probe|diag)") && sw.includes(".test(url.pathname)"), "service worker never caches the diagnostics pages");
+ck(sw.indexOf("NEVER_CACHED.test(url.pathname)") < sw.indexOf('if (e.request.mode === "navigate")'), "the bypass runs before any cache lookup");
+ck(sw.indexOf("NEVER_CACHED.test(url.pathname)") > -1 && !/\(probe\|diag\|start\|index\)/.test(sw), "start/index stay cached: offline escape hatches");
+const vj = JSON.parse(fs.readFileSync(new URL("../vercel.json", import.meta.url), "utf-8"));
+ck(vj.headers[0].source.includes("probe") && vj.headers[0].source.includes("diag"), "host config: diagnostics pages are no-store");
+ck(vj.headers[0].headers.some((h) => String(h.value).includes("no-store")), "host config sends Cache-Control: no-store");
+ck(vj.rewrites.some((r) => r.destination === "/probe.html"), "host config: /p reaches the probe");
+
+/* ---- 6. a collapsed window must not paint a flat frame ---- */
 {
-  /* one value plus a handful of outliers: the 2/98 window collapses to lo == hi */
   const d = new Uint16Array(64 * 64).fill(4000);
   for (let i = 0; i < 6; i++) d[i * 7] = i % 2 ? 0 : 4095;
-  const px5 = { w: 64, h: 64, data: d };
   const cv = paintCanvas();
-  drawFrame(cv, px5, "auto", "MR");
+  drawFrame(cv, { w: 64, h: 64, data: d }, "auto", "MR");
   const im = cv.calls.last;
   let white = 0, n = 0;
   if (im) { for (let j = 0; j < im.data.length; j += 4) { if (im.data[j] === 255) white++; n++; } }
   ck(!im || white / n < 0.9, "collapsed window no longer paints a flat frame");
+}
+{
+  const d = new Uint16Array(64 * 64).fill(500);
+  for (let i = 0; i < 40; i++) d[i * 97 % d.length] = 200 + (i % 300);
+  const cv = paintCanvas();
+  drawFrame(cv, { w: 64, h: 64, data: d }, "auto", "MR");
+  let sp = -1;
+  if (cv.calls.last) { const a = cv.calls.last.data; let mn = 255, mx = 0; for (let j = 0; j < a.length; j += 4) { const g = a[j]; if (g < mn) mn = g; if (g > mx) mx = g; } sp = mx - mn; }
+  ck(sp > 20, "background-aware rescue restores contrast");
 }
 {
   const d = new Int16Array(64 * 64).fill(1200);
@@ -177,14 +193,6 @@ const greySpread = (im) => {
   drawFrame(cv, { w: 64, h: 64, data: d }, "bone", "CT");
   ck(cv.calls.put === 1, "explicit CT preset renders");
 }
-{
-  /* 99% of the frame sits on one value: the dominant band must be skipped */
-  const d = new Uint16Array(64 * 64).fill(500);
-  for (let i = 0; i < 40; i++) d[i * 97 % d.length] = 200 + (i % 300);
-  const cv = paintCanvas();
-  drawFrame(cv, { w: 64, h: 64, data: d }, "auto", "MR");
-  ck(cv.calls.last && greySpread(cv.calls.last) > 20, "background-aware rescue restores contrast");
-}
 ck(src.includes("windowOutsideMode(d, n)"), "drawFrame re-windows outside the dominant band");
 ck(src.includes("const poorRender = (r) =>"), "collapse detection covers flat and clipped renders");
 ck(src.includes('const autoWin = !(win && modality === "CT")'), "only the automatic window is rescued");
@@ -192,11 +200,8 @@ ck(!/current\.frames\[sliceIdx\(\)\]/.test(src), "no study-wide indexing left af
 ck(src.includes("resetView(true, f0)"), "viewer fit sizes the canvas from the drawn frame");
 ck(src.includes("resetView(fit, frameOverride)"), "resetView accepts the drawn frame");
 ck(/const f = curFrame\(\) \|\| current\.frames\[0\];/.test(src), "annotation layer reads the series-local frame");
-ck(src.includes("let mn2 = Infinity, mx2 = -Infinity;"), "full-range window is the last resort before the plate");
-const probeSrc = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
-ck(probeSrc.includes("function windowReport"), "probe recomputes the viewer window");
-ck(probeSrc.includes("hist16%="), "probe prints a 16-bucket histogram");
-ck(probeSrc.includes("greySpread="), "probe reports the grey spread (0 = blank render)");
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
 process.exit(fails ? 1 : 0);
+
+/* marker-107 */

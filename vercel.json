@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(release\\.json|integrity\\.v[0-9]+\\.json|sw\\.js|sw\\.v[0-9]+\\.js|app\\.v[0-9]+\\.js|ui\\.v[0-9]+\\.html|start\\.html|index\\.html|standalone\\.html|diag\\.html)",
+      "source": "/(release\\.json|sw\\.js|sw\\.v[0-9]+\\.js|app\\.v[0-9]+\\.js|dicom\\.v[0-9]+\\.js|ui\\.v[0-9]+\\.html|integrity\\.v[0-9]+\\.json|standalone\\.html|probe\\.html|diag\\.html|start\\.html|index\\.html)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -10,50 +10,27 @@
         {
           "key": "CDN-Cache-Control",
           "value": "no-store"
-        }
-      ]
-    },
-    {
-      "source": "/r1/sw.v35.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
         },
         {
-          "key": "Cache-Control",
-          "value": "no-store, no-transform"
-        }
-      ]
-    },
-    {
-      "source": "/r2/sw.v35.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-transform"
-        }
-      ]
-    },
-    {
-      "source": "/r3/sw.v35.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-transform"
+          "key": "Vercel-CDN-Cache-Control",
+          "value": "no-store"
         }
       ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/r1/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r2/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/r3/:path*",
+      "destination": "/:path*"
+    },
     {
       "source": "/x",
       "destination": "/start.html"
@@ -71,6 +48,10 @@
       "destination": "/diag.html"
     },
     {
+      "source": "/p",
+      "destination": "/probe.html"
+    },
+    {
       "source": "/q",
       "destination": "/start.html"
     },
@@ -85,36 +66,6 @@
     {
       "source": "/t",
       "destination": "/start.html"
-    },
-    {
-      "source": "/u9",
-      "destination": "/start.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/r1/",
-      "destination": "/start.html"
-    },
-    {
-      "source": "/r2/",
-      "destination": "/start.html"
-    },
-    {
-      "source": "/r3/",
-      "destination": "/start.html"
-    },
-    {
-      "source": "/r1/:path*",
-      "destination": "/:path*"
-    },
-    {
-      "source": "/r2/:path*",
-      "destination": "/:path*"
-    },
-    {
-      "source": "/r3/:path*",
-      "destination": "/:path*"
     }
   ]
 }

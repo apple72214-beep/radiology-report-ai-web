@@ -1,12 +1,12 @@
 {
-  "build": "v106",
-  "version": "v106",
-  "mark": "ب2.78",
+  "build": "v107",
+  "version": "v107",
+  "mark": "ب2.79",
   "channel": "stable",
-  "minVersion": "v106",
-  "updatedAt": "2026-10-04T23:34:15Z",
+  "minVersion": "v107",
+  "updatedAt": "2026-10-05T08:41:46Z",
   "notes": {
-    "ar": "تثبيت فهرسة السلاسل في العرض والملاءمة والتعليقات، ونافذة احتياطية بمدى القيم، وفاحص DICOM يطبع المدرّج التكراري والنافذة المحسوبة — ب2.78",
-    "en": "Series-index fixes in show/fit/annotations, a value-range fallback window, and a probe that prints the histogram and the computed window — ب2.78"
+    "ar": "صفحات التشخيص لا تُخزَّن أبدًا، والفاحص يطبع رقم الإصدار، وضبط عدم التخزين المؤقت على الاستضافة — ب2.79",
+    "en": "Diagnostics pages are never cached, the probe prints its build, and no-store headers are configured on the host — ب2.79"
   }
 }
