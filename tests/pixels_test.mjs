@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v113.js";
-import { drawFrame, pixelProblem, pixelProblemText } from "../app.v113.js";
+import { parseDicom } from "../dicom.v114.js";
+import { drawFrame, pixelProblem, pixelProblemText } from "../app.v114.js";
 import fs from "node:fs";
 
 let fails = 0;
@@ -136,18 +136,18 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v113.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v114.js", import.meta.url), "utf-8");
 ck(/if \(pixelProblem\(px\)\) \{\n\s+bad\+\+/.test(src), "ingest counts files with unreadable pixels");
 ck(/if \(!study\.frames\.length\) \{ bad\+\+;/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v113.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v114.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
-ck(probe.includes('from "./dicom.v113.js"'), "DICOM probe page imports the current parser");
+ck(probe.includes('from "./dicom.v114.js"'), "DICOM probe page imports the current parser");
 ck(probe.includes("problem=") && probe.includes("pixelBytes="), "probe reports pixel bytes vs needed bytes");
 ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Arabic UI)");
 
@@ -159,10 +159,10 @@ ck(src.includes("if (autoWin && poorRender(res))"), "only the automatic window g
 ck(src.includes("pixels.__win = { k: ck, lo, hi }"), "a successful rescue is remembered for the next draw");
 
 /* ---- 6. no stale diagnostics pages: control + probe files are never cached ---- */
-const sw = fs.readFileSync(new URL("../sw.v113.js", import.meta.url), "utf-8");
+const sw = fs.readFileSync(new URL("../sw.v114.js", import.meta.url), "utf-8");
 ck(sw.includes("integrity\\.v\\d+\\.json") && sw.includes("/release.json") && sw.includes("sw\\.v\\d+\\.js"), "control + release files bypass the cache");
 ck(sw.includes("release.json\")) return;"), "release.json always comes from the network");
-ck(probe.includes('from "./dicom.v113.js"'), "the probe always parses with the current parser");
+ck(probe.includes('from "./dicom.v114.js"'), "the probe always parses with the current parser");
 
 /* ---- 7. on-image diagnostics layer (v108) ---- */
 ck(src.includes("export function diagLines"), "diagnostics lines are exported for the overlay");
@@ -178,7 +178,7 @@ ck(ui.includes('id="scan-btn"'), "UI carries the scan button");
 ck(src.includes("study.pixelBad = badFrames;"), "ingest records how many frames had no pixel data");
 ck(src.includes("s.pixelBad"), "the worklist shows a pixel-health badge per study");
 
-/* ---- 9. a refusal must name its reason (v113) ---- */
+/* ---- 9. a refusal must name its reason (v114) ---- */
 ck(src.includes("export function ingestRefusal"), "the refusal reason is computed as data, not hard-coded prose");
 ck(src.includes("const skipWhy = {}") && src.includes("bumpSkip(\"notdicom\")"), "files that are not readable DICOM are counted");
 ck(src.includes('bumpSkip("decode:" + String((parsed.compressed && parsed.compressed.tsuid) || "?")'), "a failed decoder is counted with its transfer syntax");
@@ -189,7 +189,7 @@ ck(src.includes('\"No study was added: \"') && src.includes("\u0644\u0645 \u062a
 ck((src.match(/ingestRefusal\(r, LANG/g) || []).length >= 2, "both import paths (button and folder) explain themselves");
 ck(src.includes("\u0627\u0641\u062a\u062d\u0647\u0627 \u0645\u0646 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0639\u0645\u0644"), "a duplicate study points the physician to the worklist instead of blaming the file");
 
-/* ---- 10. an import the physician can hand to us (v113) ---- */
+/* ---- 10. an import the physician can hand to us (v114) ---- */
 ck(src.includes("export function importReportText"), "the last import is available as copyable text");
 ck(src.includes("export function studyKeyOf"), "duplicate detection is a named, testable function");
 ck(src.includes("lastImport = { lines: lines, at: Date.now() }"), "every import stores its evidence");

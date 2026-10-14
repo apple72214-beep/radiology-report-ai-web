@@ -1,12 +1,12 @@
 {
-  "build": "v113",
-  "version": "v113",
-  "mark": "ب2.85",
+  "build": "v114",
+  "version": "v114",
+  "mark": "ب2.86",
   "channel": "stable",
-  "minVersion": "v113",
-  "updatedAt": "2026-10-14T21:15:48Z",
+  "minVersion": "v114",
+  "updatedAt": "2026-10-14T21:52:36Z",
   "notes": {
-    "ar": "تقرير استيراد قابل للنسخ + فتح الدراسة المكررة تلقائيًا — ب2.85",
-    "en": "Copyable import report + auto-open the duplicate study — ب2.85"
+    "ar": "MPR: منزلق شريحة ونافذة (W/L) مستقلان لكل نافذة — ب2.86",
+    "en": "MPR: per-pane slice slider and window preset — ب2.86"
   }
 }
