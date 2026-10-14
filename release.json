@@ -1,12 +1,12 @@
 {
-  "build": "v112",
-  "version": "v112",
-  "mark": "ب2.84",
+  "build": "v113",
+  "version": "v113",
+  "mark": "ب2.85",
   "channel": "stable",
-  "minVersion": "v112",
-  "updatedAt": "2026-10-05T21:27:50Z",
+  "minVersion": "v113",
+  "updatedAt": "2026-10-14T21:15:48Z",
   "notes": {
-    "ar": "رسالة رفض الاستيراد تشرح سببها الحقيقي — ب2.84",
-    "en": "Import refusal now states its real reason — ب2.84"
+    "ar": "تقرير استيراد قابل للنسخ + فتح الدراسة المكررة تلقائيًا — ب2.85",
+    "en": "Copyable import report + auto-open the duplicate study — ب2.85"
   }
 }
