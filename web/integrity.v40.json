@@ -1,0 +1,73 @@
+{
+  "build": "v40",
+  "pinned_commit": "7105e2b1d64302c93e5464893222b24f1e881ab2",
+  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@7105e2b1d64302c93e5464893222b24f1e881ab2/",
+  "files": {
+    "consult": {
+      "path": "consult.v40.js",
+      "chars": 5239,
+      "bytes": 5341,
+      "sha256": "729d62402ecb1ccc2959c7f55fc55f5141c5f088f4881bf8aa378bc565daf8ec"
+    },
+    "decode": {
+      "path": "codecs/decode.v40.js",
+      "chars": 5236,
+      "bytes": 5236,
+      "sha256": "8c2937d49f4d95738c1dc3cadfa6461d243b04d05a5ea9d594c4306e0fe1f46d"
+    },
+    "dicom": {
+      "path": "dicom.v40.js",
+      "chars": 7420,
+      "bytes": 7420,
+      "sha256": "caa2012696c8af3e71e79644e205b939774b9d1913c7b4827b86b80df4d34438"
+    },
+    "triage": {
+      "path": "triage.v40.js",
+      "chars": 5206,
+      "bytes": 5542,
+      "sha256": "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"
+    },
+    "docx": {
+      "path": "docx.v40.js",
+      "chars": 15444,
+      "bytes": 15736,
+      "sha256": "2b875fee0db07e3aa40cf34eea55b0bbd3af0221def56067ab013e9a22651cb1"
+    },
+    "measure": {
+      "path": "measure.v40.js",
+      "chars": 1650,
+      "bytes": 1652,
+      "sha256": "39044eae7274081becae2478481b4eace4ed9d8bfa5063e0d9c9513c33bd667f"
+    },
+    "compare": {
+      "path": "compare.v40.js",
+      "chars": 1442,
+      "bytes": 1444,
+      "sha256": "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"
+    },
+    "report": {
+      "path": "report.v40.js",
+      "chars": 8574,
+      "bytes": 9460,
+      "sha256": "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"
+    },
+    "app": {
+      "path": "app.v40.js",
+      "chars": 55108,
+      "bytes": 57770,
+      "sha256": "8a350ba2fafd7072932b86eb630ff5f07bca0e64a33d86b74e70fc2bec1103e1"
+    },
+    "ui": {
+      "path": "ui.v40.html",
+      "chars": 8317,
+      "bytes": 8841,
+      "sha256": "2f76850210aa0a26f1f300d52d5952b654ff54eeb848bd32541302710b4f1ee2"
+    },
+    "sw": {
+      "path": "sw.v40.js",
+      "chars": 3051,
+      "bytes": 3051,
+      "sha256": "80c6bfa7cff177e21840b6dc191a753af21ccdf7df8cf75624a3fe044dd4d230"
+    }
+  }
+}

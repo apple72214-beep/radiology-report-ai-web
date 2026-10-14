@@ -1,0 +1,86 @@
+<style>
+      :root { --bg:#0f172a; --panel:#1e293b; --line:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#34d399; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; background:var(--bg); color:var(--text); }
+      header { display:flex; align-items:baseline; gap:.8rem; padding:1rem 1.4rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+      header h1 { font-size:1.15rem; margin:0; }
+      header span { color:var(--muted); font-size:.8rem; }
+      main { display:grid; grid-template-columns:minmax(280px,400px) 1fr; gap:1rem; padding:1rem 1.4rem; }
+      @media (max-width:820px){ main { grid-template-columns:1fr; } }
+      section { background:var(--panel); border:1px solid var(--line); border-radius:.6rem; padding:1rem; }
+      h2 { font-size:.95rem; margin:0 0 .8rem; color:var(--accent); }
+      button, select, input[type=file] { font:inherit; }
+      button { background:var(--accent); color:#082f49; border:0; border-radius:.4rem; padding:.45rem .9rem; cursor:pointer; font-weight:600; }
+      button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+      table { width:100%; border-collapse:collapse; font-size:.85rem; }
+      th, td { text-align:right; padding:.4rem .3rem; border-bottom:1px solid var(--line); }
+      th { color:var(--muted); font-weight:500; }
+      .badge { padding:.1rem .55rem; border-radius:1rem; font-size:.72rem; font-weight:600; }
+      .badge.urgent { background:#7f1d1d; color:#fecaca; }
+      .badge.routine { background:#14532d; color:#bbf7d0; }
+      .viewer { display:flex; flex-direction:column; gap:.7rem; align-items:center; }
+      .viewer canvas { max-width:100%; background:#000; border-radius:.4rem; image-rendering:pixelated; }
+      .controls { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; justify-content:center; color:var(--muted); font-size:.85rem; }
+      input[type=range] { width:min(320px,70vw); accent-color:var(--accent); }
+      .meta { color:var(--muted); font-size:.8rem; text-align:center; }
+      .empty { color:var(--muted); font-size:.85rem; text-align:center; padding:1.5rem 0; }
+      .hint { color:var(--muted); font-size:.72rem; }
+    </style>
+<header>
+      <h1>Radiology report AI</h1>
+      <span>نسخة المتصفح — تعمل Offline بالكامل، بياناتك تبقى على جهازك</span>
+    </header>
+    <p id="update-banner" class="hint" style="display:none; color:#fcd34d; padding:0 1.4rem;"></p>
+    <main>
+      <section>
+        <h2>رفع دراسات DICOM</h2>
+        <input id="files" type="file" accept=".dcm,.dicom,.zip,application/dicom,application/zip" multiple />
+        <p>
+          <button id="upload">رفع وتحليل</button>
+          <button id="demo" class="ghost">توليد ديمو</button>
+        </p>
+        <p class="hint" id="ingest-status"></p>
+        <h2>قائمة العمل (الحرج أولًا)</h2>
+        <table id="worklist">
+          <thead><tr><th>المريض</th><th>النوع</th><th>الأولوية</th><th>الشرائح</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty" id="empty">لا توجد دراسات — ارفع DICOM أو اضغط "توليد ديمو".</p>
+        <p><button id="clear-all" class="ghost">تفريغ القائمة من الجهاز</button></p>
+        <p class="hint">💾 كل المعالجة تحدث داخل متصفحك: لا سيرفر، لا إنترنت مطلوب بعد التثبيت، ولا بيانات تغادر جهازك. من قائمة المتصفح ⋮ ← "إضافة إلى الشاشة الرئيسية" لتثبيتها كتطبيق.</p>
+      </section>
+      <section class="viewer">
+        <h2>العارض</h2>
+        <div id="viewport" style="display:none; position:relative; overflow:hidden; width:100%; background:#000; border-radius:.4rem; touch-action:none;">
+          <div id="vwrap" style="transform-origin:0 0; position:relative; width:max-content; margin:0 auto;">
+            <canvas id="frame" style="display:none; image-rendering:pixelated;"></canvas>
+            <canvas id="overlay" style="position:absolute; inset:0; pointer-events:none;"></canvas>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="zoom-reset" class="ghost">1:1</button>
+          <button id="measure" class="ghost">قياس</button>
+          <span id="measure-out"></span>
+        </div>
+        <div class="controls">
+          <label>الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
+          <label>النافذة:
+            <select id="preset">
+              <option value="auto">تلقائي</option>
+              <option value="lung">رئة</option>
+              <option value="mediastinum">منصف</option>
+              <option value="bone">عظم</option>
+            </select>
+          </label>
+        </div>
+        <p class="meta" id="meta"></p>
+        <p><button id="gen-report" class="ghost">توليد مسودة التقرير (ع/EN)</button></p>
+        <pre id="report-ar" style="display:none; white-space:pre-wrap; text-align:right; color:var(--text); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.82rem;"></pre>
+        <pre id="report-en" style="display:none; white-space:pre-wrap; text-align:left; direction:ltr; color:var(--muted); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.78rem;"></pre>
+        <p class="controls" id="sign-row" style="display:none">
+          <label><input type="checkbox" id="signoff" /> اعتماد مراجعة الأخصائي</label>
+          <input id="signer" placeholder="اسم الأخصائي" style="background:#0b1220; color:var(--text); border:1px solid var(--line); border-radius:.4rem; padding:.3rem .5rem;" />
+          <button id="copy-report" class="ghost">نسخ المسودة</button>
+        </p>
+      </section>
+    </main>

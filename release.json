@@ -1,12 +1,1 @@
-{
-  "build": "v114",
-  "version": "v114",
-  "mark": "ب2.86",
-  "channel": "stable",
-  "minVersion": "v114",
-  "updatedAt": "2026-10-14T21:52:36Z",
-  "notes": {
-    "ar": "MPR: منزلق شريحة ونافذة (W/L) مستقلان لكل نافذة — ب2.86",
-    "en": "MPR: per-pane slice slider and window preset — ب2.86"
-  }
-}
+{"build": "v41"}
