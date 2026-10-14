@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(release\\.json|sw\\.js|sw\\.v[0-9]+\\.js|app\\.v[0-9]+\\.js|ui\\.v[0-9]+\\.html|start\\.html|index\\.html)",
+      "source": "/(release\\.json|sw\\.js|sw\\.v[0-9]+\\.js|app\\.v[0-9]+\\.js|dicom\\.v[0-9]+\\.js|ui\\.v[0-9]+\\.html|integrity\\.v[0-9]+\\.json|standalone\\.html|probe\\.html|diag\\.html|start\\.html|index\\.html)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -10,45 +10,10 @@
         {
           "key": "CDN-Cache-Control",
           "value": "no-store"
-        }
-      ]
-    },
-    {
-      "source": "/r1/sw.v35.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
         },
         {
-          "key": "Cache-Control",
-          "value": "no-store, no-transform"
-        }
-      ]
-    },
-    {
-      "source": "/r2/sw.v35.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-transform"
-        }
-      ]
-    },
-    {
-      "source": "/r3/sw.v35.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-transform"
+          "key": "Vercel-CDN-Cache-Control",
+          "value": "no-store"
         }
       ]
     }
@@ -81,6 +46,10 @@
     {
       "source": "/d",
       "destination": "/diag.html"
+    },
+    {
+      "source": "/p",
+      "destination": "/probe.html"
     },
     {
       "source": "/q",

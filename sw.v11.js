@@ -1,78 +1,22 @@
-/* Offline shell v9: version-named assets + immutable launcher.
-   release.json is never cached; everything else is cache-first. */
-const BUILD = "v11";
-const CACHE = "rrai-web-v11";
-const PRECACHE = [
-  "./index.html",
-  "./start.html",
-  "./sw.v11.js",
-  "./ui.v11.html",
-  "./app.v11.js",
-  "./dicom.v11.js",
-  "./report.v11.js",
-  "./codecs/decode.v11.js",
-  "./codecs/charlswasm.js?b=v9",
-  "./codecs/openjphjs.js?b=v9",
-  "./codecs/openjpegwasm.js?b=v9",
-  "./codecs/charlswasm.wasm",
-  "./codecs/openjphjs.wasm",
-  "./codecs/openjpegwasm.wasm",
-  "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
-  self.skipWaiting();
+/* Radiology report AI — retired service worker (self-destruct pill).
+   Any device still registered on an old build gets this on its next update
+   check: it wipes every cache, unregisters itself and reloads the page, so
+   the browser must go to the network and pick up the current launcher. */
+self.addEventListener("install", () => { self.skipWaiting(); });
+self.addEventListener("activate", (e) => {
+  e.waitUntil((async () => {
+    try { const ks = await caches.keys(); await Promise.all(ks.map((k) => caches.delete(k))); } catch (x) {}
+    let cls = [];
+    try { cls = await self.clients.matchAll({ type: "window", includeUncontrolled: true }); } catch (x) {}
+    for (const c of cls) { try { c.postMessage("rrai-sw-updated"); } catch (x) {} }
+    try { await self.registration.unregister(); } catch (x) {}
+    for (const c of cls) { try { await c.navigate(c.url); } catch (x) {} }
+  })());
 });
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => clients.claim())
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || url.origin !== location.origin) return;
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      caches.match("./index.html",
-  "./start.html",
-  "./sw.v11.js").then(
-        (cached) =>
-          cached ||
-          fetch("./index.html",
-  "./start.html",
-  "./sw.v11.js").then((r) => {
-            if (r.ok) {
-              const copy = r.clone();
-              caches.open(CACHE).then((c) => c.put("./index.html",
-  "./start.html",
-  "./sw.v11.js", copy));
-            }
-            return r;
-          })
-      )
-    );
-    return;
-  }
-  if (url.pathname.endsWith("/release.json")) return; // always network, never cached
-  event.respondWith(
-    caches.match(event.request).then(
-      (cached) =>
-        cached ||
-        fetch(event.request).then((r) => {
-          if (r.ok) {
-            const copy = r.clone();
-            caches.open(CACHE).then((c) => c.put(event.request, copy));
-          }
-          return r;
-        })
-    )
-  );
+self.addEventListener("fetch", (e) => {
+  if (e.request.mode === "navigate" || (e.request.method || "GET") !== "GET") return;
+  e.respondWith(fetch(e.request, { cache: "no-store" }).catch(async () => {
+    try { const r = await caches.match(e.request); if (r) return r; } catch (x) {}
+    return new Response("", { status: 504 });
+  }));
 });

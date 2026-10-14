@@ -1,1 +1,12 @@
-{"build": "v41"}
+{
+  "build": "v115",
+  "version": "v115",
+  "mark": "ب2.87",
+  "channel": "stable",
+  "minVersion": "v115",
+  "updatedAt": "2026-10-14T22:20:08Z",
+  "notes": {
+    "ar": "تشريح الشاشة السوداء تلقائيًا + إعادة وحدات التطبيق إلى الإصدار الحالي — ب2.87",
+    "en": "Automatic black-screen autopsy + app modules pinned to the current build — ب2.87"
+  }
+}
