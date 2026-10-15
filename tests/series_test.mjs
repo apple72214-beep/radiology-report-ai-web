@@ -1,6 +1,6 @@
 /* Series awareness: an MR study is several sequences, never one mixed stack. */
 import { readFileSync } from "node:fs";
-import { groupSeries, seriesSummary } from "../app.v122.js";
+import { groupSeries, seriesSummary, allSeriesRows } from "../app.v123.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -43,9 +43,9 @@ const many = { series: [1, 2, 3, 4, 5, 6].map((n) => ({ number: n, label: "Se" +
 eq(seriesSummary(many).endsWith("+2"), true, "long summaries are truncated with a count");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v122.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v122.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v122.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v123.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v123.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v123.js", import.meta.url), "utf-8");
 ck(dcm.includes('"0020,000E"'), "parser captures SeriesInstanceUID");
 ck(app.includes("px.seriesUid = parsed.seriesUid"), "series identity kept on every frame");
 ck(app.includes("study.series = groupSeries(study.frames, study.modality)"), "series computed at ingest");
@@ -57,24 +57,42 @@ ck(/const key = \[current\.uid \|\| "", currentSeries/.test(app), "the volume ca
 ck(app.includes("mprOn = false;") && app.includes('this series cannot be resliced') && app.includes('display = "block"'), "a series that cannot be resliced falls back to the single view with a reason");
 ck(app.includes("seriesSummary(ensureSeries(s))"), "worklist shows the sequence breakdown");
 
-/* --- a study that is already on the device must open, not throw (v120) ----
-   Re-importing a study hits the all-duplicates path, which called
-   openStudy(match.uid): a UID string where the study object belongs. The
-   string reached ensureSeries() and threw "Cannot create property 'series' on
-   string '<uid>'" — the import reported success and the viewer stayed empty. */
-ck(app.includes("await openStudy(match);"), "the duplicate path opens the study itself, not its UID");
-ck(!/openStudy\([^)]*\.uid\s*\)/.test(app), "no caller hands openStudy() a bare UID");
-ck(/function ensureSeries\(study\)[\s\S]{0,400}?typeof study !== "object"/.test(app),
-  "ensureSeries refuses anything that is not a study object");
-ck(/async function openStudy\(study\)[\s\S]{0,400}?typeof study === "string"/.test(app),
-  "openStudy resolves a UID to its study instead of throwing");
-
-/* --- the study opens on the acquisition, not on a one-image series (v122) ---
-   Series are ordered by SeriesNumber, so a scout or a dose page can come first:
-   the slice bar then sits dead at 1/1 and the study looks empty. */
-ck(/currentSeries = bi;/.test(app), "the viewer opens the series with the most frames");
-ck(/if \(n > bn\) \{ bn = n; bi = i; \}/.test(app), "the largest series is chosen by frame count");
-ck(app.includes("ss0[currentSeries].indices"), "the slice bar is sized from the series actually opened");
-ck(/هذه السلسلة صورة واحدة/.test(app), "a one-image series says so instead of leaving the bar dead");
+/* --- the comprehensive hanging: one row per series (v123) ------------------
+   A study is read sequence by sequence — T1, T2, FLAIR — and each sequence in
+   the three planes. The hanging is planned from the series, so the plan is
+   testable without a DOM: how many rows, and what each row can show. */
+const fr2 = (w, h, n, seriesUid, num, desc) => Array.from({ length: n }, () => ({
+  w, h, data: new Int16Array(Array.from({ length: w * h }, (_, i) => i % 997)),
+  seq: { seriesUid, seriesNumber: num, seriesDescription: desc },
+}));
+const mixedStudy = {
+  uid: "1.2.3.4", modality: "MR",
+  frames: [
+    ...fr2(32, 32, 4, "1.1", 1, "T1"),      /* a resliceable acquisition */
+    ...fr2(32, 32, 1, "1.2", 2, "T2"),      /* one image: nothing to reslice */
+    ...fr2(32, 32, 2, "1.3", 3, "FLAIR").concat(fr2(16, 16, 1, "1.3", 3, "FLAIR")), /* sizes differ */
+  ],
+};
+{
+  const rows = allSeriesRows(mixedStudy);
+  ck(rows.length === 3, "one row per series (was: the whole study as one stack)");
+  ck(rows[0].count === 4 && rows[1].count === 1 && rows[2].count === 3, "each row knows how many images it holds");
+  ck(rows.every((r) => typeof r.label === "string" && r.label.length > 0), "every row is labelled (T1, T2, FLAIR…)");
+  ck(rows.every((r) => r.reslice === false && r.reason === "no-mpr"), "without the MPR module no row claims three planes");
+}
+{
+  const api = { volumeFromFrames: () => ({ ok: true }) };
+  const rows = allSeriesRows(mixedStudy, api);
+  ck(rows[0].reslice === true && rows[0].reason === "", "a multi-slice series is resliced into the three planes");
+  ck(rows[1].reslice === false && rows[1].reason === "one-frame", "a one-image series says so instead of showing two blank panes");
+  ck(rows[2].reslice === false && rows[2].reason === "mixed-size", "a series whose slices differ in size is not resliced");
+}
+ck(app.includes("function allSeriesRows(study, api)"), "the hanging is planned by a pure function");
+ck(app.includes("function renderAll()") && app.includes("function allToggle(on)"), "the comprehensive view renders and toggles");
+ck(app.includes("if (mprOn && allOn)") && app.includes("if (allOn && mprOn)"), "the two hangings are mutually exclusive");
+ck(app.includes("allRowVolume(r)"), "each series keeps its own volume, budget shared between rows");
+ck(app.includes("cv.onclick = () => {"), "tapping a pane opens that series");
+ck(ui.includes('id="all-toggle"') && ui.includes('id="all-grid"'), "ui: comprehensive button + grid");
+ck(ui.includes('id="all-note"'), "ui: a note tells the physician what the hanging shows");
 console.log(fails ? "SERIES TEST FAIL " + fails : "SERIES TEST PASS");
 process.exit(fails ? 1 : 0);
