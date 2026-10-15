@@ -1,12 +1,12 @@
 {
-  "build": "v121",
-  "version": "v121",
-  "mark": "ب2.93",
+  "build": "v122",
+  "version": "v122",
+  "mark": "ب2.94",
   "channel": "stable",
-  "minVersion": "v121",
-  "updatedAt": "2026-10-15T22:09:12Z",
+  "minVersion": "v122",
+  "updatedAt": "2026-10-15T22:34:08Z",
   "notes": {
-    "ar": "تحديث لا يتعطّل: خدمة العامل (SW) لم تعد ترفض مُطلِق الإصدار الجديد لأن طوله اختلف — ب2.93",
-    "en": "Updates can no longer get stuck: the service worker accepts a newer launcher instead of rejecting it for having a different length — ب2.93"
+    "ar": "العارض يفتح السلسلة الأكبر، وقراءة الكانفاس تفحص الصورة كلها لا زاويتها — ب2.94",
+    "en": "The viewer opens the largest series, and the canvas readback inspects the whole image, not its corner — ب2.94"
   }
 }

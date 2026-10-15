@@ -1,4 +1,4 @@
-import { parseMultipartRelated } from "../dicom.v121.js";
+import { parseMultipartRelated } from "../dicom.v122.js";
 let fails = 0;
 const enc = new TextEncoder();
 const bnd = "abc123";

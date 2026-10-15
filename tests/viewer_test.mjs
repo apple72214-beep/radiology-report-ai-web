@@ -1,6 +1,6 @@
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
-import { drawFrame } from "../app.v121.js";
+import { drawFrame, paintReadback } from "../app.v122.js";
 let fails = 0;
 const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
 function fakeCanvas() {
@@ -19,7 +19,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v121.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v122.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -32,7 +32,7 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v121.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v122.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
 ck(sws.includes("app." + build + ".js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
@@ -54,7 +54,7 @@ ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance
 ck(src.includes("You are a CONSULTANT RADIOLOGIST assistant"), "prompt demands consultant-grade structured draft");
 ck(src.includes("c.toDataURL(\"image/jpeg\", 0.9)"), "renders sent at 768px JPEG (sharper vision input)");
 ck(src.includes("technique: String(obj.technique || \"\").trim()"), "AI technique stored with the report");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v121.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v122.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
 ck(src.includes("fileToJpegB64") && src.includes(".concat(aiExtraImgs).slice(0, 8)"), "physician screenshots join the request (max 8 images)");
 ck(src.includes("attached screenshot(s)"), "consent names attached screenshots");
 ck(src.includes("EQUAL weight to the slice renders"), "prompt gives attached screenshots primary-evidence weight");
@@ -68,7 +68,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v121.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v122.html", import.meta.url), "utf-8"));
 const startHtml = (await import("node:fs")).readFileSync(new URL("../start.html", import.meta.url), "utf-8");
 ck(startHtml.includes("ev.persisted") && startHtml.includes("rrai-sw-updated"), "bootstrap reloads on bfcache restore and on SW update");
 ck(src.includes("if (useImages && !cfg.vision[model] && !cfg.native) continue;"), "images never silently dropped: text-only models skipped while images pending");
@@ -84,10 +84,10 @@ ck(src.includes("/^(AIza|AQ\\.)/i.test(k)"), "new AQ-format Gemini keys auto-det
 ck(src.includes("!cfg.vision[model] && !cfg.native"), "Gemini native models treated as vision-capable");
 ck(src.includes("Send up to 6 slice renders") && src.includes("while (totalB64 > 3500000 && images.length > 6)"), "six evenly spaced renders, 8-image cap with size shedding");
 ck(src.includes("function setupTemplates") && ui.includes("id=\"tpl-list\""), "settings icon with normal/pathology template library");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v121.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v122.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
 ck(src.includes("function techniqueFor"), "deterministic TECHNIQUE generator with sequence catalog");
 ck(src.includes('technique: String(obj.technique || "").trim() || techniqueFor(study)'), "AI draft never leaves technique empty");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v121.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v122.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
 ck(ui.includes("id=\"app-logo\"") && ui.includes("./icons/logo.png"), "brand logo rendered in the header");
 ck(sws.includes("./icons/logo.png"), "logo precached for offline branding");
 ck(src.includes("const lat = /RIGHT|"), "technique names the correct side (right/left) from exam fields");
@@ -204,4 +204,30 @@ ck(sth.includes("rrai-swnuke") && sth.includes("navigator.serviceWorker.controll
 ck(sth.includes("errLen.__bad") && sth.includes("healing()"), "a body that fails length validation triggers the eviction + reload");
 ck(sws.includes("const trustedHit") && sws.includes("await trustedHit(hit0"), "service worker refuses cached bodies that do not match this build");
 ck(sws.includes("if (okLen(pathname, buf.byteLength)) return hit;"), "cached entries are size-checked against the LEN table before use");
+
+/* --- the readback must judge the whole image, not its corner (v122) --------
+   A head CT paints air in the top-left corner. Reading only that corner, every
+   sampled pixel was the same black, so the viewer announced "the image did not
+   reach the screen" while the slice was on screen in front of the physician. */
+{
+  const W = 64, H = 64;
+  const data = new Uint8ClampedArray(W * H * 4);
+  for (let p = 0; p < W * H; p++) {
+    const x = p % W, y = (p / W) | 0;
+    const g = (x > 48 && y > 48) ? 220 : 0;   /* detail only in the far corner */
+    data[p * 4] = g; data[p * 4 + 1] = g; data[p * 4 + 2] = g; data[p * 4 + 3] = 255;
+  }
+  const cv = { width: W, height: H, getContext: () => ({ getImageData: () => ({ data }) }) };
+  const rb = paintReadback(cv);
+  ck(rb.ok === true, "readback runs on a painted canvas");
+  ck(rb.spread >= 2, "readback sees detail outside the top-left corner (was: false 'uniform')");
+}
+{
+  const W = 32, H = 32;
+  const data = new Uint8ClampedArray(W * H * 4);
+  for (let p = 0; p < W * H; p++) { data[p * 4] = 7; data[p * 4 + 3] = 255; }
+  const cv = { width: W, height: H, getContext: () => ({ getImageData: () => ({ data }) }) };
+  const rb = paintReadback(cv);
+  ck(rb.note === "uniform" && rb.spread === 0, "a genuinely flat frame is still called uniform");
+}
 console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (182)");

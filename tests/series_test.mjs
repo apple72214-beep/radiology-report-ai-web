@@ -1,6 +1,6 @@
 /* Series awareness: an MR study is several sequences, never one mixed stack. */
 import { readFileSync } from "node:fs";
-import { groupSeries, seriesSummary } from "../app.v121.js";
+import { groupSeries, seriesSummary } from "../app.v122.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -43,9 +43,9 @@ const many = { series: [1, 2, 3, 4, 5, 6].map((n) => ({ number: n, label: "Se" +
 eq(seriesSummary(many).endsWith("+2"), true, "long summaries are truncated with a count");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v121.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v121.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v121.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v122.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v122.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v122.js", import.meta.url), "utf-8");
 ck(dcm.includes('"0020,000E"'), "parser captures SeriesInstanceUID");
 ck(app.includes("px.seriesUid = parsed.seriesUid"), "series identity kept on every frame");
 ck(app.includes("study.series = groupSeries(study.frames, study.modality)"), "series computed at ingest");
@@ -68,5 +68,13 @@ ck(/function ensureSeries\(study\)[\s\S]{0,400}?typeof study !== "object"/.test(
   "ensureSeries refuses anything that is not a study object");
 ck(/async function openStudy\(study\)[\s\S]{0,400}?typeof study === "string"/.test(app),
   "openStudy resolves a UID to its study instead of throwing");
+
+/* --- the study opens on the acquisition, not on a one-image series (v122) ---
+   Series are ordered by SeriesNumber, so a scout or a dose page can come first:
+   the slice bar then sits dead at 1/1 and the study looks empty. */
+ck(/currentSeries = bi;/.test(app), "the viewer opens the series with the most frames");
+ck(/if \(n > bn\) \{ bn = n; bi = i; \}/.test(app), "the largest series is chosen by frame count");
+ck(app.includes("ss0[currentSeries].indices"), "the slice bar is sized from the series actually opened");
+ck(/هذه السلسلة صورة واحدة/.test(app), "a one-image series says so instead of leaving the bar dead");
 console.log(fails ? "SERIES TEST FAIL " + fails : "SERIES TEST PASS");
 process.exit(fails ? 1 : 0);
