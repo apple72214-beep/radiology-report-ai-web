@@ -1,6 +1,6 @@
 /* Series awareness: an MR study is several sequences, never one mixed stack. */
 import { readFileSync } from "node:fs";
-import { groupSeries, seriesSummary } from "../app.v119.js";
+import { groupSeries, seriesSummary } from "../app.v120.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -43,9 +43,9 @@ const many = { series: [1, 2, 3, 4, 5, 6].map((n) => ({ number: n, label: "Se" +
 eq(seriesSummary(many).endsWith("+2"), true, "long summaries are truncated with a count");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v119.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v119.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v119.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v120.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v120.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v120.js", import.meta.url), "utf-8");
 ck(dcm.includes('"0020,000E"'), "parser captures SeriesInstanceUID");
 ck(app.includes("px.seriesUid = parsed.seriesUid"), "series identity kept on every frame");
 ck(app.includes("study.series = groupSeries(study.frames, study.modality)"), "series computed at ingest");
@@ -56,5 +56,17 @@ ck(app.includes("mprApi.volumeFromFrames(frames"), "MPR builds its volume inside
 ck(/const key = \[current\.uid \|\| "", currentSeries/.test(app), "the volume cache is per series");
 ck(app.includes("mprOn = false;") && app.includes('this series cannot be resliced') && app.includes('display = "block"'), "a series that cannot be resliced falls back to the single view with a reason");
 ck(app.includes("seriesSummary(ensureSeries(s))"), "worklist shows the sequence breakdown");
+
+/* --- a study that is already on the device must open, not throw (v120) ----
+   Re-importing a study hits the all-duplicates path, which called
+   openStudy(match.uid): a UID string where the study object belongs. The
+   string reached ensureSeries() and threw "Cannot create property 'series' on
+   string '<uid>'" — the import reported success and the viewer stayed empty. */
+ck(app.includes("await openStudy(match);"), "the duplicate path opens the study itself, not its UID");
+ck(!/openStudy\([^)]*\.uid\s*\)/.test(app), "no caller hands openStudy() a bare UID");
+ck(/function ensureSeries\(study\)[\s\S]{0,400}?typeof study !== "object"/.test(app),
+  "ensureSeries refuses anything that is not a study object");
+ck(/async function openStudy\(study\)[\s\S]{0,400}?typeof study === "string"/.test(app),
+  "openStudy resolves a UID to its study instead of throwing");
 console.log(fails ? "SERIES TEST FAIL " + fails : "SERIES TEST PASS");
 process.exit(fails ? 1 : 0);

@@ -1,12 +1,12 @@
 {
-  "build": "v119",
-  "version": "v119",
-  "mark": "ب2.91",
+  "build": "v120",
+  "version": "v120",
+  "mark": "ب2.92",
   "channel": "stable",
-  "minVersion": "v119",
-  "updatedAt": "2026-10-15T19:39:28Z",
+  "minVersion": "v120",
+  "updatedAt": "2026-10-15T21:53:23Z",
   "notes": {
-    "ar": "إصلاح الشاشة السوداء في العرض الرئيسي: طبقة المعلومات فوق الصورة كانت لوحًا أسود معتمًا يغطيها — ب2.91",
-    "en": "Black main view fixed: the on-image info layer was an opaque black sheet covering the frame — ب2.91"
+    "ar": "إصلاح فتح الدراسة المكررة: كان يُمرَّر مُعرِّف الدراسة (نص) بدل كائنها فلا تظهر الصورة — ب2.92",
+    "en": "Fixed opening an already-stored study: a UID string was passed where the study object belongs, so the viewer never opened — ب2.92"
   }
 }
