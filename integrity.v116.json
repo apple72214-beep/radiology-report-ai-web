@@ -1,6 +1,6 @@
 {
   "build": "v116",
-  "pinned_commit": "f3e00e034b5582e32005261a937539ba99b59c64",
+  "pinned_commit": "dec995ff23f90b10050d327142a346e76426bb2f",
   "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@f3e00e034b5582e32005261a937539ba99b59c64/",
   "files": {
     "consult": {
