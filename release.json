@@ -1,12 +1,12 @@
 {
-  "build": "v123",
-  "version": "v123",
-  "mark": "ب2.95",
+  "build": "v124",
+  "version": "v124",
+  "mark": "ب2.96",
   "channel": "stable",
-  "minVersion": "v123",
-  "updatedAt": "2026-10-15T22:55:48Z",
+  "minVersion": "v124",
+  "updatedAt": "2026-10-15T23:41:35Z",
   "notes": {
-    "ar": "عرض شامل: كل سلاسل الدراسة (T1/T2/FLAIR) في مستوياتها الثلاثة بشاشة واحدة — ب2.95",
-    "en": "Comprehensive hanging: every series (T1/T2/FLAIR) in all three planes on one screen — ب2.95"
+    "ar": "تحديث — ب2.96",
+    "en": "Update — ب2.96"
   }
 }
