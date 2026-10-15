@@ -1,12 +1,12 @@
 {
-  "build": "v120",
-  "version": "v120",
-  "mark": "ب2.92",
+  "build": "v121",
+  "version": "v121",
+  "mark": "ب2.93",
   "channel": "stable",
-  "minVersion": "v120",
-  "updatedAt": "2026-10-15T21:53:23Z",
+  "minVersion": "v121",
+  "updatedAt": "2026-10-15T22:09:12Z",
   "notes": {
-    "ar": "إصلاح فتح الدراسة المكررة: كان يُمرَّر مُعرِّف الدراسة (نص) بدل كائنها فلا تظهر الصورة — ب2.92",
-    "en": "Fixed opening an already-stored study: a UID string was passed where the study object belongs, so the viewer never opened — ب2.92"
+    "ar": "تحديث لا يتعطّل: خدمة العامل (SW) لم تعد ترفض مُطلِق الإصدار الجديد لأن طوله اختلف — ب2.93",
+    "en": "Updates can no longer get stuck: the service worker accepts a newer launcher instead of rejecting it for having a different length — ب2.93"
   }
 }
