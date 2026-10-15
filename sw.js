@@ -1,2 +1,2 @@
 /* Radiology report AI — bootstrap service worker: always relays to the current build. */
-importScripts("./sw.v115.js");
+importScripts("./sw.v116.js");

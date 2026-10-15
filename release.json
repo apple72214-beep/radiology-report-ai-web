@@ -1,12 +1,12 @@
 {
-  "build": "v115",
-  "version": "v115",
-  "mark": "ب2.87",
+  "build": "v116",
+  "version": "v116",
+  "mark": "ب2.88",
   "channel": "stable",
-  "minVersion": "v115",
-  "updatedAt": "2026-10-14T22:20:08Z",
+  "minVersion": "v116",
+  "updatedAt": "2026-10-14T23:04:44Z",
   "notes": {
-    "ar": "تشريح الشاشة السوداء تلقائيًا + إعادة وحدات التطبيق إلى الإصدار الحالي — ب2.87",
-    "en": "Automatic black-screen autopsy + app modules pinned to the current build — ب2.87"
+    "ar": "عرض بيانات البكسل الناقصة بعمقها الحقيقي بدل رفضها — ب2.88",
+    "en": "Show short pixel data at the depth it really has, instead of refusing it — ب2.88"
   }
 }

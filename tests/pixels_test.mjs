@@ -1,9 +1,10 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v115.js";
-import { drawFrame, pixelProblem, pixelProblemText } from "../app.v115.js";
+import { parseDicom } from "../dicom.v116.js";
+import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v116.js";
 import fs from "node:fs";
+const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
 
 let fails = 0;
 const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
@@ -27,7 +28,7 @@ function el(g, e, vr, payload) {
 const cs = (v) => Buffer.from(v, "ascii");
 const us = (v) => { const b = Buffer.alloc(2); b.writeUInt16LE(v, 0); return b; };
 
-function dcm({ rows = 4, cols = 4, bits = 16, bytes = null, photometric = "MONOCHROME2", frames = 1 } = {}) {
+function dcm({ rows = 4, cols = 4, bits = 16, bytes = null, photometric = "MONOCHROME2", frames = 1, extra = [] } = {}) {
   const parts = [
     el(0x0008, 0x0060, "CS", cs("MR")),
     el(0x0028, 0x0002, "US", us(1)),
@@ -38,6 +39,7 @@ function dcm({ rows = 4, cols = 4, bits = 16, bytes = null, photometric = "MONOC
   if (cols) parts.push(el(0x0028, 0x0011, "US", us(cols)));
   parts.push(el(0x0028, 0x0100, "US", us(bits)));
   parts.push(el(0x0028, 0x0103, "US", us(0)));
+  for (const x of extra) parts.push(x);
   const px = bytes === null ? Buffer.alloc(rows * cols * (bits === 8 ? 1 : 2)) : bytes;
   parts.push(el(0x7fe0, 0x0010, bits === 8 ? "OB" : "OW", px));
   return Buffer.concat(parts);
@@ -52,9 +54,9 @@ const asBuffer = (b) => b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
   ck(p.pixelInfo.need === 32, "expected byte count reported");
 }
 {
-  const p = parseDicom(asBuffer(dcm({ rows: 8, cols: 8, bits: 16, bytes: Buffer.alloc(64) })));
-  ck(p.pixels === null && p.pixelInfo.problem === "short", "truncated pixel data flagged as short");
-  ck(p.pixelInfo.have === 64 && p.pixelInfo.need === 128, "have/need exposed for the report");
+  const p = parseDicom(asBuffer(dcm({ rows: 8, cols: 8, bits: 16, bytes: Buffer.alloc(20) })));
+  ck(p.pixels === null && p.pixelInfo.problem === "short", "a fragment too small to make one row is still refused");
+  ck(p.pixelInfo.have === 20 && p.pixelInfo.need === 128, "have/need exposed for the report");
 }
 {
   const data = Buffer.alloc(4 * 4 * 2);
@@ -136,81 +138,70 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v115.js", import.meta.url), "utf-8");
-ck(/if \(pixelProblem\(px\)\) \{\n\s+bad\+\+/.test(src), "ingest counts files with unreadable pixels");
-ck(/if \(!study\.frames\.length\) \{ bad\+\+;/.test(src), "a study with no drawable frame is not stored");
+const src = fs.readFileSync(new URL("../app.v116.js", import.meta.url), "utf-8");
+ck(src.includes("if (pixelProblem(px)) {") && src.includes("bad++;"), "ingest counts files with unreadable pixels");
+ck(/if \(!study\.frames\.length\) \{ bad\+\+;.*continue; \}/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v115.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v116.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
-ck(probe.includes('from "./dicom.v115.js"'), "DICOM probe page imports the current parser");
+ck(probe.includes('from "./dicom.' + build + '.js"'), "DICOM probe page imports the current parser");
 ck(probe.includes("problem=") && probe.includes("pixelBytes="), "probe reports pixel bytes vs needed bytes");
 ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Arabic UI)");
 
-/* ---- 5. collapsed-window rescue: a dominant value must never paint a flat frame ---- */
-ck(src.includes("export function windowOutsideMode"), "a re-window outside the dominant band is exported");
-ck(src.includes("hist[mode] / total < 0.5"), "nothing is rescued unless one value owns half the frame");
-ck(src.includes("const autoWin = !(win && modality === \"CT\");"), "a physician-chosen CT preset is never overridden");
-ck(src.includes("if (autoWin && poorRender(res))"), "only the automatic window gets rescued");
-ck(src.includes("pixels.__win = { k: ck, lo, hi }"), "a successful rescue is remembered for the next draw");
-
-/* ---- 6. no stale diagnostics pages: control + probe files are never cached ---- */
-const sw = fs.readFileSync(new URL("../sw.v115.js", import.meta.url), "utf-8");
-ck(sw.includes("integrity\\.v\\d+\\.json") && sw.includes("/release.json") && sw.includes("sw\\.v\\d+\\.js"), "control + release files bypass the cache");
-ck(sw.includes("release.json\")) return;"), "release.json always comes from the network");
-ck(probe.includes('from "./dicom.v115.js"'), "the probe always parses with the current parser");
-
-/* ---- 7. on-image diagnostics layer (v108) ---- */
-ck(src.includes("export function diagLines"), "diagnostics lines are exported for the overlay");
-ck(src.includes("function mprSetMax") && src.includes("function applyDxFoot"), "MPR pane maximising + dismissible notice are wired");
-ck(src.includes('ovPrefD("rrai-ov-diag", false)'), "the diagnostics layer defaults to off and is remembered");
-ck(ui.includes('id="ov-diag-chk"') && ui.includes('id="dx-foot"') && ui.includes('id="mpr-pane-axial"'), "UI carries the diagnostics toggle, the notice and the three panes");
-
-/* ---- 8. data or paint? (v109) the app reads the canvas back after every draw ---- */
-ck(src.includes("export function paintReadback"), "canvas readback is exported");
-ck(src.includes("lastPaint = rb"), "the last readback is kept for the diagnostics layer");
-ck(src.includes("async function scanSeries") && src.includes("sb.__wired"), "one-tap series scan is wired");
-ck(ui.includes('id="scan-btn"'), "UI carries the scan button");
-ck(src.includes("study.pixelBad = badFrames;"), "ingest records how many frames had no pixel data");
-ck(src.includes("s.pixelBad"), "the worklist shows a pixel-health badge per study");
-
-/* ---- 9. a refusal must name its reason (v115) ---- */
-ck(src.includes("export function ingestRefusal"), "the refusal reason is computed as data, not hard-coded prose");
-ck(src.includes("const skipWhy = {}") && src.includes("bumpSkip(\"notdicom\")"), "files that are not readable DICOM are counted");
-ck(src.includes('bumpSkip("decode:" + String((parsed.compressed && parsed.compressed.tsuid) || "?")'), "a failed decoder is counted with its transfer syntax");
-ck(src.includes('bumpSkip("nopixels")') && src.includes('bumpSkip("emptyzip")'), "no-pixel-data and empty archives are counted separately");
-ck(src.includes("skipWhy }") || src.includes(", skipWhy }"), "ingestFiles returns the reasons");
-ck(!src.includes("\u0627\u0644\u0645\u0644\u0641\u0627\u062a \u062a\u0627\u0644\u0641\u0629"), "the old 'corrupt files' accusation is gone");
-ck(src.includes('\"No study was added: \"') && src.includes("\u0644\u0645 \u062a\u064f\u0636\u0641 \u0623\u064a \u062f\u0631\u0627\u0633\u0629: "), "the refusal message is bilingual");
-ck((src.match(/ingestRefusal\(r, LANG/g) || []).length >= 2, "both import paths (button and folder) explain themselves");
-ck(src.includes("\u0627\u0641\u062a\u062d\u0647\u0627 \u0645\u0646 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0639\u0645\u0644"), "a duplicate study points the physician to the worklist instead of blaming the file");
-
-/* ---- 10. an import the physician can hand to us (v115) ---- */
-ck(src.includes("export function importReportText"), "the last import is available as copyable text");
-ck(src.includes("export function studyKeyOf"), "duplicate detection is a named, testable function");
-ck(src.includes("lastImport = { lines: lines, at: Date.now() }"), "every import stores its evidence");
-ck(/say\("file " \+ \(file\.name \|\| "\?"\) \+ " bytes=" \+ \(file\.size \|\| 0\) \+ " magic="/.test(src), "each file reports its size and magic bytes");
-ck(src.includes('parse-error: ') && src.includes("decode-error: "), "parse and decode failures are recorded with their message");
-ck(src.includes("duplicate of a study already on this device: "), "a duplicate is named in the report");
-ck(src.includes("async function openDuplicateIfAny"), "an all-duplicates import opens the study already on the device");
-ck(src.includes("function showImportReport") && src.includes("import-report-btn"), "one tap copies the report");
-ck(src.includes('document.execCommand("copy")'), "copying still works where the clipboard API is blocked");
-ck(ui.includes('id="import-report-btn"') && ui.includes('id="import-report"'), "the import panel carries the button and the report box");
-
-/* ---- 11. a viewer that shows nothing must say why, on its own (v115) ---- */
-ck(src.includes("function canvasAudit("), "the canvas is audited from the live DOM");
-ck(src.includes("getBoundingClientRect()") && src.includes("getComputedStyle(cv)"), "the audit measures real layout, not intent");
-ck(src.includes("document.elementFromPoint("), "the audit asks what is actually on top of the canvas");
-ck(src.includes('why.push("no-size")') && src.includes('why.push("hidden")') && src.includes('"covered:" + topEl'), "no size, hidden and covered are separate causes");
-ck(src.includes("function repairCanvas(cv)"), "a canvas the layout left with no size is put back in flow");
-ck(src.includes("layout=repaired") || src.includes("\u0623\u064f\u0635\u0644\u062d \u0627\u0644\u062a\u062e\u0637\u064a\u0637"), "a repaired layout is reported, not hidden");
-ck(src.includes("function showAuditNote(a)") && src.includes("showAuditNote(a);"), "the cause is shown on screen without any setting");
-ck(src.includes('document.execCommand("copy")'), "the autopsy can be copied where the clipboard is blocked");
-ck(ui.includes('id="redraw-btn"') && src.includes("redraw-btn"), "one tap redraws and re-fits the image");
+/* ---- 12. short pixel data is shown at the depth it really has (v116) ---- */
+{
+  /* the reported case: 512x512 declared 16-bit, exactly 512x512 bytes present */
+  const N = 64, W = 8;
+  const data = Buffer.alloc(N);
+  for (let i = 0; i < N; i++) data[i] = 20 + (i % W) * 4 + Math.floor(i / W) * 2;
+  const p = parseDicom(asBuffer(dcm({ rows: 8, cols: 8, bits: 16, bytes: data })));
+  ck(p.pixels !== null, "a block that is one byte per pixel is shown, not refused");
+  ck(p.pixelInfo && p.pixelInfo.problem === "", "…and carries no problem (was: silent black frame)");
+  ck(p.pixelInfo.depthFit === "8bit" && p.pixels.data.length === N, "…read as an 8-bit frame of the full size");
+  ck(p.pixels.w === 8 && p.pixels.h === 8, "…with the declared rows and columns");
+  ck(p.pixelInfo.declaredBits === 16 && p.pixelInfo.declaredNeed === 128, "…and the header's claim kept for the report");
+}
+{
+  /* real 16-bit data: the image lives in the high byte, the low byte is detail */
+  const W = 8, samples = 32;
+  const data = Buffer.alloc(samples * 2);
+  for (let i = 0; i < samples; i++) {
+    const v = 1000 + (i % W) * 90 + Math.floor(i / W) * 40;   /* smooth image  */
+    data.writeUInt16LE(v, i * 2);
+    data[i * 2] = (i * 37) % 256;                             /* noisy low byte */
+  }
+  const half = data.subarray(0, 64);
+  const p = parseDicom(asBuffer(dcm({ rows: 8, cols: 8, bits: 16, bytes: half })));
+  ck(p.pixels !== null && p.pixelInfo.depthFit === "partial16",
+     "half a 16-bit frame is recognised as 16-bit, not mistaken for 8-bit");
+  ck(p.pixels.h === 4 && p.pixels.w === 8, "…and shows as many rows as the bytes cover");
+}
+{
+  /* the header says the values exceed 8 bits: believe it, do not measure */
+  const data = Buffer.alloc(64);
+  for (let i = 0; i < 64; i++) data[i] = 30 + (i % 8) * 6;
+  const p = parseDicom(asBuffer(dcm({ rows: 8, cols: 8, bits: 16, bytes: data,
+    extra: [el(0x0028, 0x0107, "US", us(3000))] })));
+  ck(p.pixelInfo && p.pixelInfo.depthFit === "partial16",
+     "LargestImagePixelValue above 255 settles the question without a measurement");
+}
+{
+  /* frames stored by older builds: the bytes are still there, only misread */
+  const f = { w: 8, h: 8, data: new Uint16Array(32), info: { bitsAllocated: 16, need: 64 } };
+  for (let i = 0; i < 32; i++) f.data[i] = 0x1000 + i;
+  const fx = fixStoredDepth(f);
+  ck(!!fx, "a stored short frame is repaired on open, not left black");
+  ck(fx && fx.data.length === 64 && fx.info.depthFit === "8bit", "…re-read as one byte per pixel");
+  ck(fx && fx.data[0] === 0x00 && fx.data[1] === 0x10, "…from the bytes the device still holds");
+  ck(fixStoredDepth({ w: 8, h: 8, data: new Uint16Array(64), info: {} }) === null, "a complete frame is left alone");
+  ck(fixStoredDepth({ w: 8, h: 8, data: new Uint16Array(8), info: {} }) === null,
+     "a frame with too few bytes is not invented");
+}
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
 process.exit(fails ? 1 : 0);

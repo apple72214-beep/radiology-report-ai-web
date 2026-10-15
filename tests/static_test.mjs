@@ -46,6 +46,22 @@ for (const m of ["dicom","triage","docx","measure","compare","report","consult",
   if (c2.status !== 0) { fails++; console.log("FAIL parse " + m + ":\n" + c2.stderr.toString().slice(0, 400)); }
 }
 console.log("PASS all-modules ESM parse");
+/* The suites used to import frozen modules (dicom.v52.js, app.v104.js …) while
+   the shipped app moved on, so every assertion silently proved nothing about
+   the build we publish. A suite may only import the build it belongs to. */
+{
+  const dir = path.join(root, "tests");
+  let bad = 0, checked = 0;
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith(".mjs"))) {
+    const t = fs.readFileSync(path.join(dir, f), "utf8");
+    for (const m of t.matchAll(/["'`](\.\.\/[A-Za-z0-9_/]+)\.v(\d+)\.(js|html|json)["'`]/g)) {
+      checked++;
+      if ("v" + m[2] !== build) { fails++; bad++; console.log("FAIL " + f + " imports frozen " + m[1] + ".v" + m[2] + "." + m[3] + " (" + build + " is current)"); }
+    }
+  }
+  if (checked === 0) { fails++; console.log("FAIL no module imports found in the suites"); }
+  else if (!bad) console.log("PASS every suite imports " + build + " (" + checked + " imports checked)");
+}
 console.log(fails ? "STATIC TEST FAIL " + fails : "STATIC TEST PASS (" + build + ", " + needIds.length + " ids wired)");
 process.exit(fails ? 1 : 0);
 

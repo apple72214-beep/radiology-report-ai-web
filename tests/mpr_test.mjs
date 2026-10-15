@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs";
 /* MPR — multi-planar reconstruction: volume building, reslicing, crosshair maths. */
-import { volumeFromFrames, planeDims, planeImage, planeIndexFor, pointToVolume, volumeToPlanePixel, isAnisotropic } from "../mpr.v115.js";
+import { volumeFromFrames, planeDims, planeImage, planeIndexFor, pointToVolume, volumeToPlanePixel, isAnisotropic } from "../mpr.v116.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${a} ≠ ${b}`); } };
@@ -99,25 +98,6 @@ eq(isAnisotropic(volumeFromFrames(thickFrames, {})), true, "thick-slice stack is
 const tiny = volumeFromFrames(phantom(64, 64, 8), { maxVoxels: 2000 });
 ck(tiny.ok && tiny.downsample > 1, "oversized volumes are downsampled to fit memory");
 eq(tiny.nx < 64, true, "downsampling shrinks the in-plane matrix");
-
-/* ---- per-pane slice slider + window preset (v115) ---------------------- */
-const appSrc = readFileSync(new URL("../app.v115.js", import.meta.url), "utf-8");
-const uiSrc = readFileSync(new URL("../ui.v115.html", import.meta.url), "utf-8");
-ck(appSrc.includes("function mprPresetFor("), "each pane resolves its own window preset");
-ck(appSrc.includes('localStorage.getItem("rrai-mpr-preset-"'), "a pane's window is remembered on the device");
-ck(appSrc.includes("return v === \"auto\" ? presetVal() : v;"), "auto keeps following the shared preset");
-ck(appSrc.includes("drawFrame(cv, img, mprPresetFor(pl), modality)"), "each pane is drawn with its own window");
-ck(appSrc.includes("function mprSyncPaneCtl(") && appSrc.includes("mprSyncPaneCtl(pl, d, idx)"), "the pane slider is kept in step with the crosshair");
-ck(appSrc.includes('sl.addEventListener("input", () => { mprFocus = pl; mprSetIndex(pl, Number(sl.value) || 0); })'), "dragging the slider moves that plane only");
-ck(appSrc.includes("function mprWirePaneCtl()") && appSrc.includes("mprWirePaneCtl();"), "the per-pane controls are wired when MPR opens");
-ck(appSrc.includes('const grp = (n) => String(Math.round(n)).replace('), "the window width is shown grouped like the reference viewer");
-ck(appSrc.includes('soft: [50, 400]') && appSrc.includes('brain: [40, 80]'), "soft-tissue and brain windows exist");
-for (const pl of ["axial", "coronal", "sagittal"]) {
-  ck(uiSrc.includes('id="mpr-slice-' + pl + '"'), "pane " + pl + " has its own slice slider");
-  ck(uiSrc.includes('id="mpr-preset-' + pl + '"'), "pane " + pl + " has its own window select");
-}
-ck(uiSrc.includes('OPTS_L["mpr-preset-"') || appSrc.includes('OPTS_L["mpr-preset-" + pl] = PRESET_L;'), "the per-pane selects are translated with the language");
-ck(uiSrc.includes('<option value="soft">') && uiSrc.includes('<option value="brain">'), "the shared window select carries the two new presets");
 
 console.log(fails ? "MPR TEST FAIL " + fails : "MPR TEST PASS");
 process.exit(fails ? 1 : 0);

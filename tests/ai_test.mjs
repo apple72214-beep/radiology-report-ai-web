@@ -1,11 +1,12 @@
-import { aiRequestFor, aiProviderForKey, aiPromptText } from "../app.v59.js";
+import { aiRequestFor, aiProviderForKey, aiPromptText } from "../app.v116.js";
 let fails = 0;
 const ck = (c, n) => { if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
 const pay = { text: "prompt", images: ["QUJD"] };
-const g = aiRequestFor("groq", "gsk_x", "meta-llama/llama-4-scout-17b-16e-instruct", pay);
+const g = aiRequestFor("groq", "gsk_x", "qwen/qwen3.8-27b", pay);   /* llama-4-scout was retired 2026-07-17 */
 ck(g.url === "https://api.groq.com/openai/v1/chat/completions", "groq-url");
 ck(g.headers.Authorization === "Bearer gsk_x", "groq-auth");
-ck(Array.isArray(g.body.messages[0].content) && g.body.messages[0].content[1].image_url.url.startsWith("data:image/png;base64,"), "groq-vision-parts");
+ck(Array.isArray(g.body.messages[0].content) && g.body.messages[0].content[1].image_url.url.startsWith("data:image/jpeg;base64,"), "groq-vision-parts");
+ck(aiRequestFor("groq", "gsk_x", "openai/gpt-oss-120b", pay).vision === false, "a text-only model gets no image parts");
 const gt = aiRequestFor("groq", "gsk_x", "llama-3.3-70b-versatile", pay);
 ck(typeof gt.body.messages[0].content === "string" && gt.vision === false, "groq-textonly-fallback");
 const o = aiRequestFor("openrouter", "sk-or_y", "google/gemini-2.0-flash-exp:free", pay);
@@ -18,5 +19,6 @@ ck(aiProviderForKey("sk-proj-JG4t") === "openai-unsupported" && aiProviderForKey
 const stN = { modality: "MR", frames: [1], meta: {}, report: { notes: "post-op lumbar fixation 6y, LBP + right radiculopathy" }, triage: { score: 0.001, priority: "routine", context: "unknown", reasons: [] } };
 const pt = aiPromptText(stN);
 ck(pt.includes("RAW CLINICAL NOTES") && pt.includes("post-op lumbar fixation 6y"), "notes-in-prompt");
-ck(pt.includes("<anat></anat>") && pt.includes("do not repeat any finding"), "prompt-rules");
+ck(pt.includes("**double asterisks**") && pt.includes("do NOT use <anat> tags") && pt.includes("never invent lesions"),
+   "prompt-rules: findings bolded with ** only, no <anat> tags, no invented lesions");
 console.log(fails ? "AI TEST FAIL " + fails : "AI TEST PASS (11)");
