@@ -226,7 +226,11 @@ export function parseDicom(buffer) {
       pixelInfo.depthFit = fit.mode;          /* "8bit" | "partial16" | "partial24" */
       pixelInfo.declaredBits = bitsAllocated;
       pixelInfo.declaredNeed = needX;
-      pixelInfo.have = haveX;
+      /* What this frame needs now, not what the header claimed. Leaving `need`
+         at the declared value makes the viewer's own drawability check reject
+         a frame it can perfectly well draw — the refusal the physician sees. */
+      pixelInfo.need = fit.data.length;
+      pixelInfo.have = fit.data.length;
       pixelInfo.rowsShown = fit.h;
     } else {
       pixelInfo.problem = haveX === 0 ? "empty" : "short";

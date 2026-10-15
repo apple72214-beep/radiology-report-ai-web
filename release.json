@@ -1,12 +1,12 @@
 {
-  "build": "v116",
-  "version": "v116",
-  "mark": "ب2.88",
+  "build": "v117",
+  "version": "v117",
+  "mark": "ب2.89",
   "channel": "stable",
-  "minVersion": "v116",
-  "updatedAt": "2026-10-14T23:04:44Z",
+  "minVersion": "v117",
+  "updatedAt": "2026-10-15T15:39:14Z",
   "notes": {
-    "ar": "عرض بيانات البكسل الناقصة بعمقها الحقيقي بدل رفضها — ب2.88",
-    "en": "Show short pixel data at the depth it really has, instead of refusing it — ب2.88"
+    "ar": "قبول الإطار الذي أصلح عمقه: كان التطبيق يرفضه لأنه يقيسه بمقياس العنوان القديم — ب2.89",
+    "en": "Accept the frame whose depth was repaired: it was still measured against the header's claim — ب2.89"
   }
 }

@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v116.js";
-import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v116.js";
+import { parseDicom } from "../dicom.v117.js";
+import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v117.js";
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
 
@@ -138,14 +138,14 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v116.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v117.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) {") && src.includes("bad++;"), "ingest counts files with unreadable pixels");
 ck(/if \(!study\.frames\.length\) \{ bad\+\+;.*continue; \}/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v116.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v117.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
@@ -165,6 +165,10 @@ ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Ara
   ck(p.pixelInfo.depthFit === "8bit" && p.pixels.data.length === N, "…read as an 8-bit frame of the full size");
   ck(p.pixels.w === 8 && p.pixels.h === 8, "…with the declared rows and columns");
   ck(p.pixelInfo.declaredBits === 16 && p.pixelInfo.declaredNeed === 128, "…and the header's claim kept for the report");
+  /* The point of the whole exercise: the viewer must agree it can draw it.
+     `need` stayed at the header's claim, so the app refused the very frame the
+     parser had just repaired — the import report still said pixel-problem=short. */
+  ck(pixelProblem(p.pixels) === "", "…and the viewer's own drawability check accepts it");
 }
 {
   /* real 16-bit data: the image lives in the high byte, the low byte is detail */
