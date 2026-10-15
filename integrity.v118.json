@@ -1,0 +1,73 @@
+{
+  "build": "v118",
+  "pinned_commit": "4cd26e53c8554b098419fd69f1f6c624099e6d60",
+  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@4cd26e53c8554b098419fd69f1f6c624099e6d60/",
+  "files": {
+    "consult": {
+      "path": "consult.v118.js",
+      "chars": 5239,
+      "bytes": 5341,
+      "sha256": "729d62402ecb1ccc2959c7f55fc55f5141c5f088f4881bf8aa378bc565daf8ec"
+    },
+    "decode": {
+      "path": "codecs/decode.v118.js",
+      "chars": 5236,
+      "bytes": 5236,
+      "sha256": "f2b87411b1e3c14edc6b0815a16cb775dffccdffa078d946968db818e1f9abd2"
+    },
+    "dicom": {
+      "path": "dicom.v118.js",
+      "chars": 15708,
+      "bytes": 15714,
+      "sha256": "92545e01298cedf20a82339abc05a2d9efceea7da937081700dfe1e7b0d226ee"
+    },
+    "triage": {
+      "path": "triage.v118.js",
+      "chars": 5206,
+      "bytes": 5542,
+      "sha256": "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"
+    },
+    "docx": {
+      "path": "docx.v118.js",
+      "chars": 20215,
+      "bytes": 20507,
+      "sha256": "e93e32a243d9e4182123c6970f1341f2b7f3ce96ee11a79b5a649fb7c2fda994"
+    },
+    "measure": {
+      "path": "measure.v118.js",
+      "chars": 1650,
+      "bytes": 1652,
+      "sha256": "39044eae7274081becae2478481b4eace4ed9d8bfa5063e0d9c9513c33bd667f"
+    },
+    "compare": {
+      "path": "compare.v118.js",
+      "chars": 1442,
+      "bytes": 1444,
+      "sha256": "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"
+    },
+    "report": {
+      "path": "report.v118.js",
+      "chars": 8574,
+      "bytes": 9460,
+      "sha256": "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"
+    },
+    "mpr": {
+      "path": "mpr.v118.js",
+      "chars": 8050,
+      "bytes": 8058,
+      "sha256": "db1435dc932c083ac6f4c3a86ce51bf61cfbf265b331fee234931942c204fc83"
+    },
+    "app": {
+      "path": "app.v118.js",
+      "chars": 235984,
+      "bytes": 247449,
+      "sha256": "2a284c027f673ddcede68bed8171c5243b75b1b1d9b5b2f8fc146b9974e461b4"
+    },
+    "ui": {
+      "path": "ui.v118.html",
+      "chars": 44079,
+      "bytes": 47513,
+      "sha256": "5109bf8fb625464519c70d44c61a5cba22a7953bf9e8c1d2fed9b07de2d3c6ac"
+    }
+  }
+}

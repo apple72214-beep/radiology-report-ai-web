@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v117.js";
-import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v117.js";
+import { parseDicom } from "../dicom.v118.js";
+import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v118.js";
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
 
@@ -51,12 +51,12 @@ const asBuffer = (b) => b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
   const p = parseDicom(asBuffer(dcm({ rows: 4, cols: 4, bits: 16, bytes: Buffer.alloc(0) })));
   ck(p.pixels === null, "empty pixel data yields no pixels");
   ck(p.pixelInfo && p.pixelInfo.problem === "empty", "empty pixel data flagged (was: black frame)");
-  ck(p.pixelInfo.need === 32, "expected byte count reported");
+  ck(p.pixelInfo.need === 16 && p.pixelInfo.bytes === 32, "sample count and byte count reported separately");
 }
 {
   const p = parseDicom(asBuffer(dcm({ rows: 8, cols: 8, bits: 16, bytes: Buffer.alloc(20) })));
   ck(p.pixels === null && p.pixelInfo.problem === "short", "a fragment too small to make one row is still refused");
-  ck(p.pixelInfo.have === 20 && p.pixelInfo.need === 128, "have/need exposed for the report");
+  ck(p.pixelInfo.haveBytes === 20 && p.pixelInfo.bytes === 128, "byte counts exposed for the report");
 }
 {
   const data = Buffer.alloc(4 * 4 * 2);
@@ -64,7 +64,7 @@ const asBuffer = (b) => b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
   const p = parseDicom(asBuffer(dcm({ rows: 4, cols: 4, bits: 16, bytes: data })));
   ck(p.pixels !== null, "valid 16-bit frame accepted");
   ck(p.pixelInfo.problem === "", "valid frame carries no problem");
-  ck(p.pixels.info && p.pixels.info.need === 32, "frame keeps its pixel info for diagnostics");
+  ck(p.pixels.info && p.pixels.info.need === 16 && p.pixels.info.bytes === 32, "frame keeps its pixel info for diagnostics");
   ck(p.pixels.data.length === 16, "16-bit data length is rows*cols");
 }
 {
@@ -138,14 +138,14 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v117.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v118.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) {") && src.includes("bad++;"), "ingest counts files with unreadable pixels");
 ck(/if \(!study\.frames\.length\) \{ bad\+\+;.*continue; \}/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v117.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v118.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
@@ -205,6 +205,30 @@ ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Ara
   ck(fixStoredDepth({ w: 8, h: 8, data: new Uint16Array(64), info: {} }) === null, "a complete frame is left alone");
   ck(fixStoredDepth({ w: 8, h: 8, data: new Uint16Array(8), info: {} }) === null,
      "a frame with too few bytes is not invented");
+}
+
+/* ---- 13. a complete frame is never called short (v118) -------------------- */
+{
+  /* The field report read len=65536 need=131072 for files that were complete:
+     `need` was a byte count while data.length counts samples, so every 16-bit
+     frame looked half-empty and every 16-bit import was refused. */
+  const W = 8;
+  const data = Buffer.alloc(W * W * 2);
+  for (let i = 0; i < W * W; i++) data.writeUInt16LE(500 + i * 13, i * 2);
+  const p = parseDicom(asBuffer(dcm({ rows: W, cols: W, bits: 16, bytes: data })));
+  ck(p.pixels !== null && pixelProblem(p.pixels) === "",
+     "a complete 16-bit frame is accepted: need counts samples, not bytes");
+  ck(p.pixelInfo.need === W * W && p.pixelInfo.bytes === W * W * 2,
+     "…need is the sample count; bytes keeps the byte count");
+  ck(p.pixels.data.length === W * W, "…and the frame holds one sample per pixel");
+}
+{
+  /* the same frame at 8 bits: the two agreed only because bpp was 1 */
+  const W = 8;
+  const data = Buffer.alloc(W * W);
+  for (let i = 0; i < W * W; i++) data[i] = (i * 11) & 255;
+  const p = parseDicom(asBuffer(dcm({ rows: W, cols: W, bits: 8, bytes: data })));
+  ck(p.pixels !== null && pixelProblem(p.pixels) === "", "a complete 8-bit frame is accepted");
 }
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
