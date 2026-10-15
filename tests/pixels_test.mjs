@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v118.js";
-import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v118.js";
+import { parseDicom } from "../dicom.v119.js";
+import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v119.js";
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
 
@@ -138,14 +138,14 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v118.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v119.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) {") && src.includes("bad++;"), "ingest counts files with unreadable pixels");
 ck(/if \(!study\.frames\.length\) \{ bad\+\+;.*continue; \}/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v118.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v119.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
@@ -230,6 +230,29 @@ ck(probe.includes("نسخ التقرير"), "probe has a copy-report button (Ara
   const p = parseDicom(asBuffer(dcm({ rows: W, cols: W, bits: 8, bytes: data })));
   ck(p.pixels !== null && pixelProblem(p.pixels) === "", "a complete 8-bit frame is accepted");
 }
+
+/* ---- 14. nothing drawn above the image may be opaque (v119) --------------
+   The main view went black for a whole study while the pixels underneath were
+   perfect: #annot sits on top of #frame with `inset:0`, and the blanket rule
+   `.viewer canvas{background:#000}` gave that transparent info layer an
+   opaque black background — a solid sheet over a correctly painted image.
+   The letterbox colour belongs to #frame and #viewport, never to a layer. */
+ck(/\.viewer canvas#annot[^{]*\{[^}]*background:\s*transparent/.test(ui),
+  "the stylesheet keeps #annot transparent instead of black");
+ck(/\.viewer canvas#overlay[^{]*\{[^}]*background:\s*transparent/.test(ui),
+  "the stylesheet keeps #overlay transparent instead of black");
+ck(/id="annot"[^>]*background:\s*transparent/.test(ui),
+  "#annot carries transparency inline too, so a cached stylesheet cannot undo it");
+ck(/function drawAnnot\(\)[\s\S]{0,900}?cv\.style\.background = "transparent"/.test(src),
+  "drawAnnot clears the layer background on every draw");
+ck(/ov0\.style\.background = "transparent"/.test(src),
+  "drawAnnot clears the overlay background on every draw");
+ck(src.includes('why.push("opaque:" + el.id)'),
+  "the audit names an opaque layer instead of staying silent");
+ck(src.includes('x.indexOf("opaque:") === 0'),
+  "an opaque layer is repaired like any other layout fault");
+ck(/if \(an\) an\.style\.background = "transparent"/.test(src),
+  "the layout repair clears #annot's background");
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
 process.exit(fails ? 1 : 0);

@@ -1,12 +1,12 @@
 {
-  "build": "v118",
-  "version": "v118",
-  "mark": "ب2.90",
+  "build": "v119",
+  "version": "v119",
+  "mark": "ب2.91",
   "channel": "stable",
-  "minVersion": "v118",
-  "updatedAt": "2026-10-15T16:36:04Z",
+  "minVersion": "v119",
+  "updatedAt": "2026-10-15T19:39:28Z",
   "notes": {
-    "ar": "قياس طول الإطار بالعيّنات لا بالبايتات: كل ملف 16 بت كان مرفوضًا خطأً — ب2.90",
-    "en": "Count the frame in samples, not bytes: every 16-bit file was refused by mistake — ب2.90"
+    "ar": "إصلاح الشاشة السوداء في العرض الرئيسي: طبقة المعلومات فوق الصورة كانت لوحًا أسود معتمًا يغطيها — ب2.91",
+    "en": "Black main view fixed: the on-image info layer was an opaque black sheet covering the frame — ب2.91"
   }
 }
