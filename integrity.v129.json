@@ -1,7 +1,7 @@
 {
   "build": "v129",
-  "pinned_commit": "4b1e6c8ea9b032ab0644aa7f81c677fad625ece3",
-  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@4b1e6c8ea9b032ab0644aa7f81c677fad625ece3/",
+  "pinned_commit": "1ab987e053fc3d23ce7da4c8c8fa0069ed5351d0",
+  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@1ab987e053fc3d23ce7da4c8c8fa0069ed5351d0/",
   "files": {
     "consult": {
       "path": "consult.v129.js",
