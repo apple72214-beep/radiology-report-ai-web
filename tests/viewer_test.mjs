@@ -298,5 +298,13 @@ ck(app.includes("function fsReserve(vp, avail)"), "the free band is reserved bef
 ck(app.includes("fsReserve(vp, avail);") && app.includes("} else if (vp.style.paddingBottom) {"),
    "and the reserve is dropped again outside fullscreen");
 ck(app.includes("try { fsReserve($(\"viewport\"), 0); } catch (e) {}"), "leaving fullscreen clears the reserve too");
+/* The same inline-style trap, one layer up: the app writes
+   $("viewer-name").style.display = "block", which beat the rule that hides the
+   chrome in fullscreen — so the patient line sat over the picture. */
+ck(app.includes('$("viewer-name").style.display = "block";'), "the app shows the patient line by an inline style");
+ck(/#viewer-card:fullscreen h2, #viewer-card:fullscreen p, #viewer-card:fullscreen details \{ display:none !important; \}/.test(ui),
+   "fullscreen hides the chrome (patient line included) — !important, so the inline style cannot win");
+ck(/\.fs-fake h2, \.fs-fake p, \.fs-fake details \{ display:none !important; \}/.test(ui),
+   "the iOS fallback path hides it too");
 
 console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (" + checks + ")");

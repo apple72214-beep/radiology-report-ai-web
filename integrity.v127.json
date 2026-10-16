@@ -71,9 +71,9 @@
     },
     "ui": {
       "path": "ui.v127.html",
-      "chars": 49528,
-      "bytes": 53065,
-      "sha256": "a7cfbb4ef96e76cee5a334995cb58565afd10bc90c918cf5e812287976607588"
+      "chars": 49550,
+      "bytes": 53087,
+      "sha256": "bc251c3ef198444ee2bf4a6bfe30db8fabbbfc120844fe27b001386f2a6483d6"
     }
   }
 }
