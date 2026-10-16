@@ -1,10 +1,10 @@
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
-import { drawFrame, paintReadback, filmWindow, filmDragSteps, fitScaleFor } from "../app.v128.js";
+import { drawFrame, paintReadback, filmWindow, filmDragSteps, fitScaleFor } from "../app.v129.js";
 let fails = 0, checks = 0;
 const ck = (c, n) => { checks++; if (!c) { fails++; console.log("FAIL " + n); } };
 const eq = (a, b, m) => { checks++; if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
-const app = fs.readFileSync(new URL("../app.v128.js", import.meta.url), "utf8");
+const app = fs.readFileSync(new URL("../app.v129.js", import.meta.url), "utf8");
 function fakeCanvas() {
   let w = 0, h = 0, sets = 0;
   const ctx = { createImageData: (W, H) => ({ data: new Uint8ClampedArray(W * H * 4) }), putImageData: () => {} };
@@ -21,7 +21,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v128.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v129.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -34,7 +34,7 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v128.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v129.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
 ck(sws.includes("app." + build + ".js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
@@ -46,7 +46,7 @@ ck(src.includes("card.requestFullscreen"), "native fullscreen with graceful fall
 ck(src.includes("fs-fake"), "pseudo-fullscreen fallback for browsers without API");
 ck(src.includes("const fs = fsNow()"), "fit honors fullscreen height");
 ck(src.includes("const ch = vp ? (vp.clientHeight || 0) : 0;"), "fullscreen cover measured from real viewport height");
-ck(src.includes("const avail = fsAvailHeight(vp, chh);") && src.includes("fitScaleFor(cw, avail, f.w, f.h)") && src.includes("Math.max(0.25, Math.min(4, a))"), "v127: fullscreen CONTAIN — the whole image is fitted to the space above the bars, never cropped");
+ck(src.includes("const avail = fsAvailHeight(vp, chh);") && src.includes("fitScaleFor(cw, avail, dw, dh)") && src.includes("Math.max(0.25, Math.min(4, a))"), "v127: fullscreen CONTAIN — the whole image is fitted to the space above the bars, never cropped");
 ck(src.includes("function fsArm()") && !src.includes("fsBarShow(false); }, 3000)"), "fullscreen controls stay visible (no auto-hide)");
 ck(src.includes("qwen/qwen3.8-27b"), "groq list uses live Sep-2026 free models (retired llama ids removed)");
 ck(src.includes("new AbortController()"), "AI requests time out at 45s instead of hanging");
@@ -56,7 +56,7 @@ ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance
 ck(src.includes("You are a CONSULTANT RADIOLOGIST assistant"), "prompt demands consultant-grade structured draft");
 ck(src.includes("c.toDataURL(\"image/jpeg\", 0.9)"), "renders sent at 768px JPEG (sharper vision input)");
 ck(src.includes("technique: String(obj.technique || \"\").trim()"), "AI technique stored with the report");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v128.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v129.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
 ck(src.includes("fileToJpegB64") && src.includes(".concat(aiExtraImgs).slice(0, 8)"), "physician screenshots join the request (max 8 images)");
 ck(src.includes("attached screenshot(s)"), "consent names attached screenshots");
 ck(src.includes("EQUAL weight to the slice renders"), "prompt gives attached screenshots primary-evidence weight");
@@ -70,7 +70,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v128.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v129.html", import.meta.url), "utf-8"));
 const startHtml = (await import("node:fs")).readFileSync(new URL("../start.html", import.meta.url), "utf-8");
 ck(startHtml.includes("ev.persisted") && startHtml.includes("rrai-sw-updated"), "bootstrap reloads on bfcache restore and on SW update");
 ck(src.includes("if (useImages && !cfg.vision[model] && !cfg.native) continue;"), "images never silently dropped: text-only models skipped while images pending");
@@ -86,10 +86,10 @@ ck(src.includes("/^(AIza|AQ\\.)/i.test(k)"), "new AQ-format Gemini keys auto-det
 ck(src.includes("!cfg.vision[model] && !cfg.native"), "Gemini native models treated as vision-capable");
 ck(src.includes("Send up to 6 slice renders") && src.includes("while (totalB64 > 3500000 && images.length > 6)"), "six evenly spaced renders, 8-image cap with size shedding");
 ck(src.includes("function setupTemplates") && ui.includes("id=\"tpl-list\""), "settings icon with normal/pathology template library");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v128.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v129.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
 ck(src.includes("function techniqueFor"), "deterministic TECHNIQUE generator with sequence catalog");
 ck(src.includes('technique: String(obj.technique || "").trim() || techniqueFor(study)'), "AI draft never leaves technique empty");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v128.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v129.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
 ck(ui.includes("id=\"app-logo\"") && ui.includes("./icons/logo.png"), "brand logo rendered in the header");
 ck(sws.includes("./icons/logo.png"), "logo precached for offline branding");
 ck(src.includes("const lat = /RIGHT|"), "technique names the correct side (right/left) from exam fields");
@@ -161,7 +161,7 @@ ck(!ui.includes("image-rendering:pixelated"), "nearest-neighbor shimmer removed 
 ck(src.includes("cv.style.width = Math.round(f.w * fitK)"), "explicit fit width (no layout/scale mismatch crop)");
 ck(ui.includes("transform-origin:center"), "center-origin user zoom (symmetric crop)");
 ck(src.includes("const Ox = r.width / (2 * vk)"), "centroid anchor for center origin");
-ck(src.includes("const s = (f0 && r.width / f0.w) || vk"), "measure math uses true display scale");
+ck(src.includes("const s = (f0 && dw && r.width / dw) || vk"), "v129: measure math uses the true display scale of the TURNED picture");
 ck(src.includes('localStorage.getItem("rrai-sort")') && src.includes('sortMode === "date"') && src.includes('sortMode === "name"'), "v96: worklist default sort (urgent/date/name)");
 ck(src.includes('localStorage.getItem("rrai-default-win")') && src.includes('$("preset").value = dw2'), "v96: default window/level applied on study open");
 ck(src.includes("function applyOverlayPrefs") && src.includes('rrai-ov-name') && src.includes('rrai-ov-meta') && (src.match(/applyOverlayPrefs\(\);/g) || []).length >= 2, "v96: overlay show/hide prefs wired into draw path");
@@ -276,7 +276,7 @@ eq(fitScaleFor(720, 1544, 32, 32), 4, "a tiny image is never blown up past x4");
 eq(fitScaleFor(36, 36, 512, 512), 0.25, "a huge image is never shrunk past 0.25");
 eq(fitScaleFor(720, 400, 512, 1024), 400 / 1024, "a tall image in a short space is limited by the height");
 ck(app.includes("function fsAvailHeight(vp, fallback)"), "fullscreen measures the space above the bars");
-ck(app.includes("const avail = fsAvailHeight(vp, chh);") && app.includes("fitScaleFor(cw, avail, f.w, f.h)"), "and fits the picture to that space, not to the whole screen");
+ck(app.includes("const avail = fsAvailHeight(vp, chh);") && app.includes("fitScaleFor(cw, avail, dw, dh)"), "and fits the picture to that space, not to the whole screen");
 ck(app.includes('classList.toggle("fs-folded", !!on)'), "the settings rows fold away");
 ck(app.includes('localStorage.getItem("rrai-fs-fold") !== "0"'), "folded is the default, so the picture starts with the screen");
 ck(app.includes('fc.textContent = (idx + 1) + " / " + frames.length'), "the slim line carries the slice counter");
@@ -319,5 +319,59 @@ const winLbl = (ui.match(/<label id="lbl-win">[\s\S]{0,600}?<\/label>/) || [""])
 ck(winLbl.includes('id="preset"'), "the window/level select lives inside its label — the shape that used to be destroyed");
 ck(app.includes('document.getElementById("preset")') && app.includes('const presetVal = () => val("preset", "auto")'),
    "and the viewer still reads the window it offers");
+
+/* --- v129: how the film is turned -----------------------------------------
+   Invert, rotate, flip H, flip V, and back to the way it was acquired. Radiology
+   has never agreed on one orientation: a chest film is hung one way in one
+   department and the other way in the next, and the physician turns it until it
+   matches the picture in his head. So the viewer must let him — but the turn is
+   DISPLAY ONLY. A millimetre measured on a turned film must be the same
+   millimetre, which is why the tap is mapped back through the turn before it
+   reaches the pixels. */
+ck(/id="orient-bar"/.test(ui) && /id="orient-invert"/.test(ui) && /id="orient-rotate"/.test(ui) &&
+   /id="orient-fliph"/.test(ui) && /id="orient-flipv"/.test(ui) && /id="orient-reset"/.test(ui),
+   "ui: invert, rotate, flip H, flip V, and back to the original");
+ck(app.includes("const sx = o.flipH ? -vk : vk, sy = o.flipV ? -vk : vk;") && app.includes("rotate(${o.rotate}deg)"),
+   "the turn is ONE transform on the wrapper, with the flips outside the rotation — a flip mirrors what is on screen, not the film");
+ck(app.includes('cv.style.filter = o.invert ? "invert(1)" : "none"'),
+   "invert is a filter on the picture alone: the overlay, the labels and the numbers keep their colours");
+ck(app.includes("const [dw, dh] = oSize(f.w || 1, f.h || 1, orientNow());"),
+   "the fit measures the TURNED picture, so a wide film stood on its end is fitted as the tall picture it became");
+ck(app.includes("const [dw, dh] = oSize(f.w, f.h, orientNow());") && app.includes("cv.style.left = Math.round((dw - f.w) * fitK / 2)"),
+   "the wrapper is the turned box and the canvas is centred in it — a turned film stays in the middle of the screen");
+ck(app.includes("r.width / dw") && app.includes("unPoint(u, v, f0.w, f0.h, o)"),
+   "a tap is mapped back through the turn: a measurement is the same millimetre however the film is held");
+ck(app.includes("oPoint(ix, iy, f0.w, f0.h, o)"),
+   "and zooming to a point maps it forward through the same turn");
+ck(/function orientNow\(\)/.test(app) && app.includes("const o = orientNow();"),
+   "ONE place says how the picture is turned, and the fit, the tap and the transform all read it");
+ck(app.includes("orientWire();") && /bind\("orient-invert", \(\) => \{ vst\(\{ type: "toggleInvert" \}\)/.test(app),
+   "the buttons dispatch to the reducer like the slice and the zoom do, they never set a style of their own");
+ck(app.includes('else if (k === (map.invert || "i"))') && app.includes('else if (k === (map.rotate || "r"))'),
+   "the turns answer to the keyboard too, and to the same key map as the rest");
+ck(app.includes('"orient-invert": ["قلب اللون", "Invert"]') && app.includes('"orient-reset": ["الوضع الأصلي", "Reset view"]'),
+   "every new button is named in Arabic and in English");
+
+/* --- v129: the value of one pixel, and a rectangle ROI -------------------- */
+ck(app.includes('["rect", "مستطيل"], ["probe", "قيمة البكسل"]'),
+   "ui: a rectangle and a pixel value join the length, the angle and the ellipse");
+ck(app.includes('mMode === "probe" ? 1 : 2'),
+   "one tap reads a value, two corners make a rectangle — the tools ask for the taps they need");
+ck(app.includes("rectStats(f, mPts[0], mPts[1])") && app.includes("rectStats = m.rectStats; grayAt = m.grayAt;"),
+   "the rectangle is measured over every pixel of the box, by the same module that measures the rest");
+ck(app.includes('mProbe = { p: [x, y], v: grayAt(f, x, y), unit: f.hu ? "HU" : "gray" }'),
+   "the pixel value is read in the unit the FILE declares: HU where the file rescaled, plain grey where it did not");
+ck(app.includes("function probeText(p)") && /probeText\(mProbe\)/.test(app),
+   "and it is written out where the physician can read it, with the millimetre position when the file carries a spacing");
+ck(app.includes("mItems = { segments: [], angles: [], rois: [], rects: [] }"),
+   "clearing the measurements clears the rectangles with them");
+ck(app.includes("rects: mItems.rects }") && app.includes('rects: current.measurements.rects || []'),
+   "a rectangle is saved with the study and comes back with it");
+ck(/ctx\.rect\(x0, y0, x1 - x0, y1 - y0\); ctx\.stroke\(\)/.test(app) && /mMode === "rect" && mPts\.length === 2/.test(app),
+   "the rectangle is drawn while it is being dragged and after it is committed");
+ck(/mProbe\.p\[0\] - 9/.test(app) && /mMode === "probe" && mPts\.length === 1/.test(app),
+   "the pixel under the finger is marked where the physician asked for it");
+ck(app.includes('hints[mMode]') && /rect: "انقر زاويتين للمستطيل"/.test(app),
+   "each tool says what it wants next, in the language on screen");
 
 console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (" + checks + ")");

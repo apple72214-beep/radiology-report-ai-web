@@ -1,5 +1,5 @@
 /* MPR — multi-planar reconstruction: volume building, reslicing, crosshair maths. */
-import { volumeFromFrames, planeDims, planeImage, planeIndexFor, pointToVolume, volumeToPlanePixel, isAnisotropic } from "../mpr.v128.js";
+import { volumeFromFrames, planeDims, planeImage, planeIndexFor, pointToVolume, volumeToPlanePixel, isAnisotropic } from "../mpr.v129.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${a} ≠ ${b}`); } };

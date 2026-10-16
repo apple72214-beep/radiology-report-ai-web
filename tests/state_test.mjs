@@ -7,14 +7,15 @@ import { readFileSync } from "node:fs";
 import {
   TOOLS, LAYOUTS, MIN_ZOOM, MAX_ZOOM, CINE_MS_DEFAULT,
   initialViewerState, viewerReducer, seriesOf, identityName, clampZoom, clampSlice,
-} from "../viewer-state.v124.js";
+  orientSize, orientPoint, unorientPoint,
+} from "../viewer-state.v129.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
 const ck = (c, m) => { if (!c) { fails++; console.log("FAIL " + m); } };
 
-const app = readFileSync(new URL("../app.v128.js", import.meta.url), "utf8");
-const ui = readFileSync(new URL("../ui.v128.html", import.meta.url), "utf8");
+const app = readFileSync(new URL("../app.v129.js", import.meta.url), "utf8");
+const ui = readFileSync(new URL("../ui.v129.html", import.meta.url), "utf8");
 
 const study = [
   { id: "0", label: "T1", count: 4, reslice: true },
@@ -160,6 +161,126 @@ ck(app.includes("function cineTick()") && app.includes("function cineStop()") &&
 ck(app.includes('document.addEventListener("visibilitychange"'), "the loop stops when the tab is hidden");
 ck(ui.includes('id="id-toggle"') && ui.includes('id="cine-toggle"'), "ui: hide-identity and cine buttons");
 ck(app.includes('"id-toggle": [') && app.includes('"cine-toggle": ['), "both buttons are labelled in Arabic and English");
+
+/* --- v129: how the picture is turned --------------------------------------
+   Invert, rotate, flip H, flip V, and back to the way it was acquired. The turn
+   is DISPLAY ONLY — it never touches the pixels, the pixel value or a
+   measurement — but a tap on a turned picture is a point in the turned picture,
+   so the mapping between the two has to be exact, and it lives here where it can
+   be tested without a browser. If it were wrong, a line drawn on a rotated film
+   would measure a different piece of the patient than the one under the finger. */
+{
+  const flat = { rotate: 0, flipH: false, flipV: false };
+  eq(orientSize(512, 256, flat).join("x"), "512x256", "an upright picture is its own size on screen");
+  eq(orientSize(512, 256, { rotate: 90 }).join("x"), "256x512", "a quarter turn swaps the sides of the box");
+  eq(orientSize(512, 256, { rotate: 180 }).join("x"), "512x256", "a half turn does not");
+  eq(orientSize(512, 256, { rotate: 270 }).join("x"), "256x512", "three quarter turns swap them back");
+  eq(orientSize(512, 256, { rotate: 450 }).join("x"), "256x512", "450° is the quarter turn it really is");
+  eq(orientSize(512, 256, { rotate: -90 }).join("x"), "256x512", "and a turn the other way is the same shape");
+
+  /* the top-left corner of a film stood on its end: the left edge becomes the
+     top of the picture, the top edge becomes the right. */
+  const tl = orientPoint(0, 0, 512, 256, { rotate: 90 });
+  eq(tl[0], 256, "a quarter turn stands the film on its end: the left edge runs along the top");
+  eq(tl[1], 0, "and what was the top edge is now down the right-hand side");
+  eq(orientPoint(0, 0, 512, 256, { rotate: 90, flipH: true })[0], 0,
+     "a flip is a mirror of what is ON SCREEN, not of the film under it");
+
+  /* every turn × every flip × every corner: the mapping must be exact */
+  let worst = 0, out = 0;
+  for (const rot of [0, 90, 180, 270]) {
+    for (const fh of [false, true]) {
+      for (const fv of [false, true]) {
+        const o = { rotate: rot, flipH: fh, flipV: fv };
+        const [dw, dh] = orientSize(512, 256, o);
+        for (const [x, y] of [[0, 0], [511, 0], [0, 255], [511, 255], [137, 88], [256, 128]]) {
+          const p = orientPoint(x, y, 512, 256, o);
+          if (!(p[0] >= -1e-9 && p[0] <= dw + 1e-9 && p[1] >= -1e-9 && p[1] <= dh + 1e-9)) out++;
+          const b = unorientPoint(p[0], p[1], 512, 256, o);
+          worst = Math.max(worst, Math.abs(b[0] - x), Math.abs(b[1] - y));
+        }
+      }
+    }
+  }
+  eq(out, 0, "no point of a picture is ever mapped outside the picture, however it is turned");
+  ck(worst < 1e-9, "the mapping is exact: a tap returns the pixel it came from, however the film is held");
+  {
+    const o = { rotate: 270, flipH: true, flipV: true };
+    const p = orientPoint(511, 255, 512, 256, o);
+    const b = unorientPoint(p[0], p[1], 512, 256, o);
+    ck(Math.abs(b[0] - 511) < 1e-9 && Math.abs(b[1] - 255) < 1e-9,
+       "the far corner of a wide film comes back to itself through a turn and both flips");
+  }
+}
+
+/* --- the turn is one field in the state, changed in one place -------------- */
+{
+  const s0 = initialViewerState();
+  eq(s0.invert, false, "a viewer opens the way the film was acquired: not inverted");
+  eq(s0.rotate, 0, "…upright");
+  eq(s0.flipH, false, "…and not mirrored");
+  const inv = viewerReducer(s0, { type: "toggleInvert" });
+  eq(inv.invert, true, "invert switches on");
+  eq(viewerReducer(inv, { type: "toggleInvert" }).invert, false, "and off again");
+  eq(viewerReducer(s0, { type: "rotate90" }).rotate, 90, "one press is one quarter turn");
+  eq(viewerReducer(viewerReducer(s0, { type: "rotate90" }), { type: "rotate90" }).rotate, 180, "two presses is a half turn");
+  eq(viewerReducer(viewerReducer(viewerReducer(viewerReducer(s0, { type: "rotate90" }), { type: "rotate90" }), { type: "rotate90" }), { type: "rotate90" }).rotate,
+     0, "four quarter turns is the picture you started from");
+  eq(viewerReducer(s0, { type: "rotate90", step: -1 }).rotate, 270, "the other way round is a turn too");
+  eq(viewerReducer(viewerReducer(s0, { type: "rotate90", step: -1 }), { type: "rotate90", step: -1 }).rotate, 180, "and it carries on round");
+  eq(viewerReducer(s0, { type: "rotate90", step: 7 }).rotate, 90, "an unknown step is one turn forward, never a jump");
+  {
+    const fh = viewerReducer(s0, { type: "toggleFlip", axis: "h" });
+    ck(fh.flipH === true && fh.flipV === false, "the horizontal flip is the horizontal one");
+    const fv = viewerReducer(s0, { type: "toggleFlip", axis: "v" });
+    ck(fv.flipV === true && fv.flipH === false, "and the vertical one is vertical");
+    ck(viewerReducer(s0, { type: "toggleFlip", axis: "diagonal" }) === s0,
+       "an axis a picture does not have is ignored, not guessed");
+    ck(viewerReducer(s0, { type: "toggleFlip" }) === s0, "so is no axis at all");
+    ck(viewerReducer(fh, { type: "toggleFlip", axis: "h" }).flipH === false, "a flip switches back");
+  }
+  {
+    let all = viewerReducer(s0, { type: "toggleInvert" });
+    all = viewerReducer(all, { type: "rotate90" });
+    all = viewerReducer(all, { type: "toggleFlip", axis: "h" });
+    all = viewerReducer(all, { type: "toggleFlip", axis: "v" });
+    const back = viewerReducer(all, { type: "resetOrientation" });
+    ck(back.invert === false && back.rotate === 0 && back.flipH === false && back.flipV === false,
+       "one button puts the film back the way it was acquired");
+    ck(back.zoom === all.zoom && back.sliceIndex === all.sliceIndex && back.seriesId === all.seriesId,
+       "putting the picture straight does not throw away the slice or the zoom");
+    ck(viewerReducer(s0, { type: "resetOrientation" }) === s0,
+       "pressed on an upright picture it changes nothing at all");
+    const before = JSON.stringify(all);
+    viewerReducer(all, { type: "resetOrientation" });
+    eq(JSON.stringify(all), before, "the reducer is pure: turning the picture never alters the state you passed in");
+  }
+  /* the turn belongs to the PICTURE, and a new study is a new picture */
+  const turned = viewerReducer(viewerReducer(loaded, { type: "rotate90" }), { type: "toggleInvert" });
+  eq(turned.rotate, 90, "a turned picture stays turned while you scroll it");
+  eq(viewerReducer(turned, { type: "setSlice", index: 4 }).rotate, 90, "scrolling does not straighten it");
+  eq(viewerReducer(turned, { type: "selectSeries", seriesId: "0" }).rotate, 90, "and neither does changing series");
+  const reopened = viewerReducer(turned, { type: "studyLoaded", studyId: "U2", series: study });
+  eq(reopened.rotate, 0, "a new study opens upright: the previous turn belonged to another patient's film");
+  eq(reopened.invert, false, "and not inverted with the last one's settings");
+}
+
+/* --- the app turns the picture through the reducer, not through a style ---- */
+ck(ui.includes('id="orient-bar"') && ui.includes('id="orient-invert"') && ui.includes('id="orient-rotate"') &&
+   ui.includes('id="orient-fliph"') && ui.includes('id="orient-flipv"') && ui.includes('id="orient-reset"'),
+   "ui: invert, rotate, flip H, flip V, and back to the original");
+ck(app.includes('vst({ type: "toggleInvert" })') && app.includes('vst({ type: "rotate90" })') &&
+   app.includes('vst({ type: "toggleFlip", axis: "h" })') && app.includes('vst({ type: "toggleFlip", axis: "v" })') &&
+   app.includes('vst({ type: "resetOrientation" })'),
+   "every turn goes through the reducer, like the slice and the zoom before it");
+ck(app.includes("function orientNow()") && app.includes("const o = orientNow();"),
+   "there is ONE place that says how the picture is turned, and the handlers read it");
+ck(app.includes("unPoint(u, v, f0.w, f0.h, o)") && app.includes("oPoint(ix, iy, f0.w, f0.h, o)"),
+   "a tap is mapped back through the turn, and a zoom back forward through it");
+ck(app.includes('cv.style.filter = o.invert ? "invert(1)" : "none"'),
+   "invert is a filter on the picture, never on the numbers");
+ck(app.includes('"orient-invert": ["قلب اللون", "Invert"]') && app.includes('"orient-reset": ["الوضع الأصلي", "Reset view"]'),
+   "the new buttons are named in Arabic and English");
 
 console.log(fails ? "STATE TEST FAIL " + fails : "STATE TEST PASS");
 process.exit(fails ? 1 : 0);
