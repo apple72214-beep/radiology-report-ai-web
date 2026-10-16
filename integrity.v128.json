@@ -65,9 +65,9 @@
     },
     "app": {
       "path": "app.v128.js",
-      "chars": 283311,
-      "bytes": 295084,
-      "sha256": "7346725442f266c7e31afef0dc544774fc83ef6f29447100e07457a58e185f29"
+      "chars": 285723,
+      "bytes": 297500,
+      "sha256": "ea2f22f25cb7156f84cc507547ab4518859e4b07bbf3e9f0d8779cf7fb1d35c0"
     },
     "ui": {
       "path": "ui.v128.html",

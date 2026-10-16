@@ -1532,20 +1532,41 @@ let cmp = null;
 export function cmpCandidates(studies, current) {
   const list = Array.isArray(studies) ? studies : [];
   if (!current) return [];
-  /* One patient arrives under several spellings even inside one device:
-     "Ala^Fahmi^Bazl" from one source, "Ala Fahmi Bazl" from another,
-     "AlaFahmiBazl" from a third. Matching on the raw string found nothing to
-     compare against — which looks like "this feature does not work". Compare
-     the consonant skeleton instead: upper case, '^' becomes a space, all
-     spaces go. Two names that differ only by separators are one patient. */
-  const norm = (s) => String((s && (s.patient || (s.meta && s.meta.patientName))) || "")
-    .toUpperCase().replace(/\^/g, " ").replace(/\s+/g, "");
-  const mine = norm(current);
+  const mine = cmpNameKey(current);
   if (!mine) return [];
-  const when = (s) => String((s && s.meta && s.meta.studyDate) || (s && s.createdAt) || "");
   return list
-    .filter((s) => s && s !== current && s.uid !== current.uid && norm(s) === mine)
-    .sort((x, y) => (when(y) < when(x) ? -1 : when(y) > when(x) ? 1 : 0));
+    .filter((s) => s && s !== current && s.uid !== current.uid && cmpNameKey(s) === mine)
+    .sort((x, y) => (cmpWhen(y) < cmpWhen(x) ? -1 : cmpWhen(y) > cmpWhen(x) ? 1 : 0));
+}
+/* One patient arrives under several spellings even inside one device:
+   "Ala^Fahmi^Bazl" from one source, "Ala Fahmi Bazl" from another,
+   "AlaFahmiBazl" from a third. Matching on the raw string found nothing to
+   compare against — which looks like "this feature does not work". Compare the
+   name without its separators instead: two names that differ only by '^' or by
+   spaces are one patient. */
+export function cmpNameKey(s) {
+  return String((s && (s.patient || (s.meta && s.meta.patientName))) || "")
+    .toUpperCase().replace(/\^/g, " ").replace(/\s+/g, "");
+}
+const cmpWhen = (s) => String((s && s.meta && s.meta.studyDate) || (s && s.createdAt) || "");
+/** Two studies belong to the same person however their names are spelled. */
+export function cmpSamePatient(a, b) {
+  const ka = cmpNameKey(a), kb = cmpNameKey(b);
+  return !!ka && ka === kb;
+}
+/** Every other study on the device, newest first — the fallback when this
+    patient has no previous study of their own. */
+export function cmpOthers(studies, current) {
+  const list = Array.isArray(studies) ? studies : [];
+  if (!current) return [];
+  return list
+    .filter((s) => s && s !== current && s.uid !== current.uid)
+    .sort((x, y) => (cmpWhen(y) < cmpWhen(x) ? -1 : cmpWhen(y) > cmpWhen(x) ? 1 : 0));
+}
+/** True when the comparison partner is another person's study. */
+export function cmpCrossPatient(current, other) {
+  if (!current || !other) return false;
+  return !cmpSamePatient(current, other);
 }
 /** Where a slice sits inside its stack, as 0..1 — the shared currency. */
 export function cmpRatio(idx, n) {
@@ -1563,11 +1584,13 @@ export function cmpIndex(ratio, n) {
 }
 /** The slice of the other stack that lies at the same depth. */
 export function cmpPartner(idx, fromN, toN) { return cmpIndex(cmpRatio(idx, fromN), toN); }
-/** One line a physician recognises a study by. */
-export function cmpLabel(study) {
+/** One line a physician recognises a study by. With withPatient the name is
+    part of the line — which it must be when the partner is another person. */
+export function cmpLabel(study, withPatient) {
   if (!study) return "";
   const n = (study.frames || []).length;
-  return [study.modality, fmtDicomDate(study.meta && study.meta.studyDate), n ? n + (LANG === "en" ? " img" : " \u0635\u0648\u0631\u0629") : ""].filter(Boolean).join(" \u2022 ");
+  const name = withPatient ? String(study.patient || (study.meta && study.meta.patientName) || "").trim() : "";
+  return [name, study.modality, fmtDicomDate(study.meta && study.meta.studyDate), n ? n + (LANG === "en" ? " img" : " \u0635\u0648\u0631\u0629") : ""].filter(Boolean).join(" \u2022 ");
 }
 
 let cmpB = null, cmpIa = 0, cmpIb = 0, cmpZa = 1, cmpZb = 1;
@@ -1644,7 +1667,11 @@ function cmpText() {
   set("lbl-cmp-zoom", "\u0645\u0632\u0627\u0645\u0646\u0629 \u0627\u0644\u062a\u0643\u0628\u064a\u0631", "Link zoom");
   set("lbl-cmp-win", "\u0645\u0632\u0627\u0645\u0646\u0629 \u0627\u0644\u0646\u0627\u0641\u0630\u0629", "Link window");
   const ha = $("cmp-head-a"); if (ha) ha.textContent = (LANG === "en" ? "Current \u2014 " : "\u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u2014 ") + cmpLabel(current);
-  const hb = $("cmp-head-b"); if (hb) hb.textContent = (LANG === "en" ? "Previous \u2014 " : "\u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u2014 ") + cmpLabel(cmpB);
+  const cross = cmpCrossPatient(current, cmpB);
+  const hb = $("cmp-head-b");
+  if (hb) hb.textContent = (cross
+    ? (LANG === "en" ? "Other study \u2014 " : "\u062f\u0631\u0627\u0633\u0629 \u0623\u062e\u0631\u0649 \u2014 ")
+    : (LANG === "en" ? "Previous \u2014 " : "\u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u2014 ")) + cmpLabel(cmpB, cross);
 }
 function cmpDraw() {
   cmpFillWin("b");
@@ -1660,25 +1687,49 @@ function cmpDraw() {
     if (cmpSyncGet("slice")) linked.push(LANG === "en" ? "slice" : "\u0627\u0644\u0634\u0631\u064a\u062d\u0629");
     if (cmpSyncGet("zoom")) linked.push(LANG === "en" ? "zoom" : "\u0627\u0644\u062a\u0643\u0628\u064a\u0631");
     if (cmpSyncGet("win")) linked.push(LANG === "en" ? "window" : "\u0627\u0644\u0646\u0627\u0641\u0630\u0629");
-    note.textContent = (LANG === "en" ? "Linked: " : "\u0645\u0632\u0627\u0645\u0646\u0629: ") + (linked.length ? linked.join(" \u2022 ") : (LANG === "en" ? "nothing \u2014 the panes move on their own" : "\u0644\u0627 \u0634\u064a\u0621 \u2014 \u0643\u0644 \u0646\u0627\u0641\u0630\u0629 \u062a\u062a\u062d\u0631\u0643 \u0648\u062d\u062f\u0647\u0627"));
+    let txt = (LANG === "en" ? "Linked: " : "\u0645\u0632\u0627\u0645\u0646\u0629: ") + (linked.length ? linked.join(" \u2022 ") : (LANG === "en" ? "nothing \u2014 the panes move on their own" : "\u0644\u0627 \u0634\u064a\u0621 \u2014 \u0643\u0644 \u0646\u0627\u0641\u0630\u0629 \u062a\u062a\u062d\u0631\u0643 \u0648\u062d\u062f\u0647\u0627"));
+    /* never by colour alone, and never silently: say whose study it is */
+    if (cmpCrossPatient(current, cmpB)) {
+      txt = (LANG === "en"
+        ? "\u26a0 Not the same patient \u2014 " + String((cmpB && (cmpB.patient || (cmpB.meta && cmpB.meta.patientName))) || "").trim() + ". "
+        : "\u26a0 \u0644\u064a\u0633 \u0627\u0644\u0645\u0631\u064a\u0636 \u0646\u0641\u0633\u0647 \u2014 " + String((cmpB && (cmpB.patient || (cmpB.meta && cmpB.meta.patientName))) || "").trim() + ". ") + txt;
+    }
+    note.textContent = txt;
   }
 }
 async function cmpFillPicker() {
   const sel = $("cmp-pick");
-  const list = cmpCandidates(await allStudies(), current);
-  if (!sel) return list;
+  const all = await allStudies();
+  const list = cmpCandidates(all, current);
+  const same = new Set(list.map((s) => s.uid));
+  const others = cmpOthers(all, current).filter((s) => !same.has(s.uid));
+  const pool = list.concat(others);
+  if (!sel) return pool;
   sel.innerHTML = "";
-  if (!list.length) {
+  if (!pool.length) {
     sel.style.display = "none";
     const note = $("cmp-note");
-    if (note) note.textContent = LANG === "en" ? "No other study of this patient is on this device." : "\u0644\u0627 \u062a\u0648\u062c\u062f \u062f\u0631\u0627\u0633\u0629 \u0623\u062e\u0631\u0649 \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0631\u064a\u0636 \u0639\u0644\u0649 \u0627\u0644\u062c\u0647\u0627\u0632.";
-    return list;
+    if (note) note.textContent = LANG === "en" ? "No other study is on this device yet." : "\u0644\u0627 \u062a\u0648\u062c\u062f \u062f\u0631\u0627\u0633\u0629 \u0623\u062e\u0631\u0649 \u0639\u0644\u0649 \u0627\u0644\u062c\u0647\u0627\u0632 \u0628\u0639\u062f.";
+    return pool;
   }
   sel.style.display = "";
-  for (const s of list) { const o = document.createElement("option"); o.value = s.uid; o.textContent = cmpLabel(s); sel.appendChild(o); }
-  if (!cmpB || !list.some((s) => s.uid === cmpB.uid)) { cmpB = list[0]; cmpIb = 0; }
+  const group = (label, items, withPatient) => {
+    if (!items.length) return;
+    const g = document.createElement("optgroup");
+    g.label = label;
+    for (const s of items) {
+      const o = document.createElement("option");
+      o.value = s.uid;
+      o.textContent = cmpLabel(s, withPatient);
+      g.appendChild(o);
+    }
+    sel.appendChild(g);
+  };
+  group(LANG === "en" ? "Same patient" : "\u0646\u0641\u0633 \u0627\u0644\u0645\u0631\u064a\u0636", list, false);
+  group(LANG === "en" ? "Other studies on this device" : "\u062f\u0631\u0627\u0633\u0627\u062a \u0623\u062e\u0631\u0649 \u0639\u0644\u0649 \u0627\u0644\u062c\u0647\u0627\u0632", others, true);
+  if (!cmpB || !pool.some((s) => s.uid === cmpB.uid)) { cmpB = pool[0]; cmpIb = 0; }
   sel.value = cmpB.uid;
-  return list;
+  return pool;
 }
 async function cmpSheetOpen(on) {
   const sh = $("cmp-sheet"), sc = $("cmp-scrim");

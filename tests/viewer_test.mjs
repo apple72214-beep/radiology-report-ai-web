@@ -307,4 +307,17 @@ ck(/#viewer-card:fullscreen h2, #viewer-card:fullscreen p, #viewer-card:fullscre
 ck(/\.fs-fake h2, \.fs-fake p, \.fs-fake details \{ display:none !important; \}/.test(ui),
    "the iOS fallback path hides it too");
 
+/* A label in the language table may WRAP a control. applyLang used to set
+   textContent on every id in the table, which destroyed the control inside:
+   <label id="lbl-win">النافذة: <select id="preset">… lost its select the moment
+   the language was applied, so every image stayed on "auto" however the
+   physician set the window. Found while building the compare panes. */
+const langBlock = (app.match(/if \(el\.children\.length[\s\S]{0,260}/) || [""])[0];
+ck(/nodeValue = txt/.test(langBlock) && /else el\.textContent = txt/.test(langBlock),
+   "the language setter rewrites a label's text node when the label holds a control");
+const winLbl = (ui.match(/<label id="lbl-win">[\s\S]{0,600}?<\/label>/) || [""])[0];
+ck(winLbl.includes('id="preset"'), "the window/level select lives inside its label — the shape that used to be destroyed");
+ck(app.includes('document.getElementById("preset")') && app.includes('const presetVal = () => val("preset", "auto")'),
+   "and the viewer still reads the window it offers");
+
 console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (" + checks + ")");
