@@ -1,6 +1,6 @@
 /* Series awareness: an MR study is several sequences, never one mixed stack. */
 import { readFileSync } from "node:fs";
-import { groupSeries, seriesSummary, allSeriesRows } from "../app.v124.js";
+import { groupSeries, seriesSummary, allSeriesRows, orientationFromIop, seriesRows, seriesRowText } from "../app.v125.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -43,9 +43,9 @@ const many = { series: [1, 2, 3, 4, 5, 6].map((n) => ({ number: n, label: "Se" +
 eq(seriesSummary(many).endsWith("+2"), true, "long summaries are truncated with a count");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v124.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v124.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v124.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v125.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v125.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v125.js", import.meta.url), "utf-8");
 ck(dcm.includes('"0020,000E"'), "parser captures SeriesInstanceUID");
 ck(app.includes("px.seriesUid = parsed.seriesUid"), "series identity kept on every frame");
 ck(app.includes("study.series = groupSeries(study.frames, study.modality)"), "series computed at ingest");
@@ -94,5 +94,52 @@ ck(app.includes("allRowVolume(r)"), "each series keeps its own volume, budget sh
 ck(app.includes("cv.onclick = () => {"), "tapping a pane opens that series");
 ck(ui.includes('id="all-toggle"') && ui.includes('id="all-grid"'), "ui: comprehensive button + grid");
 ck(ui.includes('id="all-note"'), "ui: a note tells the physician what the hanging shows");
+
+/* --- v125 series navigator: which series is which, before you open it ----- */
+eq(orientationFromIop([1, 0, 0, 0, 1, 0]), "axial", "axial: the slice normal points through the body");
+eq(orientationFromIop([1, 0, 0, 0, 0, -1]), "coronal", "coronal");
+eq(orientationFromIop([0, 1, 0, 0, 0, -1]), "sagittal", "sagittal");
+eq(orientationFromIop([1, 0, 0]), "", "a truncated orientation is unknown, not guessed");
+eq(orientationFromIop(null), "", "no orientation at all is unknown, not guessed");
+
+const navFrames = [
+  fr(0, { seriesUid: "N1", seq: { seriesNumber: 1, seriesDescription: "T1 Sagittal" }, geometry: { iop: [0, 1, 0, 0, 0, -1], sliceThickness: 3 }, spacing: [0.9, 0.9] }),
+  fr(1, { seriesUid: "N1", seq: { seriesNumber: 1, seriesDescription: "T1 Sagittal" }, geometry: { iop: [0, 1, 0, 0, 0, -1], sliceThickness: 3 }, spacing: [0.9, 0.9] }),
+  fr(2, { seriesUid: "N2", seq: { seriesNumber: 2, seriesDescription: "T2 Axial" }, geometry: { iop: [1, 0, 0, 0, 1, 0], sliceThickness: 5 }, spacing: [0.7, 0.7] }),
+  fr(3, { seriesUid: "N3", seq: { seriesNumber: 3, seriesDescription: "STIR Coronal" }, geometry: { iop: [1, 0, 0, 0, 0, -1], sliceThickness: 4 } }),
+];
+const navStudy = { uid: "NAV1", modality: "MR", frames: navFrames, series: groupSeries(navFrames, "MR") };
+const nav = seriesRows(navStudy);
+eq(nav.length, 3, "one row per series");
+eq(nav[0].orient, "sagittal", "the plane comes from ImageOrientationPatient, not from the name");
+eq(nav[1].orient, "axial", "the second series is axial");
+eq(nav[2].orient, "coronal", "the third series is coronal");
+eq(nav[0].mm, 3, "the slice thickness is read from the file");
+eq(nav[1].mm, 5, "a different thickness on a different series");
+ck(nav[0].count === 2 && nav[1].count === 1 && nav[2].count === 1, "each row counts its own images");
+ck(nav[0].w === 256 && nav[0].h === 256, "each row knows its matrix");
+{
+  const t = seriesRowText(nav[0], true);
+  ck(t.indexOf("Sagittal") >= 0, "the row names the plane: " + t);
+  ck(t.indexOf("256") >= 0, "the row shows the matrix: " + t);
+  ck(t.indexOf("3 mm") >= 0, "the row shows the slice thickness: " + t);
+  ck(/· 2$/.test(t), "the row ends with the image count: " + t);
+  ck(t.indexOf("T1 (2)") < 0, "a series is never reduced to a label and a count");
+  const chip = seriesRowText(nav[0], true, true);
+  ck(chip.indexOf("Sagittal") >= 0 && /\u00b7 2$/.test(chip), "the chip keeps the plane and the count: " + chip);
+  ck(chip.indexOf("256") < 0, "the chip stays short: the matrix lives in the sheet, not in the chip");
+  ck(seriesRowText(nav[0], false).indexOf("\u0633\u0647\u0645\u064a") >= 0, "the plane is named in Arabic too");
+  ck(seriesRowText(nav[2], true).indexOf("Coronal") >= 0, "every plane is named, not only the first");
+}
+ck(app.includes("export function seriesRows(study)"), "the rows are built by a pure function");
+ck(app.includes("function renderSeriesSheet()") && app.includes("function seriesSheetOpen(on)"), "the sheet renders and opens");
+ck(app.includes('row.setAttribute("aria-current", "true")'), "the current series is marked for screen readers");
+ck(app.includes('\\u2713'), "the current series carries a tick — never colour alone");
+ck(app.includes("function seriesThumb(study, i)") && app.includes("seriesThumbs.set(key, url)"), "each series keeps a thumbnail, built once");
+ck(app.includes('document.addEventListener("keydown", (e) => { if (e.key === "Escape")'), "Escape closes the sheet");
+ck(ui.includes('id="series-sheet"') && ui.includes('id="series-open"') && ui.includes('id="series-list"'),
+   "ui: the sheet, the button that opens it and the list inside it");
+ck(ui.includes("#series-sheet") && ui.includes("max-height:66vh"), "ui: the sheet is a bottom sheet, not a full screen");
+
 console.log(fails ? "SERIES TEST FAIL " + fails : "SERIES TEST PASS");
 process.exit(fails ? 1 : 0);

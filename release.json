@@ -1,12 +1,12 @@
 {
-  "build": "v124",
-  "version": "v124",
-  "mark": "ب2.96",
+  "build": "v125",
+  "version": "v125",
+  "mark": "ب2.97",
   "channel": "stable",
-  "minVersion": "v124",
-  "updatedAt": "2026-10-15T23:41:35Z",
+  "minVersion": "v125",
+  "updatedAt": "2026-10-16T01:32:31Z",
   "notes": {
-    "ar": "تحديث — ب2.96",
-    "en": "Update — ب2.96"
+    "ar": "تحديث — ب2.97",
+    "en": "Update — ب2.97"
   }
 }

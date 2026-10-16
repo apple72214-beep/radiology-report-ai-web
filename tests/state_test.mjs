@@ -13,8 +13,8 @@ let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
 const ck = (c, m) => { if (!c) { fails++; console.log("FAIL " + m); } };
 
-const app = readFileSync(new URL("../app.v124.js", import.meta.url), "utf8");
-const ui = readFileSync(new URL("../ui.v124.html", import.meta.url), "utf8");
+const app = readFileSync(new URL("../app.v125.js", import.meta.url), "utf8");
+const ui = readFileSync(new URL("../ui.v125.html", import.meta.url), "utf8");
 
 const study = [
   { id: "0", label: "T1", count: 4, reslice: true },
@@ -143,7 +143,7 @@ eq(viewerReducer(loaded, { type: "setLoading", loading: true }).loading, true, "
 eq(viewerReducer(loaded, { type: "studyLoaded", studyId: "U2", series: [] }).error, null, "opening a study clears the last error");
 
 /* --- the app really routes its state through this module ------------------- */
-ck(app.includes('["viewer-state", "./viewer-state.v124.js"'), "the app loads the state module with the rest");
+ck(app.includes('["viewer-state", "./viewer-state.v'), "the app loads the state module with the rest");
 ck(app.includes("function vst(a) {"), "one funnel: every change goes through the reducer");
 ck((app.match(/vst\(\{ type: "/g) || []).length >= 10, "the handlers dispatch actions, they do not poke the state");
 ck(app.includes('vst({ type: "setSlice", index: idx, total: frames.length, keepCine: !!cineT })'),
