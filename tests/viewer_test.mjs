@@ -1,8 +1,10 @@
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
-import { drawFrame, paintReadback } from "../app.v125.js";
-let fails = 0;
-const ck = (c, n) => { if (!c) { fails++; console.log("FAIL " + n); } };
+import { drawFrame, paintReadback, filmWindow, filmDragSteps } from "../app.v126.js";
+let fails = 0, checks = 0;
+const ck = (c, n) => { checks++; if (!c) { fails++; console.log("FAIL " + n); } };
+const eq = (a, b, m) => { checks++; if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
+const app = fs.readFileSync(new URL("../app.v126.js", import.meta.url), "utf8");
 function fakeCanvas() {
   let w = 0, h = 0, sets = 0;
   const ctx = { createImageData: (W, H) => ({ data: new Uint8ClampedArray(W * H * 4) }), putImageData: () => {} };
@@ -19,7 +21,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v125.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v126.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -32,7 +34,7 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v125.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v126.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
 ck(sws.includes("app." + build + ".js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
@@ -54,7 +56,7 @@ ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance
 ck(src.includes("You are a CONSULTANT RADIOLOGIST assistant"), "prompt demands consultant-grade structured draft");
 ck(src.includes("c.toDataURL(\"image/jpeg\", 0.9)"), "renders sent at 768px JPEG (sharper vision input)");
 ck(src.includes("technique: String(obj.technique || \"\").trim()"), "AI technique stored with the report");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v125.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v126.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
 ck(src.includes("fileToJpegB64") && src.includes(".concat(aiExtraImgs).slice(0, 8)"), "physician screenshots join the request (max 8 images)");
 ck(src.includes("attached screenshot(s)"), "consent names attached screenshots");
 ck(src.includes("EQUAL weight to the slice renders"), "prompt gives attached screenshots primary-evidence weight");
@@ -68,7 +70,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v125.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v126.html", import.meta.url), "utf-8"));
 const startHtml = (await import("node:fs")).readFileSync(new URL("../start.html", import.meta.url), "utf-8");
 ck(startHtml.includes("ev.persisted") && startHtml.includes("rrai-sw-updated"), "bootstrap reloads on bfcache restore and on SW update");
 ck(src.includes("if (useImages && !cfg.vision[model] && !cfg.native) continue;"), "images never silently dropped: text-only models skipped while images pending");
@@ -84,10 +86,10 @@ ck(src.includes("/^(AIza|AQ\\.)/i.test(k)"), "new AQ-format Gemini keys auto-det
 ck(src.includes("!cfg.vision[model] && !cfg.native"), "Gemini native models treated as vision-capable");
 ck(src.includes("Send up to 6 slice renders") && src.includes("while (totalB64 > 3500000 && images.length > 6)"), "six evenly spaced renders, 8-image cap with size shedding");
 ck(src.includes("function setupTemplates") && ui.includes("id=\"tpl-list\""), "settings icon with normal/pathology template library");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v125.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v126.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
 ck(src.includes("function techniqueFor"), "deterministic TECHNIQUE generator with sequence catalog");
 ck(src.includes('technique: String(obj.technique || "").trim() || techniqueFor(study)'), "AI draft never leaves technique empty");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v125.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v126.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
 ck(ui.includes("id=\"app-logo\"") && ui.includes("./icons/logo.png"), "brand logo rendered in the header");
 ck(sws.includes("./icons/logo.png"), "logo precached for offline branding");
 ck(src.includes("const lat = /RIGHT|"), "technique names the correct side (right/left) from exam fields");
@@ -153,7 +155,7 @@ ck(ui.includes('id="fs-toggle"'), "fullscreen button present in viewer controls"
 ck(ui.includes("#viewer-card:fullscreen #viewport { position:absolute; inset:0; width:100%; height:100%; border-radius:0; display:flex; align-items:center; justify-content:center; }"), "fullscreen viewport = whole screen, centered");
 ck(ui.includes("#viewer-card:fullscreen.fs-hide .controls { opacity:0; pointer-events:none; }"), "controls auto-hide overlay in fullscreen");
 ck(ui.includes("#viewer-card:fullscreen #viewport { position:absolute; inset:0; width:100%; height:100%; border-radius:0; display:flex; align-items:center; justify-content:center; }"), "fullscreen image centered both axes");
-ck(src.includes("vk = 2; centerOn"), "dblclick zoom tempered to x2 (less blur shock)");
+ck(src.includes('vst({ type: "setZoom", zoom: 2 })') && src.includes("vk = (vState && vState.zoom) || 2"), "v124: dblclick zoom tempered to x2, through the state");
 ck(src.includes("const zs = $(\"zscale\")"), "applyView publishes live scale");
 ck(!ui.includes("image-rendering:pixelated"), "nearest-neighbor shimmer removed from viewer");
 ck(src.includes("cv.style.width = Math.round(f.w * fitK)"), "explicit fit width (no layout/scale mismatch crop)");
@@ -169,8 +171,8 @@ ck(src.includes('localStorage.getItem("rrai-gzip")') && src.includes("Compressio
 ck(src.includes('localStorage.getItem("rrai-auto-open")') && src.includes("function applyDefaultExport") && src.includes('rrai-default-export'), "v96: auto-open after upload + default export format swap");
 ck(src.includes('localStorage.getItem("rrai-keys")') && src.includes('map.next || "ArrowRight"') && src.includes('el.value = ev.key'), "v96: customizable keyboard shortcuts with key recorder");
 ck(["set-pacs","set-store","set-ui","set-view","set-work","set-keys","set-io","set-priv","set-about"].every((id) => ui.includes('id="' + id + '"')) && ["lang-sel","pacs-ae","pacs-port","default-win-sel","ov-name-chk","ov-meta-chk","measure-color","measure-unit","sort-sel","auto-open-chk","ks-next","ks-prev","ks-fit","ks-measure","default-export-sel","gzip-chk","set-retention-days","set-retention-signed","perf-smooth","rebuild-cache","clear-db","about-ver","about-conn","about-disclaimer","about-privacy","about-licenses","about-support"].every((id) => ui.includes('id="' + id + '"')), "v96: ten settings sections + all new controls present in UI");
-ck(src.includes('map.zoomIn || "+"') && src.includes("vk = Math.min(8, vk * 1.25)") && src.includes("centerOn(f0.w / 2, f0.h / 2)"), "v97: zoom-in shortcut with clamped vk + re-centering");
-ck(src.includes('map.zoomOut || "-"') && src.includes("vk = Math.max(0.5, vk / 1.25)"), "v97: zoom-out shortcut clamped to 0.5");
+ck(src.includes('map.zoomIn || "+"') && src.includes('vst({ type: "zoomBy", factor: 1.25 })') && src.includes("vk = (vState && vState.zoom) || vk") && src.includes("centerOn(f0.w / 2, f0.h / 2)"), "v124: zoom-in shortcut goes through the state and re-centres");
+ck(src.includes('map.zoomOut || "-"') && src.includes('vst({ type: "zoomBy", factor: 1 / 1.25 })') && src.includes("vk = (vState && vState.zoom) || vk"), "v124: zoom-out shortcut goes through the state, clamped there");
 ck(src.includes('map.contrast || "c"') && src.includes("ps.selectedIndex = (ps.selectedIndex + 1) % ps.options.length") && src.includes('["ks-zoom-in", "+"], ["ks-zoom-out", "-"], ["ks-contrast", "c"]') && ui.includes('id="ks-contrast"'), "v97: contrast cycling shortcut + 3 new key recorders");
 ck(src.includes("function verNum") && src.includes("best > verNum(APP_BUILD)") && !src.includes("m[1] !== APP_BUILD"), "v98: numeric version gate — never prompts downgrades");
 ck(src.includes("async function forceUpdateReload") && src.includes("reg.waiting.postMessage") && src.includes('$("update-banner")'), "v98: force-reload clears caches + wakes waiting SW");
@@ -230,4 +232,40 @@ ck(sws.includes("if (okLen(pathname, buf.byteLength)) return hit;"), "cached ent
   const rb = paintReadback(cv);
   ck(rb.note === "uniform" && rb.spread === 0, "a genuinely flat frame is still called uniform");
 }
-console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (182)");
+
+/* --- v126 filmstrip: see the neighbours of the slice on screen ------------ */
+{
+  const w0 = filmWindow(0, 100, 15);
+  eq(w0.from, 0, "at the first slice the window starts at the first slice");
+  eq(w0.count, 15, "the window keeps the span it was given");
+  const wm = filmWindow(50, 100, 15);
+  eq(wm.from, 43, "the window sits around the slice on screen");
+  eq(wm.to, 57, "and ends the same distance the other way");
+  const wEnd = filmWindow(99, 100, 15);
+  eq(wEnd.to, 99, "the last slice is reachable: the window ends there");
+  eq(wEnd.from, 85, "the window slides back instead of running past the end");
+  const wSmall = filmWindow(5, 3, 15);
+  eq(wSmall.count, 3, "a short series shows all of its slices, no more");
+  eq(wSmall.from, 0, "and starts at zero");
+  eq(filmWindow(0, 1, 15).count, 0, "a single image has no filmstrip at all");
+  eq(filmWindow(3, 0, 15).count, 0, "no frames, no filmstrip");
+}
+eq(filmDragSteps(0, 26), 0, "no drag, no movement");
+eq(filmDragSteps(26, 26), 1, "one slice-width of drag advances one slice");
+eq(filmDragSteps(51, 26), 1, "a drag shorter than two slices does not skip");
+eq(filmDragSteps(52, 26), 2, "two slice-widths advance two slices");
+eq(filmDragSteps(-26, 26), -1, "dragging back goes back");
+eq(filmDragSteps(NaN, 26), 0, "a broken pointer reading moves nothing");
+ck(app.includes("export function filmWindow(current, total, span)"), "the window is a pure function");
+ck(app.includes("export function filmDragSteps(dx, pxPerSlice)"), "the drag is a pure function");
+ck(app.includes("function renderFilmstrip()") && app.includes("function filmWire()"), "the strip renders and is wired for dragging");
+ck(app.includes("filmThumbs.set(k, url)") && app.includes("if (filmThumbs.size > 400) filmThumbs.clear()"),
+   "thumbnails are kept, and the cache is capped");
+ck(app.includes("function filmFill(from, to)") && app.includes('if (filmThumbs.has(k)) continue;'),
+   "only the slices on screen are decoded — never the whole study");
+ck(app.includes("setTimeout(() => {"), "the thumbnails are built after the strip is on screen");
+ck((app.match(/renderFilmstrip\(\);/g) || []).length >= 3, "the strip follows every frame and both hangings");
+ck(ui.includes('id="filmstrip"') && ui.includes('id="film-wrap"'), "ui: the filmstrip");
+ck(ui.includes("touch-action:pan-y"), "ui: the strip can be scrubbed sideways without the page scrolling");
+
+console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (" + checks + ")");
