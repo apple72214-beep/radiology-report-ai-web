@@ -1,10 +1,10 @@
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
-import { drawFrame, paintReadback, filmWindow, filmDragSteps } from "../app.v126.js";
+import { drawFrame, paintReadback, filmWindow, filmDragSteps, fitScaleFor } from "../app.v127.js";
 let fails = 0, checks = 0;
 const ck = (c, n) => { checks++; if (!c) { fails++; console.log("FAIL " + n); } };
 const eq = (a, b, m) => { checks++; if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
-const app = fs.readFileSync(new URL("../app.v126.js", import.meta.url), "utf8");
+const app = fs.readFileSync(new URL("../app.v127.js", import.meta.url), "utf8");
 function fakeCanvas() {
   let w = 0, h = 0, sets = 0;
   const ctx = { createImageData: (W, H) => ({ data: new Uint8ClampedArray(W * H * 4) }), putImageData: () => {} };
@@ -21,7 +21,7 @@ ck(c.sets() === 2, "first draw sizes canvas once");
 drawFrame(c, px, "auto", "MR");
 ck(c.sets() === 2, "second draw must NOT re-clear canvas (flicker guard)");
 ck(px.__win && px.__win.k === "auto|MR", "window/level memo stored per frame");
-const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v126.js", import.meta.url), "utf-8"));
+const src = await import("node:fs").then((fs) => fs.readFileSync(new URL("../app.v127.js", import.meta.url), "utf-8"));
 ck(src.includes("if (viewKey !== vKey)"), "view preserved across slice scroll");
 ck(src.includes("Math.round(vx)"), "integer pan (no subpixel shimmer)");
 ck(src.includes("requestAnimationFrame(() => { showRaf = 0; show(v); })"), "scroll redraws coalesced via rAF");
@@ -34,7 +34,7 @@ ck(!src.includes("Math.max(1, Math.min(4,"), "fit allowed below 1x on phones");
 ck(src.includes("• ${APP_BUILD}"), "meta line uses APP_BUILD (never a stale literal)");
 ck(src.includes("window.innerHeight"), "fit accounts for available height (controls stay on screen)");
 ck(src.includes("controllerchange"), "open tabs self-heal when a new SW takes control");
-const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v126.js", import.meta.url), "utf-8"));
+const sws = await import("node:fs").then((fs) => fs.readFileSync(new URL("../sw.v127.js", import.meta.url), "utf-8"));
 ck(sws.includes("self.skipWaiting()") && sws.includes("clients.claim()"), "SW activates immediately and claims clients");
 ck(sws.includes("app." + build + ".js"), "SW precache list matches current build");
 ck(src.includes("function sliceFitFor(f)"), "per-slice fit: every slice fills the viewport");
@@ -46,7 +46,7 @@ ck(src.includes("card.requestFullscreen"), "native fullscreen with graceful fall
 ck(src.includes("fs-fake"), "pseudo-fullscreen fallback for browsers without API");
 ck(src.includes("const fs = fsNow()"), "fit honors fullscreen height");
 ck(src.includes("const ch = vp ? (vp.clientHeight || 0) : 0;"), "fullscreen cover measured from real viewport height");
-ck(src.includes("Math.min(cw / (f.w || 1), chh / (f.h || 1))"), "fullscreen CONTAIN: whole image visible at max screen size (never cropped)");
+ck(src.includes("const avail = fsAvailHeight(vp, chh);") && src.includes("fitScaleFor(cw, avail, f.w, f.h)") && src.includes("Math.max(0.25, Math.min(4, a))"), "v127: fullscreen CONTAIN — the whole image is fitted to the space above the bars, never cropped");
 ck(src.includes("function fsArm()") && !src.includes("fsBarShow(false); }, 3000)"), "fullscreen controls stay visible (no auto-hide)");
 ck(src.includes("qwen/qwen3.8-27b"), "groq list uses live Sep-2026 free models (retired llama ids removed)");
 ck(src.includes("new AbortController()"), "AI requests time out at 45s instead of hanging");
@@ -56,7 +56,7 @@ ck(src.includes("console.groq.com → API Keys (gsk…)"), "missing-key guidance
 ck(src.includes("You are a CONSULTANT RADIOLOGIST assistant"), "prompt demands consultant-grade structured draft");
 ck(src.includes("c.toDataURL(\"image/jpeg\", 0.9)"), "renders sent at 768px JPEG (sharper vision input)");
 ck(src.includes("technique: String(obj.technique || \"\").trim()"), "AI technique stored with the report");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v126.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v127.js", import.meta.url), "utf-8"))).includes("const compTech = comp && comp.technique"), "Word export uses AI technique when present");
 ck(src.includes("fileToJpegB64") && src.includes(".concat(aiExtraImgs).slice(0, 8)"), "physician screenshots join the request (max 8 images)");
 ck(src.includes("attached screenshot(s)"), "consent names attached screenshots");
 ck(src.includes("EQUAL weight to the slice renders"), "prompt gives attached screenshots primary-evidence weight");
@@ -70,7 +70,7 @@ ck(src.includes("wr.style.height = stH + \"px\""), "fixed stage box (no layout j
 ck(src.includes("ov.style.inset = \"auto\""), "overlay box tracks canvas inside stage");
 ck(src.includes("min-width: 900px"), "height cap only on desktop layouts (phones keep width fit)");
 ck((src.match(/const r = \$\("frame"\)\.getBoundingClientRect\(\);/g)||[]).length === 2, "pointer math uses canvas box (stage-safe)");
-const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v126.html", import.meta.url), "utf-8"));
+const ui = await import("node:fs").then((fs) => fs.readFileSync(new URL("../ui.v127.html", import.meta.url), "utf-8"));
 const startHtml = (await import("node:fs")).readFileSync(new URL("../start.html", import.meta.url), "utf-8");
 ck(startHtml.includes("ev.persisted") && startHtml.includes("rrai-sw-updated"), "bootstrap reloads on bfcache restore and on SW update");
 ck(src.includes("if (useImages && !cfg.vision[model] && !cfg.native) continue;"), "images never silently dropped: text-only models skipped while images pending");
@@ -86,10 +86,10 @@ ck(src.includes("/^(AIza|AQ\\.)/i.test(k)"), "new AQ-format Gemini keys auto-det
 ck(src.includes("!cfg.vision[model] && !cfg.native"), "Gemini native models treated as vision-capable");
 ck(src.includes("Send up to 6 slice renders") && src.includes("while (totalB64 > 3500000 && images.length > 6)"), "six evenly spaced renders, 8-image cap with size shedding");
 ck(src.includes("function setupTemplates") && ui.includes("id=\"tpl-list\""), "settings icon with normal/pathology template library");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v126.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v127.js", import.meta.url), "utf-8"))).includes("paraBold(\"• \" + String(bullets[bi2]).replace"), "Word impression bullets bold-parsed and de-duplicated");
 ck(src.includes("function techniqueFor"), "deterministic TECHNIQUE generator with sequence catalog");
 ck(src.includes('technique: String(obj.technique || "").trim() || techniqueFor(study)'), "AI draft never leaves technique empty");
-ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v126.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
+ck((await import("node:fs").then((fs) => fs.readFileSync(new URL("../docx.v127.js", import.meta.url), "utf-8"))).includes("compTech || techniqueFor(study)"), "Word technique falls back to catalog, not contradictory boilerplate");
 ck(ui.includes("id=\"app-logo\"") && ui.includes("./icons/logo.png"), "brand logo rendered in the header");
 ck(sws.includes("./icons/logo.png"), "logo precached for offline branding");
 ck(src.includes("const lat = /RIGHT|"), "technique names the correct side (right/left) from exam fields");
@@ -152,9 +152,9 @@ ck(ui.includes("id=\"ai-extra\"") && ui.includes("id=\"ai-extra-count\""), "UI e
 ck(ui.includes('id="zoom-reset" class="ghost">\u0645\u0644\u0627\u0621\u0645\u0629</button>'), "fit button labeled clearly (was cryptic 1:1)");
 ck(ui.includes('id="zscale"'), "live zoom scale indicator present");
 ck(ui.includes('id="fs-toggle"'), "fullscreen button present in viewer controls");
-ck(ui.includes("#viewer-card:fullscreen #viewport { position:absolute; inset:0; width:100%; height:100%; border-radius:0; display:flex; align-items:center; justify-content:center; }"), "fullscreen viewport = whole screen, centered");
+ck(/#viewer-card:fullscreen #viewport \{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important;[^}]*\}/.test(ui), "fullscreen viewport = whole screen, centered");
 ck(ui.includes("#viewer-card:fullscreen.fs-hide .controls { opacity:0; pointer-events:none; }"), "controls auto-hide overlay in fullscreen");
-ck(ui.includes("#viewer-card:fullscreen #viewport { position:absolute; inset:0; width:100%; height:100%; border-radius:0; display:flex; align-items:center; justify-content:center; }"), "fullscreen image centered both axes");
+ck(/\.fs-fake #viewport \{[^}]*align-items:center !important; justify-content:center !important;[^}]*\}/.test(ui), "fullscreen image centered both axes (iOS fallback path too)");
 ck(src.includes('vst({ type: "setZoom", zoom: 2 })') && src.includes("vk = (vState && vState.zoom) || 2"), "v124: dblclick zoom tempered to x2, through the state");
 ck(src.includes("const zs = $(\"zscale\")"), "applyView publishes live scale");
 ck(!ui.includes("image-rendering:pixelated"), "nearest-neighbor shimmer removed from viewer");
@@ -267,5 +267,36 @@ ck(app.includes("setTimeout(() => {"), "the thumbnails are built after the strip
 ck((app.match(/renderFilmstrip\(\);/g) || []).length >= 3, "the strip follows every frame and both hangings");
 ck(ui.includes('id="filmstrip"') && ui.includes('id="film-wrap"'), "ui: the filmstrip");
 ck(ui.includes("touch-action:pan-y"), "ui: the strip can be scrubbed sideways without the page scrolling");
+
+
+/* --- v127 fullscreen: the picture keeps the screen ----------------------- */
+eq(fitScaleFor(720, 1544, 512, 512), 720 / 512, "a square image on a tall screen is limited by the width");
+eq(fitScaleFor(720, 400, 512, 512), 400 / 512, "a short space limits it by the height instead");
+eq(fitScaleFor(720, 1544, 32, 32), 4, "a tiny image is never blown up past x4");
+eq(fitScaleFor(36, 36, 512, 512), 0.25, "a huge image is never shrunk past 0.25");
+eq(fitScaleFor(720, 400, 512, 1024), 400 / 1024, "a tall image in a short space is limited by the height");
+ck(app.includes("function fsAvailHeight(vp, fallback)"), "fullscreen measures the space above the bars");
+ck(app.includes("const avail = fsAvailHeight(vp, chh);") && app.includes("fitScaleFor(cw, avail, f.w, f.h)"), "and fits the picture to that space, not to the whole screen");
+ck(app.includes('classList.toggle("fs-folded", !!on)'), "the settings rows fold away");
+ck(app.includes('localStorage.getItem("rrai-fs-fold") !== "0"'), "folded is the default, so the picture starts with the screen");
+ck(app.includes('fc.textContent = (idx + 1) + " / " + frames.length'), "the slim line carries the slice counter");
+ck(ui.includes('id="fs-mini"') && ui.includes('id="fs-fold"') && ui.includes('id="fs-count"') && ui.includes('id="fs-exit"'),
+   "ui: one line — settings, counter, exit");
+ck(ui.includes(".fs-folded .controls"), "ui: folded hides the rows, it does not only dim them");
+/* The defect this build fixes: #viewport carries an INLINE style="position:relative",
+   which silently beat the ":fullscreen #viewport{position:absolute}" rule. The viewport
+   stayed in the flow, the settings rows squeezed it to ~69 px and the fit collapsed to
+   0.27 — a 69-pixel picture on a 720-pixel screen. */
+ck(/id="viewport" style="[^"]*position:relative/.test(ui), "ui: the viewport still carries an inline position (why the rule below needs !important)");
+ck(/#viewer-card:fullscreen #viewport \{ position:absolute !important; inset:0 !important;[^}]*display:flex !important;/.test(ui),
+   "the fullscreen viewport rule wins over that inline style — absolute, full screen");
+ck(/#viewer-card:fullscreen #viewport \{[^}]*box-sizing:border-box !important;/.test(ui),
+   "and reserves the bars' strip as padding, so the picture centres in what is visible");
+ck(/\.fs-fake #viewport \{[^}]*box-sizing:border-box !important;/.test(ui),
+   "the iOS fallback (fs-fake) gets the same reserve");
+ck(app.includes("function fsReserve(vp, avail)"), "the free band is reserved before the picture is centred");
+ck(app.includes("fsReserve(vp, avail);") && app.includes("} else if (vp.style.paddingBottom) {"),
+   "and the reserve is dropped again outside fullscreen");
+ck(app.includes("try { fsReserve($(\"viewport\"), 0); } catch (e) {}"), "leaving fullscreen clears the reserve too");
 
 console.log(fails ? "VIEWER TEST FAIL " + fails : "VIEWER TEST PASS (" + checks + ")");
