@@ -1,12 +1,12 @@
 {
-  "build": "v130",
-  "version": "v130",
-  "mark": "ب3.02",
+  "build": "v131",
+  "version": "v131",
+  "mark": "ب3.03",
   "channel": "stable",
-  "minVersion": "v130",
-  "updatedAt": "2026-10-17T18:33:36Z",
+  "minVersion": "v131",
+  "updatedAt": "2026-10-17T20:14:57Z",
   "notes": {
-    "ar": "عرض السلاسل معًا وMPR عمودي وتصدير PNG — ب3.02",
-    "en": "Live series overview, portrait MPR and PNG export — ب3.02"
+    "ar": "نافذتان مستقلتان وشريط سلاسل مصغر — ب3.03",
+    "en": "Independent dual panes and compact series strip — ب3.03"
   }
 }

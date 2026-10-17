@@ -8,14 +8,14 @@ import {
   TOOLS, LAYOUTS, MIN_ZOOM, MAX_ZOOM, CINE_MS_DEFAULT,
   initialViewerState, viewerReducer, seriesOf, identityName, clampZoom, clampSlice,
   orientSize, orientPoint, unorientPoint,
-} from "../viewer-state.v130.js";
+} from "../viewer-state.v131.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
 const ck = (c, m) => { if (!c) { fails++; console.log("FAIL " + m); } };
 
-const app = readFileSync(new URL("../app.v130.js", import.meta.url), "utf8");
-const ui = readFileSync(new URL("../ui.v130.html", import.meta.url), "utf8");
+const app = readFileSync(new URL("../app.v131.js", import.meta.url), "utf8");
+const ui = readFileSync(new URL("../ui.v131.html", import.meta.url), "utf8");
 
 const study = [
   { id: "0", label: "T1", count: 4, reslice: true },
