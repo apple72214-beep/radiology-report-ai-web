@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const {build}=JSON.parse(fs.readFileSync(new URL('../release.json',import.meta.url)));
+const app=fs.readFileSync(new URL(`../app.${build}.js`,import.meta.url),'utf8');
+const ui=fs.readFileSync(new URL(`../ui.${build}.html`,import.meta.url),'utf8');
+assert(app.includes('let overviewSync = false;'));
+assert(ui.includes('<details id="spatial-sync-options">'));
+assert(!ui.includes('<details id="spatial-sync-options" open'));
+assert(ui.includes('max-height:28vh; overflow:auto'));
+assert(ui.includes('.fs-fake #series-overview, #viewer-card:fullscreen #series-overview'));
+assert(app.includes('fsSetFold(true);'));
+console.log('FULLSCREEN PANEL TEST PASS');

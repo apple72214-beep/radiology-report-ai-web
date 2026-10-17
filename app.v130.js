@@ -972,7 +972,7 @@ function renderSeriesBar() {
 // All series remain visible; only one full-resolution main canvas is allocated.
 let overviewStudy = null;
 let overviewIndices = new Map();
-let overviewSync = true;
+let overviewSync = false;
 export function spatialMatch(source, targets) {
   const a = source && source.geometry;
   if (!a || !a.frameOfReferenceUid || !a.ipp || !a.iop) return -1;
@@ -998,9 +998,6 @@ function renderSeriesOverview(idx) {
   if(ss.length<2){root.replaceChildren();return;}
   overviewIndices.set(currentSeries,idx);
   root.replaceChildren();
-  const toolbar=document.createElement("div"), sync=document.createElement("button");
-  sync.className="ghost";sync.textContent=(LANG==="en"?"Spatial sync: ":"مزامنة مكانية: ")+(overviewSync?"✓":"—");
-  sync.setAttribute("aria-pressed",String(overviewSync));sync.onclick=()=>{overviewSync=!overviewSync;renderSeriesOverview(idx);};toolbar.append(sync);root.append(toolbar);
   const tiles=document.createElement("div");tiles.className="series-live-grid";root.append(tiles);
   const source=activeFrames()[idx];
   ss.forEach((series,i)=>{
@@ -1416,7 +1413,7 @@ function fsAvailHeight(vp, fallback) {
   try {
     const vr = vp.getBoundingClientRect();
     let top = Infinity;
-    const els = card.querySelectorAll(".controls, #film-wrap, .fs-mini, #meta, #dx-foot");
+    const els = card.querySelectorAll("#viewer-settings, #viewer-bar, .fs-mini");
     for (let i = 0; i < els.length; i++) {
       const r = els[i].getBoundingClientRect();
       if (r.height > 2 && r.top < top) top = r.top;
@@ -1504,7 +1501,7 @@ function fsWire() {
   if (f && !f.__fs) { f.__fs = 1; f.onclick = () => fsSetFold(!fsFolded()); }
   const x = $("fs-exit");
   if (x && !x.__fs) { x.__fs = 1; x.onclick = fsExit; }
-  fsSetFold(localStorage.getItem("rrai-fs-fold") !== "0");
+  fsSetFold(true);
 }
 function fsBarShow(on) { const c = $("viewer-card"); if (c) c.classList.toggle("fs-hide", !on); }
 function fsArm() {
@@ -5109,11 +5106,11 @@ $("slice").addEventListener("input", (e) => {
     if (document.fullscreenElement) { try { document.exitFullscreen().catch(() => {}); } catch (e) {} return; }
     if (card && card.requestFullscreen) { card.requestFullscreen().catch(() => card.classList.toggle("fs-fake")); }
     else if (card) card.classList.toggle("fs-fake");
-    fsSetFold(localStorage.getItem("rrai-fs-fold") !== "0");
+    fsSetFold(true);
     try { if (current) resetView(true); } catch (e) {}
   });
   document.addEventListener("fullscreenchange", () => {
-    if (document.fullscreenElement) { fsArm(); fsSetFold(localStorage.getItem("rrai-fs-fold") !== "0"); }
+    if (document.fullscreenElement) { fsArm(); fsSetFold(true); }
     else fsBarShow(true);
     const b = $("fs-toggle");
     if (b) b.textContent = document.fullscreenElement ? (LANG === "ar" ? "خروج من ملء الشاشة" : "Exit fullscreen") : (LANG === "ar" ? "ملء الشاشة" : "Fullscreen");
@@ -5427,6 +5424,13 @@ function setupMeasureUI() {
 }
 
 function setupV130(){
+ const syncHost=$("spatial-sync-options");
+ if(syncHost&&!$("spatial-sync-toggle")){
+  const label=document.createElement("label"), cb=document.createElement("input");
+  cb.id="spatial-sync-toggle";cb.type="checkbox";cb.checked=false;
+  label.append(cb,document.createTextNode(" تفعيل المزامنة المكانية للسلاسل المتوافقة فقط / Enable spatial sync"));syncHost.append(label);
+  cb.onchange=()=>{overviewSync=cb.checked;if(current)renderSeriesOverview(sliceIdx());};
+ }
  const row=$("measure-bar");if(row&&!$("export-png")){
   const b=document.createElement("button");b.id="export-png";b.className="ghost";b.textContent="PNG — الصورة الأصلية / المستويات";
   b.onclick=()=>{const sources=mprOn?MPR_PLANES.map(p=>$("mpr-c-"+p)):[$("frame")];const out=document.createElement("canvas");out.width=Math.max(...sources.map(c=>c.width));out.height=sources.reduce((n,c)=>n+c.height,0);const ctx=out.getContext("2d");ctx.fillStyle="#000";ctx.fillRect(0,0,out.width,out.height);let y=0;sources.forEach(c=>{ctx.drawImage(c,0,y);y+=c.height;});out.toBlob(blob=>{if(!blob)return;const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="viewer.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);});};row.append(b);
