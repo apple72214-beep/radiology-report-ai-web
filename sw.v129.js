@@ -5,7 +5,7 @@ const CRITICAL = [
   "./ui.v129.html", "./app.v129.js", "./dicom.v129.js", "./report.v129.js", "./sw.v129.js", "./triage.v129.js", "./consult.v129.js", "./docx.v129.js", "./measure.v129.js", "./compare.v129.js",
   "./mpr.v129.js", "./viewer-state.v129.js", "./codecs/decode.v129.js", "./icons/logo.png"
 ];
-const LEN = {"consult.v129.js": 5341, "codecs/decode.v129.js": 5236, "dicom.v129.js": 15714, "triage.v129.js": 5542, "docx.v129.js": 20507, "measure.v129.js": 2808, "compare.v129.js": 1444, "report.v129.js": 9460, "mpr.v129.js": 8058, "viewer-state.v129.js": 12985, "app.v129.js": 306405, "ui.v129.html": 56974, "start.html": 18897, "index.html": 941};;
+const LEN = {"consult.v129.js": 5341, "codecs/decode.v129.js": 5236, "dicom.v129.js": 15714, "triage.v129.js": 5542, "docx.v129.js": 20507, "measure.v129.js": 2808, "compare.v129.js": 1444, "report.v129.js": 9460, "mpr.v129.js": 8058, "viewer-state.v129.js": 12985, "app.v129.js": 309356, "ui.v129.html": 58418, "start.html": 18897, "index.html": 941};;
 const okLen = (u, n) => { for (const k in LEN) if (u.endsWith(k)) return n === LEN[k]; return true; };
 /* v129 — the launcher is the one file whose length CHANGES with every build, so
    this build's byte table can no longer tell a fresh launcher from a poisoned

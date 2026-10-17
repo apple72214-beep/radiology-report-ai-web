@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const {build}=JSON.parse(fs.readFileSync(new URL('../release.json',import.meta.url)));
+const ui=fs.readFileSync(new URL(`../ui.${build}.html`,import.meta.url),'utf8');
+const app=fs.readFileSync(new URL(`../app.${build}.js`,import.meta.url),'utf8');
+assert(ui.includes('id="viewer-settings" hidden'));
+assert(ui.includes('aria-controls="viewer-settings"'));
+const panel=ui.slice(ui.indexOf('<div id="viewer-settings"'),ui.indexOf('<div id="dx-foot"'));
+for(const id of ['measure','cine-toggle','id-toggle','slice','preset','orient-bar','series-bar','mpr-bar','film-wrap','meta'])assert(panel.includes(`id="${id}"`),id);
+for(const id of ['zoom-reset','fs-toggle','mpr-grid'])assert(!panel.includes(`id="${id}"`),id+' stays outside');
+assert(app.includes('localStorage.setItem(VS_KEY'));
+assert(ui.includes(':not(.fs-folded) #viewer-settings'));
+console.log('VIEWER FOLD TEST PASS');

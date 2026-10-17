@@ -114,7 +114,15 @@
       .fs-fake .fs-mini, #viewer-card:fullscreen .fs-mini { display:flex; position:fixed; inset-inline:0; bottom:0; z-index:9; align-items:center; gap:.5rem; padding:.35rem .6rem; background:rgba(15,23,42,.86); border-top:1px solid #334155; font-size:.8rem; }
       .fs-mini .ghost { padding:.28rem .65rem; font-size:.8rem; }
       #fs-count { color:#e2e8f0; font-variant-numeric:tabular-nums; direction:ltr; }
+      /* v129 (2): the viewer's settings are one foldable group. */
+      #viewer-settings { margin:.35rem 0 .5rem; padding:.5rem .6rem; border:1px solid #334155; border-radius:.5rem; background:rgba(30,41,59,.45); }
+      [hidden] { display:none !important; }
+      .fs-fake:not(.fs-folded) #viewer-settings, #viewer-card:fullscreen:not(.fs-folded) #viewer-settings { display:block !important; position:relative; z-index:5; }
+      .fs-fake #vs-fold, #viewer-card:fullscreen #vs-fold { display:none !important; }
+      #viewer-settings .controls { margin:.18rem 0; }
+      #viewer-bar { margin:.35rem 0 .1rem; }
       .fs-fake.fs-folded .controls, #viewer-card:fullscreen.fs-folded .controls { display:none !important; }
+      .fs-fake.fs-folded #viewer-settings, #viewer-card:fullscreen.fs-folded #viewer-settings { display:none !important; }
       .fs-fake.fs-folded #film-wrap, #viewer-card:fullscreen.fs-folded #film-wrap,
       .fs-fake.fs-folded #meta, #viewer-card:fullscreen.fs-folded #meta,
       .fs-fake.fs-folded #dx-foot, #viewer-card:fullscreen.fs-folded #dx-foot,
@@ -260,46 +268,32 @@
           </div>
           <canvas id="annot" style="position:absolute; inset:0; pointer-events:none; display:block; background:transparent;"></canvas>
         </div>
-        <div id="img-note" style="display:none; margin:.45rem 0; padding:.55rem .7rem; border:1px solid #f59e0b; border-radius:.45rem; background:#2a1d06; color:#fde68a; font-size:.82rem; line-height:1.8; direction:ltr; text-align:left; word-break:break-word;">
+<div id="img-note" style="display:none; margin:.45rem 0; padding:.55rem .7rem; border:1px solid #f59e0b; border-radius:.45rem; background:#2a1d06; color:#fde68a; font-size:.82rem; line-height:1.8; direction:ltr; text-align:left; word-break:break-word;">
           <span id="img-note-text"></span>
           <button id="img-note-copy" class="ghost" style="display:none; margin-top:.35rem;">Copy diagnostics</button>
         </div>
-        <div class="controls" id="series-bar" style="display:none; flex-wrap:wrap; gap:.35rem;"></div>
-        <button id="series-open" class="ghost" style="display:none; margin:.15rem 0;" type="button">السلاسل ▾</button>
-        <div class="controls" id="mpr-bar">
-          <button id="mpr-toggle" class="ghost">MPR: محوري / إكليلي / سهمي</button>
-          <button id="all-toggle" class="ghost">عرض شامل: كل السلاسل × ٣ مستويات</button>
-          <span id="mpr-note" class="meta" style="font-size:.75rem"></span>
-          <span id="all-note" class="meta" style="font-size:.75rem"></span>
-          <button id="scan-btn" class="ghost" style="display:none;">فحص السلسلة</button>
-        </div>
-        <div id="mpr-grid" class="mpr-grid" style="display:none">
+          <div id="mpr-grid" class="mpr-grid" style="display:none">
           <div class="mpr-pane" id="mpr-pane-axial"><p class="mpr-lab" id="mpr-lab-axial">محوري</p><canvas id="mpr-c-axial" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-axial" min="0" max="0" value="0" step="1" aria-label="slice Axial" /><select id="mpr-preset-axial" aria-label="window Axial"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
         <div id="all-grid" style="display:none; width:100%;"></div>
           <div class="mpr-pane" id="mpr-pane-coronal"><p class="mpr-lab" id="mpr-lab-coronal">إكليلي</p><canvas id="mpr-c-coronal" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-coronal" min="0" max="0" value="0" step="1" aria-label="slice Coronal" /><select id="mpr-preset-coronal" aria-label="window Coronal"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
           <div class="mpr-pane" id="mpr-pane-sagittal"><p class="mpr-lab" id="mpr-lab-sagittal">سهمي</p><canvas id="mpr-c-sagittal" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-sagittal" min="0" max="0" value="0" step="1" aria-label="slice Sagittal" /><select id="mpr-preset-sagittal" aria-label="window Sagittal"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
         </div>
-        <div id="dx-foot" style="display:none; margin:.5rem 0; padding:.55rem .7rem; border:1px solid #b45309; border-radius:.45rem; background:#241704; color:#fcd34d; font-size:.8rem; line-height:1.8;">
-          <span id="dx-foot-text">هذا العارض أداة عرض ومسودة تقرير؛ <b>غير معتمد للتشخيص النهائي</b>. القرار السريري يبقى للطبيب المختص.</span>
-          <button id="dx-foot-ok" class="ghost" style="margin-inline-start:.5rem;">إخفاء</button>
-        </div>
-        <div class="controls">
+                  <!-- v129 (2): the row a hand reaches for while reading a picture. -->
+        <div class="controls" id="viewer-bar">
           <button id="zoom-reset" class="ghost">ملاءمة</button>
           <span id="zscale" class="meta" style="margin-inline-start:.5rem"></span>
           <button id="fs-toggle" class="ghost">ملء الشاشة</button>
+          <button id="vs-fold" class="ghost" type="button" aria-expanded="false" aria-controls="viewer-settings" title="إعدادات العارض: القياس، الشريحة، النافذة، التدوير، السلاسل — Viewer settings">⚙ إعدادات العارض ▾</button>
+        </div>
+        <div id="viewer-settings" hidden>
+          <p class="hint" id="vs-hint" style="margin:.1rem 0 .35rem; font-size:.75rem;">كل إعدادات العارض في مكان واحد — تُطوى ليأخذ التشريح الشاشة.</p>
+        <div class="controls" id="measure-bar">
           <button id="measure" class="ghost">قياس</button>
           <button id="cine-toggle" class="ghost">عرض متحرك</button>
           <button id="id-toggle" class="ghost">إخفاء الهوية</button>
           <span id="measure-out"></span>
         </div>
-        <div class="controls" id="orient-bar">
-          <button id="orient-invert" class="ghost" type="button" aria-pressed="false" title="قلب الأبيض والأسود — Invert">قلب اللون</button>
-          <button id="orient-rotate" class="ghost" type="button" title="تدوير ٩٠° — Rotate">تدوير 0°</button>
-          <button id="orient-fliph" class="ghost" type="button" aria-pressed="false" title="قلب أفقي — Flip H">قلب أفقي</button>
-          <button id="orient-flipv" class="ghost" type="button" aria-pressed="false" title="قلب رأسي — Flip V">قلب رأسي</button>
-          <button id="orient-reset" class="ghost" type="button" title="عودة إلى وضع التصوير الأصلي — Reset view">الوضع الأصلي</button>
-        </div>
-        <div class="controls">
+          <div class="controls">
           <label id="lbl-slice">الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
           <button id="redraw-btn" class="ghost" style="display:none;padding:.35rem .8rem;">إعادة الرسم</button>
           <label id="lbl-win">النافذة:
@@ -313,10 +307,31 @@
             </select>
           </label>
         </div>
-        <div id="film-wrap" style="display:none">
+<div class="controls" id="orient-bar">
+          <button id="orient-invert" class="ghost" type="button" aria-pressed="false" title="قلب الأبيض والأسود — Invert">قلب اللون</button>
+          <button id="orient-rotate" class="ghost" type="button" title="تدوير ٩٠° — Rotate">تدوير 0°</button>
+          <button id="orient-fliph" class="ghost" type="button" aria-pressed="false" title="قلب أفقي — Flip H">قلب أفقي</button>
+          <button id="orient-flipv" class="ghost" type="button" aria-pressed="false" title="قلب رأسي — Flip V">قلب رأسي</button>
+          <button id="orient-reset" class="ghost" type="button" title="عودة إلى وضع التصوير الأصلي — Reset view">الوضع الأصلي</button>
+        </div>
+        <div class="controls" id="series-bar" style="display:none; flex-wrap:wrap; gap:.35rem;"></div>
+        <button id="series-open" class="ghost" style="display:none; margin:.15rem 0;" type="button">السلاسل ▾</button>
+          <div class="controls" id="mpr-bar">
+          <button id="mpr-toggle" class="ghost">MPR: محوري / إكليلي / سهمي</button>
+          <button id="all-toggle" class="ghost">عرض شامل: كل السلاسل × ٣ مستويات</button>
+          <span id="mpr-note" class="meta" style="font-size:.75rem"></span>
+          <span id="all-note" class="meta" style="font-size:.75rem"></span>
+          <button id="scan-btn" class="ghost" style="display:none;">فحص السلسلة</button>
+        </div>
+<div id="film-wrap" style="display:none">
           <div id="filmstrip" role="listbox" aria-label="filmstrip"></div>
         </div>
-        <p class="meta" id="meta"></p>
+          <p class="meta" id="meta"></p>
+        </div>
+        <div id="dx-foot" style="display:none; margin:.5rem 0; padding:.55rem .7rem; border:1px solid #b45309; border-radius:.45rem; background:#241704; color:#fcd34d; font-size:.8rem; line-height:1.8;">
+          <span id="dx-foot-text">هذا العارض أداة عرض ومسودة تقرير؛ <b>غير معتمد للتشخيص النهائي</b>. القرار السريري يبقى للطبيب المختص.</span>
+          <button id="dx-foot-ok" class="ghost" style="margin-inline-start:.5rem;">إخفاء</button>
+        </div>
         <p><button id="gen-report" class="ghost">توليد مسودة التقرير (ع/EN)</button></p>
         <details id="composer-set" style="margin:1rem 0;">
           <summary id="composer-sum" style="cursor:pointer;opacity:.85;">تأليف التقرير التشخيصي (نمط تقرير المستشفى)</summary>

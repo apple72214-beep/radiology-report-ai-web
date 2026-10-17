@@ -1300,6 +1300,7 @@ function setupViewerState() {
   fsWire();
   cmpWire();
   orientWire();
+  vsWire();
   const cb = $("cine-toggle");
   if (cb && !cb.__vs) { cb.__vs = 1; cb.onclick = () => { if (vState && vState.cine) cineStop(); else cineStart(); }; }
   cineLabel();
@@ -2044,6 +2045,48 @@ function probeText(p) {
    Invert, rotate, flip H, flip V, and back to the way it was acquired. Each one
    dispatches to the reducer and then refits, because a picture stood on its end
    is a different shape on screen and must be fitted as one. */
+/* ---- v129 (2): one fold for the viewer's settings -----------------------
+   Six rows had piled up under the picture — measure tools, slice, window, the
+   turns, series, MPR, filmstrip, the info line — 372 px of chrome on a phone,
+   so the anatomy was left with 641 px of a 1544-px screen. One button folds the
+   lot; what a hand reaches for while reading (Fit, Fullscreen, and the fold
+   itself) stays. Folded by default and remembered, because the picture is the
+   point. */
+const VS_KEY = "rrai-vs-fold";
+let vsOn = true;                       /* folded until the physician says otherwise */
+const vsFolded = () => !!vsOn;
+function vsLabel() {
+  const b = $("vs-fold");
+  if (!b) return;
+  const name = LANG === "en" ? "\u2699 Viewer settings" : "\u2699 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0639\u0627\u0631\u0636";
+  /* the arrow carries the state, not the colour: the app's own rule */
+  b.textContent = name + (vsOn ? " \u25be" : " \u25b4");
+  b.setAttribute("aria-expanded", vsOn ? "false" : "true");
+  b.style.background = vsOn ? "" : "var(--accent)";
+  b.style.color = vsOn ? "" : "#0f172a";
+  b.style.borderColor = vsOn ? "" : "var(--accent)";
+}
+function vsSetFold(on) {
+  vsOn = !!on;
+  const box = $("viewer-settings");
+  if (box) box.hidden = vsOn;
+  try { localStorage.setItem(VS_KEY, vsOn ? "1" : "0"); } catch (e) {}
+  vsLabel();
+  /* The fit is measured from what is free: folding the rows away must hand the
+     space back to the anatomy, not leave a hole underneath it. */
+  try { if (current) resetView(true); } catch (e) {}
+  try { renderFilmstrip(); } catch (e) {}
+}
+/** A keyboard shortcut that reaches a control inside the fold opens it first:
+    a turn the physician cannot see is worse than no turn at all. */
+function vsOpen() { if (vsOn) vsSetFold(false); }
+function vsWire() {
+  const b = $("vs-fold");
+  if (b && !b.__vs) { b.__vs = 1; b.addEventListener("click", () => vsSetFold(!vsOn)); }
+  let want = "1";
+  try { want = localStorage.getItem(VS_KEY) || "1"; } catch (e) {}
+  vsSetFold(want !== "0");
+}
 function orientChanged() {
   orientLabels();
   try { if (current) resetView(true); } catch (e) {}
@@ -4018,7 +4061,7 @@ function setupMenuSettings() {
         else { const sl = $("slice"); if (sl) { sl.value = String(Math.max(0, Number(sl.value) - 1)); sl.dispatchEvent(new Event("input")); } }
       }
       else if (k === (map.fit || "f")) { const z = $("zoom-reset"); if (z) z.click(); }
-      else if (k === (map.measure || "m")) { const mm = $("measure"); if (mm) mm.click(); }
+      else if (k === (map.measure || "m")) { vsOpen(); const mm = $("measure"); if (mm) mm.click(); }
       else if (k === (map.zoomIn || "+") || (!map.zoomIn && k === "=")) {
         const f0 = curFrame();
         if (f0) { vst({ type: "zoomBy", factor: 1.25 }); vk = (vState && vState.zoom) || vk; centerOn(f0.w / 2, f0.h / 2); }
@@ -4027,10 +4070,10 @@ function setupMenuSettings() {
         const f0 = curFrame();
         if (f0) { vst({ type: "zoomBy", factor: 1 / 1.25 }); vk = (vState && vState.zoom) || vk; centerOn(f0.w / 2, f0.h / 2); }
       }
-      else if (k === (map.invert || "i")) { const b = $("orient-invert"); if (b) b.click(); }
-      else if (k === (map.rotate || "r")) { const b = $("orient-rotate"); if (b) b.click(); }
-      else if (k === (map.flipH || "h")) { const b = $("orient-fliph"); if (b) b.click(); }
-      else if (k === (map.flipV || "v")) { const b = $("orient-flipv"); if (b) b.click(); }
+      else if (k === (map.invert || "i")) { vsOpen(); const b = $("orient-invert"); if (b) b.click(); }
+      else if (k === (map.rotate || "r")) { vsOpen(); const b = $("orient-rotate"); if (b) b.click(); }
+      else if (k === (map.flipH || "h")) { vsOpen(); const b = $("orient-fliph"); if (b) b.click(); }
+      else if (k === (map.flipV || "v")) { vsOpen(); const b = $("orient-flipv"); if (b) b.click(); }
       else if (k === (map.contrast || "c")) {
         const ps = $("preset");
         if (ps && ps.options.length > 1) { ps.selectedIndex = (ps.selectedIndex + 1) % ps.options.length; ps.dispatchEvent(new Event("change")); }
@@ -4531,6 +4574,9 @@ const I18N = {
   "files-btn": ["اختيار الملفات", "Choose files"], "ai-extra-btn": ["اختيار الملفات", "Choose files"],
   "export-csv": ["تصدير القائمة CSV", "Export worklist CSV"],
   "zoom-reset": ["ملاءمة", "Fit"], "fs-toggle": ["ملء الشاشة", "Fullscreen"],
+  "vs-fold": ["\u2699 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0639\u0627\u0631\u0636", "\u2699 Viewer settings"],
+  "vs-hint": ["\u0643\u0644 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0639\u0627\u0631\u0636 \u0641\u064a \u0645\u0643\u0627\u0646 \u0648\u0627\u062d\u062f \u2014 \u062a\u064f\u0637\u0648\u0649 \u0644\u064a\u0623\u062e\u0630 \u0627\u0644\u062a\u0634\u0631\u064a\u062d \u0627\u0644\u0634\u0627\u0634\u0629.",
+               "Every viewer setting in one place - folded away so the anatomy keeps the screen."],
   "orient-invert": ["قلب اللون", "Invert"],
   "orient-fliph": ["قلب أفقي", "Flip H"],
   "orient-flipv": ["قلب رأسي", "Flip V"],
@@ -4674,8 +4720,10 @@ function applyLang(lang) {
   if (lt) lt.textContent = LANG === "en" ? "ع" : "EN";
   try { localStorage.setItem("rrai-lang", LANG); } catch (e) {}
   if (typeof refresh === "function") refresh().catch(() => {});
-  /* the rotate button carries the current angle, so it is written here too */
+  /* the rotate button carries the current angle and the fold its arrow, so
+     both are written here too */
   try { orientLabels(); } catch (e) {}
+  try { vsLabel(); } catch (e) {}
 }
 function swSelfHeal() {
   if (!("serviceWorker" in navigator)) return;
@@ -5055,8 +5103,10 @@ function setupConsultUI() {
   exp.id = "export-consult";
   exp.textContent = LANG === "en" ? "Export consult package" : "تصدير حزمة استشارة";
   exp.title = "حزمة موقّعة SHA-256: لقطة + فرز + تقرير + ملاحظات";
-  const zr = $("zoom-reset");
-  if (zr && zr.parentNode) zr.parentNode.insertBefore(exp, zr.nextSibling);
+  /* v129 (2): it used to be dropped next to «ملاءمة», which put an export
+     button in the one row that stays on screen. It is a setting like the rest. */
+  const row = ($("measure") && $("measure").parentNode) || ($("zoom-reset") && $("zoom-reset").parentNode);
+  if (row) row.appendChild(exp);
   exp.onclick = () => exportConsult();
   const imp = document.createElement("button");
   imp.className = "ghost";
