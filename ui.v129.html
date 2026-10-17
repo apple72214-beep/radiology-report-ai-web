@@ -6,8 +6,12 @@
       header { display:flex; align-items:baseline; gap:.8rem; padding:1rem 1.4rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
       header h1 { font-size:1.15rem; margin:0; }
       header span { color:var(--muted); font-size:.8rem; }
-      main { display:grid; grid-template-columns:minmax(280px,400px) 1fr; gap:1rem; padding:1rem 1.4rem; }
+      main { display:grid; grid-template-columns:minmax(0, min(44%, 620px)) minmax(0,1fr); gap:1rem; padding:1rem 1.4rem; }
       @media (max-width:820px){ main { grid-template-columns:1fr; } }
+      main > section { min-width:0; }
+      .worklist-scroll { max-width:100%; overflow-x:auto; position:relative; isolation:isolate; }
+      #worklist { min-width:600px; overflow:visible; }
+      #worklist th:last-child, #worklist td:last-child { position:sticky; inset-inline-end:0; background:#12283f; z-index:1; min-width:90px; }
       section { background:var(--panel); border:1px solid var(--line); border-radius:.6rem; padding:1rem; }
       h2 { font-size:.95rem; margin:0 0 .8rem; color:var(--accent); }
       button, select, input[type=file] { font:inherit; }
@@ -248,10 +252,12 @@
         <p class="hint" id="pacs-dl-hint"></p>
       </details>
       <h2 id="h-worklist">قائمة العمل (الحرج أولًا)</h2>
+        <div class="worklist-scroll" tabindex="0" role="region" aria-label="قائمة الحالات — Studies">
         <table id="worklist">
           <thead><tr><th id="th-patient">المريض</th><th id="th-mod">النوع</th><th id="th-date">التاريخ</th><th id="th-pri">الأولوية</th><th id="th-slices">الشرائح</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
+        </div>
         <p class="empty" id="empty">لا توجد دراسات — ارفع DICOM أو اضغط "توليد ديمو".</p>
         <details id="data-mgmt" style="margin:.5rem 0 .2rem;"><summary id="data-mgmt-sum" class="ghost" style="display:inline-block;padding:.4rem 1rem;cursor:pointer;">إدارة البيانات ▾</summary>
         <p style="margin:.4rem 0 .2rem;display:flex;gap:.5rem;flex-wrap:wrap;"><button id="export-csv" class="ghost">تصدير القائمة CSV</button> <button id="clear-all" class="ghost">تفريغ القائمة من الجهاز</button></p></details>
