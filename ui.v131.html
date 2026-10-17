@@ -325,6 +325,7 @@
         <div id="viewport" style="display:none; position:relative; overflow:hidden; width:100%; background:#000; border-radius:.4rem; touch-action:none;">
           <div id="vwrap" style="transform-origin:center; position:relative; width:max-content; margin:0 auto;">
             <canvas id="frame" style="display:none; "></canvas>
+            <canvas id="reference-overlay" style="position:absolute;inset:0;pointer-events:none;background:transparent;"></canvas>
             <canvas id="overlay" style="position:absolute; inset:0; pointer-events:none; background:transparent;"></canvas>
           </div>
           <canvas id="annot" style="position:absolute; inset:0; pointer-events:none; display:block; background:transparent;"></canvas>
@@ -340,6 +341,7 @@
           <input id="session-slice" type="range" min="0" max="0" value="0" step="1" />
           <output id="session-position" for="session-slice" dir="auto"></output>
         </div>
+        <small id="reference-status" hidden style="font-size:.72rem;color:#94a3b8;"></small>
         <div id="series-overview" hidden aria-label="جميع السلاسل — All series"></div>
 <div id="img-note" style="display:none; margin:.45rem 0; padding:.55rem .7rem; border:1px solid #f59e0b; border-radius:.45rem; background:#2a1d06; color:#fde68a; font-size:.82rem; line-height:1.8; direction:ltr; text-align:left; word-break:break-word;">
           <span id="img-note-text"></span>

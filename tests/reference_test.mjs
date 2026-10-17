@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import {referenceSegment} from '../app.v131.js';
+const frame=(ipp,iop,spacing=[1,1],uid='same')=>({w:101,h:101,spacing,geometry:{ipp,iop,frameOfReferenceUid:uid}});
+const axial=frame([0,0,30],[1,0,0,0,1,0]);
+const sagittal=frame([20,0,0],[0,1,0,0,0,1]);
+assert.deepEqual(referenceSegment(axial,sagittal),[[0,30],[100,30]]);
+assert.deepEqual(referenceSegment(sagittal,axial),[[20,0],[20,100]]);
+assert.deepEqual(referenceSegment(axial,{...sagittal,spacing:[2,3]}),[[0,15],[100,15]]);
+assert.equal(referenceSegment(axial,frame([20,0,0],[0,1,0,0,0,1],[1,1],'other')),null);
+assert.equal(referenceSegment(axial,axial),null);
+assert.equal(referenceSegment(frame([0,0,300],[1,0,0,0,1,0]),sagittal),null);
+assert.equal(referenceSegment(axial,{...sagittal,spacing:null}),null);
+assert.deepEqual(referenceSegment(frame([0,0,40],[1,0,0,0,1,0]),sagittal),[[0,40],[100,40]]);
+console.log('REFERENCE TEST PASS');

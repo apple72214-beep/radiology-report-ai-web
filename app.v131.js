@@ -5461,12 +5461,50 @@ function setupMeasureUI() {
   m.parentNode.insertBefore(clr, sel.nextSibling);
 }
 
+/** Intersection of the source DICOM plane with the target image rectangle.
+ * Pixel Spacing is [row, column]; IOP's first vector advances columns. */
+export function referenceSegment(source,target){
+ const a=source?.geometry,b=target?.geometry,sp=target?.spacing;
+ if(!a||!b||!a.frameOfReferenceUid||a.frameOfReferenceUid!==b.frameOfReferenceUid||!sp||sp.length!==2||!sp.every(v=>Number.isFinite(v)&&v>0))return null;
+ const dot=(x,y)=>x.reduce((n,v,i)=>n+v*y[i],0);
+ const cross=(u,v)=>[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+ for(const g of [a,b]){if(!g.ipp||g.ipp.length!==3||!g.iop||g.iop.length!==6||![...g.ipp,...g.iop].every(Number.isFinite))return null;const u=g.iop.slice(0,3),v=g.iop.slice(3);if(Math.abs(Math.hypot(...u)-1)>.01||Math.abs(Math.hypot(...v)-1)>.01||Math.abs(dot(u,v))>.01)return null;}
+ if(!(target.w>1&&target.h>1))return null;
+ const n=cross(a.iop.slice(0,3),a.iop.slice(3)),u=b.iop.slice(0,3),v=b.iop.slice(3);
+ const A=dot(n,u)*sp[1],B=dot(n,v)*sp[0],C=dot(n,b.ipp.map((x,i)=>x-a.ipp[i]));
+ if(Math.hypot(A,B)<1e-6)return null;
+ const points=[],w=target.w-1,h=target.h-1;
+ const add=(x,y)=>{if(x>=-1e-6&&x<=w+1e-6&&y>=-1e-6&&y<=h+1e-6&&!points.some(p=>Math.hypot(p[0]-x,p[1]-y)<1e-5))points.push([Math.max(0,Math.min(w,x)),Math.max(0,Math.min(h,y))]);};
+ if(Math.abs(B)>1e-8){add(0,-C/B);add(w,(-C-A*w)/B);}
+ if(Math.abs(A)>1e-8){add(-C/A,0);add((-C-B*h)/A,h);}
+ if(points.length<2)return null;
+ return [points[0],points[1]];
+}
+function paintReference(canvas,segment,color){
+ if(!canvas||!segment)return;
+ const ctx=canvas.getContext("2d");ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=.48;
+ const width=canvas.getBoundingClientRect().width;ctx.lineWidth=Math.max(.5,canvas.width/Math.max(1,width)*1.2);
+ ctx.beginPath();ctx.moveTo(...segment[0]);ctx.lineTo(...segment[1]);ctx.stroke();ctx.restore();
+}
+function renderReferences(){
+ const overlay=$("reference-overlay");if(!overlay)return;
+ const primary=activeFrames()[sliceIdx()];
+ overlay.width=primary?.w||1;overlay.height=primary?.h||1;
+ const status=$("reference-status");if(status)status.hidden=!dualOn||!current;
+ if(!dualOn||!current)return;
+ const series=ensureSeries(current)[dualSeries],secondary=current.frames[series?.indices?.[dualIndex]];
+ try{if(secondary)drawFrame($("dual-frame"),secondary,presetVal(),current.modality);}catch(e){}
+ const line=referenceSegment(primary,secondary),reverse=referenceSegment(secondary,primary);
+ paintReference($("dual-frame"),line,"#fbbf24");
+ paintReference(overlay,reverse,"#38bdf8");
+ if(status)status.textContent=line||reverse?(LANG==="en"?"Reference lines: other pane's slice level":"خط المستوى: موضع شريحة النافذة الأخرى"):(LANG==="en"?"No reference line: missing compatible geometry, parallel planes, or intersection outside image":"لا يظهر خط: بيانات مكانية غير متوافقة/ناقصة، أو مستويان متوازيان، أو تقاطع خارج الصورة");
+}
 let dualOn=false,dualActive=1,dualSeries=0,dualIndex=0,dualStudy=null;
 function dualRender(){
  const panel=$("dual-secondary"),card=$("viewer-card");if(!panel||!card)return;
  card.classList.toggle("dual-on",dualOn && !!current);panel.hidden=!dualOn||!current;
  const toggle=$("dual-toggle");if(toggle){toggle.setAttribute("aria-pressed",String(dualOn));toggle.textContent=dualOn?"نافذة واحدة / Single":"نافذتان / Split";}
- if(!current||!dualOn)return;
+ if(!current||!dualOn){requestAnimationFrame(renderReferences);return;}
  const ss=ensureSeries(current);
  if(dualStudy!==current){dualStudy=current;dualSeries=ss.length>1?1:0;dualIndex=0;}
  dualSeries=Math.min(dualSeries,ss.length-1);
@@ -5478,6 +5516,7 @@ function dualRender(){
  const slider=$("dual-slice");slider.max=String(Math.max(0,frames.length-1));slider.value=String(dualIndex);
  panel.classList.toggle("active-pane",dualActive===2);
  $("viewport").classList.toggle("active-pane",dualActive===1);
+ requestAnimationFrame(renderReferences);
 }
 function dualStep(amount){
  if(!dualOn||!current)return;
