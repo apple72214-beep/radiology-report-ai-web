@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {spatialMatch} from '../app.v130.js';
+const f=(z,uid='frame1',iop=[1,0,0,0,1,0])=>({geometry:{ipp:[0,0,z],iop,frameOfReferenceUid:uid,spacingBetweenSlices:2}});
+assert.equal(spatialMatch(f(4),[f(0),f(2),f(4)]),2);
+assert.equal(spatialMatch(f(4),[f(4,'other')]),-1);
+assert.equal(spatialMatch(f(4),[f(4,'frame1',[0,1,0,0,0,1])]),-1);
+assert.equal(spatialMatch(f(100),[f(4)]),-1);
+assert.equal(spatialMatch({geometry:{ipp:[0,0,0],iop:[1,0,0,0,1,0]}},[f(0)]),-1);
+assert.equal(spatialMatch(f(4),[f(4,'frame1',[-1,0,0,0,1,0])]),0);
+console.log('OVERVIEW TEST PASS');

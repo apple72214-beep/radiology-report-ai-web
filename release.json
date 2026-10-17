@@ -1,12 +1,12 @@
 {
-  "build": "v129",
-  "version": "v129",
-  "mark": "ب3.01",
+  "build": "v130",
+  "version": "v130",
+  "mark": "ب3.02",
   "channel": "stable",
-  "minVersion": "v129",
-  "updatedAt": "2026-10-16T15:15:55Z",
+  "minVersion": "v130",
+  "updatedAt": "2026-10-17T18:33:36Z",
   "notes": {
-    "ar": "تحديث — ب3.01",
-    "en": "Update — ب3.01"
+    "ar": "عرض السلاسل معًا وMPR عمودي وتصدير PNG — ب3.02",
+    "en": "Live series overview, portrait MPR and PNG export — ب3.02"
   }
 }
