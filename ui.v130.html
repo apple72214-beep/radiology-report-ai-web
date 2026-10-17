@@ -156,6 +156,16 @@
       .fs-fake #viewer-bar, #viewer-card:fullscreen #viewer-bar { display:none !important; }
       .fs-fake #viewer-settings details, #viewer-card:fullscreen #viewer-settings details { display:block !important; }
       .series-live-tile input[type=range] { min-width:0; max-width:100%; box-sizing:border-box; }
+
+      #session-bar { width:100%;min-width:0;margin:.35rem 0;padding:.35rem .5rem;background:#0f172a;border-radius:.4rem; }
+      #session-bar label,#session-position { display:block;font-size:.78rem;overflow-wrap:anywhere; }
+      #session-slice { width:100%;min-width:0;max-width:100%;direction:ltr; }
+      #viewer-settings { min-width:0;max-width:100%;overflow-x:hidden; }
+      #viewer-settings .controls { flex-wrap:wrap;min-width:0; }
+      #viewer-settings button,#viewer-settings label { max-width:100%;white-space:normal;overflow-wrap:anywhere; }
+      #viewer-settings input[type=range] { min-width:0;max-width:100%; }
+      .fs-fake #session-bar,#viewer-card:fullscreen #session-bar { position:absolute;bottom:3rem;inset-inline:.3rem;width:auto;z-index:8;background:#0f172a; }
+      .fs-fake:not(.fs-folded) #session-bar,#viewer-card:fullscreen:not(.fs-folded) #session-bar { display:none!important; }
 </style>
 <header>
       <h1><img id="app-logo" src="./icons/logo.png" alt="Radiology report AI" style="height:2.4rem;width:2.4rem;border-radius:.6rem;vertical-align:middle;margin-inline-end:.55rem;box-shadow:0 0 0 1px #334155;" />Radiology report AI <button id="menu-btn" class="ghost" style="font-size:.8rem;padding:.2rem .6rem;" title="القائمة / Menu">☰</button> <button id="settings-btn" class="ghost" style="font-size:.8rem;padding:.2rem .6rem;" title="الإعدادات / Settings">⚙</button> <button id="lang-toggle" class="ghost" style="font-size:.7rem;padding:.2rem .6rem;">EN</button></h1>
@@ -297,6 +307,12 @@
           </div>
           <canvas id="annot" style="position:absolute; inset:0; pointer-events:none; display:block; background:transparent;"></canvas>
         </div>
+<div id="session-bar" hidden>
+          <label for="session-slice">شرائح الدراسة / Study slices</label>
+          <input id="session-slice" type="range" min="0" max="0" value="0" step="1" />
+          <output id="session-position" for="session-slice" dir="auto"></output>
+        </div>
+        <div id="series-overview" hidden aria-label="جميع السلاسل — All series"></div>
 <div id="img-note" style="display:none; margin:.45rem 0; padding:.55rem .7rem; border:1px solid #f59e0b; border-radius:.45rem; background:#2a1d06; color:#fde68a; font-size:.82rem; line-height:1.8; direction:ltr; text-align:left; word-break:break-word;">
           <span id="img-note-text"></span>
           <button id="img-note-copy" class="ghost" style="display:none; margin-top:.35rem;">Copy diagnostics</button>
@@ -308,7 +324,6 @@
           <div class="mpr-pane" id="mpr-pane-sagittal"><p class="mpr-lab" id="mpr-lab-sagittal">سهمي</p><canvas id="mpr-c-sagittal" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-sagittal" min="0" max="0" value="0" step="1" aria-label="slice Sagittal" /><select id="mpr-preset-sagittal" aria-label="window Sagittal"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
         </div>
                   <!-- v130 (2): the row a hand reaches for while reading a picture. -->
-        <div id="series-overview" hidden aria-label="جميع السلاسل — All series"></div>
         <div class="controls" id="viewer-bar">
           <button id="zoom-reset" class="ghost">ملاءمة</button>
           <span id="zscale" class="meta" style="margin-inline-start:.5rem"></span>
@@ -325,7 +340,7 @@
           <span id="measure-out"></span>
         </div>
           <div class="controls">
-          <label id="lbl-slice">الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
+          <label id="lbl-slice" style="display:none">الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
           <button id="redraw-btn" class="ghost" style="display:none;padding:.35rem .8rem;">إعادة الرسم</button>
           <label id="lbl-win">النافذة:
             <select id="preset">

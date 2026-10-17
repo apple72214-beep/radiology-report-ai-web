@@ -1017,6 +1017,36 @@ function renderSeriesOverview(idx) {
     tile.append(b,slider);tiles.append(tile);
   });
 }
+/** A linear reading session, not a reconstructed volume: series boundaries
+ * are retained and displayed, never treated as spatial neighbors. */
+export function sessionFrameAt(series, position) {
+  let offset=0; const total=series.reduce((n,s)=>n+(s.indices||[]).length,0);
+  const at=Math.max(0,Math.min(Math.max(0,total-1),Math.trunc(Number(position)||0)));
+  for(let i=0;i<series.length;i++){
+    const count=(series[i].indices||[]).length;
+    if(at<offset+count)return {series:i,index:at-offset,total,position:at};
+    offset+=count;
+  }
+  return null;
+}
+function sessionBarUpdate(index){
+  const bar=$("session-bar"), slider=$("session-slice"),label=$("session-position");
+  if(!bar||!slider||!current)return;
+  const ss=ensureSeries(current),total=ss.reduce((n,s)=>n+(s.indices||[]).length,0);
+  const offset=ss.slice(0,currentSeries).reduce((n,s)=>n+(s.indices||[]).length,0);
+  bar.hidden=!total;
+  slider.max=String(Math.max(0,total-1));slider.value=String(offset+index);
+  const series=ss[currentSeries]||{};
+  const name=series.label||series.description||("Se "+(currentSeries+1));
+  const text=name+" · "+(index+1)+"/"+(series.indices||[]).length+" · "+(LANG==="en"?"Series ":"سلسلة ")+(currentSeries+1)+"/"+ss.length+" · "+(offset+index+1)+"/"+total;
+  if(label)label.textContent=text;slider.setAttribute("aria-valuetext",text);
+  if(!slider.__session){slider.__session=1;slider.addEventListener("input",()=>{
+    if(!current)return;const target=sessionFrameAt(ensureSeries(current),slider.value);if(!target)return;
+    if(allOn)allToggle(false);if(mprOn)mprToggle(false);
+    if(currentSeries!==target.series)selectSeries(target.series);
+    const local=$("slice");if(local)local.value=String(target.index);show(target.index);
+  });}
+}
 function selectSeries(i) {
   const ss = ensureSeries(current);
   if (!ss.length) return;
@@ -1413,7 +1443,7 @@ function fsAvailHeight(vp, fallback) {
   try {
     const vr = vp.getBoundingClientRect();
     let top = Infinity;
-    const els = card.querySelectorAll("#viewer-settings, #viewer-bar, .fs-mini");
+    const els = card.querySelectorAll("#viewer-settings, #viewer-bar, #session-bar, .fs-mini");
     for (let i = 0; i < els.length; i++) {
       const r = els[i].getBoundingClientRect();
       if (r.height > 2 && r.top < top) top = r.top;
@@ -2632,6 +2662,7 @@ function show(idx) {
     if (fc) fc.textContent = (idx + 1) + " / " + frames.length;
   }
   renderFilmstrip();
+  sessionBarUpdate(idx);
   renderSeriesOverview(idx);
   const f0 = frames[idx] || current.frames[0];
   let drawErr = "";
