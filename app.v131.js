@@ -995,6 +995,8 @@ function renderSeriesOverview(idx) {
   const root=$("series-overview"); if(!root || !current)return;
   if(overviewStudy!==current){overviewStudy=current;overviewIndices=new Map();}
   const ss=ensureSeries(current);root.hidden=ss.length<2;
+  const fold=$("series-preview-fold");if(fold)fold.hidden=ss.length<2;
+  const summary=$("series-preview-summary");if(summary)summary.textContent=(LANG==="en"?"Series thumbnails":"السلاسل — المصغّرات")+" ("+ss.length+")";
   if(ss.length<2){root.replaceChildren();return;}
   overviewIndices.set(currentSeries,idx);
   root.replaceChildren();
@@ -5536,6 +5538,13 @@ function dualWire(){
  cv.addEventListener("pointerup",()=>start=null);cv.addEventListener("pointercancel",()=>start=null);
 }
 function setupV130(){
+ const previews=$("series-preview-fold");
+ if(previews&&!previews.__wired){
+  previews.__wired=true;
+  try{previews.open=localStorage.getItem("rrai-series-preview-open")==="1";}catch(e){}
+  previews.addEventListener("toggle",()=>{try{localStorage.setItem("rrai-series-preview-open",previews.open?"1":"0");}catch(e){}});
+ }
+
  dualWire();
  const syncHost=$("spatial-sync-options");
  if(syncHost&&!$("spatial-sync-toggle")){

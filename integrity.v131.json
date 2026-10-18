@@ -65,15 +65,15 @@
     },
     "app": {
       "path": "app.v131.js",
-      "chars": 311387,
-      "bytes": 323557,
-      "sha256": "613786005137fba949645a4f8f83bac0d7e27b3eba8dce8e19a5e18e011a34a0"
+      "chars": 311933,
+      "bytes": 324121,
+      "sha256": "0512ffd5920df6c90173eee5bd3be759600bb5ef43777444b32438f6fbb3f4e3"
     },
     "ui": {
       "path": "ui.v131.html",
-      "chars": 60778,
-      "bytes": 64746,
-      "sha256": "b5b568f34fda15e0521a0817629875502e5e0f650e4cefb97aac3bf10f966f1c"
+      "chars": 61501,
+      "bytes": 65492,
+      "sha256": "13fdcbd7c49289718a2cc150fe37bda41acb0cde3a13c2c4202e678c44c95110"
     }
   }
 }

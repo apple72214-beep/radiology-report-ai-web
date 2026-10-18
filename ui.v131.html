@@ -186,6 +186,12 @@
       .fs-fake.dual-on #viewport,#viewer-card:fullscreen.dual-on #viewport {position:relative!important;inset:auto!important;height:100%!important;max-height:none;}
       .fs-fake.dual-on #dual-secondary,#viewer-card:fullscreen.dual-on #dual-secondary {position:relative;z-index:2;}
       @media(max-width:820px){.fs-fake.dual-on #dual-layout,#viewer-card:fullscreen.dual-on #dual-layout {grid-template-columns:1fr;grid-template-rows:1fr 1fr;} .fs-fake.dual-on #dual-frame,#viewer-card:fullscreen.dual-on #dual-frame {max-height:34vh;}}
+
+      #series-preview-fold { width:100%;max-width:100%;min-width:0;align-self:stretch;box-sizing:border-box; }
+      #series-preview-summary { cursor:pointer;padding:.5rem .7rem;border:1px solid #334155;border-radius:.4rem;font-size:.85rem; }
+      #series-overview { width:100%;max-width:100%;min-width:0; }
+      #series-overview .series-live-grid { width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain; }
+      .fs-fake #series-preview-fold,#viewer-card:fullscreen #series-preview-fold { display:none!important; }
 </style>
 <header>
       <h1><img id="app-logo" src="./icons/logo.png" alt="Radiology report AI" style="height:2.4rem;width:2.4rem;border-radius:.6rem;vertical-align:middle;margin-inline-end:.55rem;box-shadow:0 0 0 1px #334155;" />Radiology report AI <button id="menu-btn" class="ghost" style="font-size:.8rem;padding:.2rem .6rem;" title="القائمة / Menu">☰</button> <button id="settings-btn" class="ghost" style="font-size:.8rem;padding:.2rem .6rem;" title="الإعدادات / Settings">⚙</button> <button id="lang-toggle" class="ghost" style="font-size:.7rem;padding:.2rem .6rem;">EN</button></h1>
@@ -342,7 +348,10 @@
           <output id="session-position" for="session-slice" dir="auto"></output>
         </div>
         <small id="reference-status" hidden style="font-size:.72rem;color:#94a3b8;"></small>
-        <div id="series-overview" hidden aria-label="جميع السلاسل — All series"></div>
+        <details id="series-preview-fold" hidden>
+          <summary id="series-preview-summary">السلاسل — إظهار المصغّرات / Series thumbnails</summary>
+          <div id="series-overview" hidden aria-label="جميع السلاسل — All series"></div>
+        </details>
 <div id="img-note" style="display:none; margin:.45rem 0; padding:.55rem .7rem; border:1px solid #f59e0b; border-radius:.45rem; background:#2a1d06; color:#fde68a; font-size:.82rem; line-height:1.8; direction:ltr; text-align:left; word-break:break-word;">
           <span id="img-note-text"></span>
           <button id="img-note-copy" class="ghost" style="display:none; margin-top:.35rem;">Copy diagnostics</button>
