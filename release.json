@@ -1,12 +1,12 @@
 {
-  "build": "v131",
-  "version": "v131",
-  "mark": "ب3.03",
+  "build": "v132",
+  "version": "v132",
+  "mark": "ب3.04",
   "channel": "stable",
-  "minVersion": "v131",
-  "updatedAt": "2026-10-17T20:14:57Z",
+  "minVersion": "v132",
+  "updatedAt": "2026-10-18T22:50:03Z",
   "notes": {
-    "ar": "نافذتان مستقلتان وشريط سلاسل مصغر — ب3.03",
-    "en": "Independent dual panes and compact series strip — ب3.03"
+    "ar": "تدقيق تناقضات التقرير وتشخيص هندسي آمن — ب3.04",
+    "en": "Report consistency review and private geometry diagnostics — ب3.04"
   }
 }
