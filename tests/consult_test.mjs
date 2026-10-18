@@ -1,4 +1,4 @@
-import { buildPackage, validatePackage, sha256FallbackHex } from "../consult.v132.js";
+import { buildPackage, validatePackage, sha256FallbackHex } from "../consult.v133.js";
 const enc = new TextEncoder();
 let fails = 0;
 // known SHA-256 vectors for the pure-JS fallback (LAN http:// path)
@@ -26,5 +26,7 @@ const v4 = await validatePackage(reply);
 if (v4.ok && v4.isReply && reply.payload.refUid === "S1") console.log("PASS reply+refUid"); else { fails++; console.log("FAIL reply", v4); }
 const v5 = await validatePackage(await buildPackage({ reply: true, actor: "Dr B", note: "x" }));
 if (!v5.ok) console.log("PASS reply-needs-ref"); else { fails++; console.log("FAIL reply-ref"); }
+const scoped=await buildPackage({study,measurementFrames:{'2:0':{segments:[{px:4}],angles:[],rois:[],rects:[]}}});
+if(scoped.payload.measurementFrames['2:0'].segments[0].px===4 && (await validatePackage(scoped)).ok) console.log('PASS pane/frame measurements signed and retained');else {fails++;console.log('FAIL measurementFrames');}
 console.log(fails ? "CONSULT TEST FAIL " + fails : "CONSULT TEST PASS (9)");
 process.exit(fails ? 1 : 0);

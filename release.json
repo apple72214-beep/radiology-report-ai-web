@@ -1,12 +1,12 @@
 {
-  "build": "v132",
-  "version": "v132",
-  "mark": "ب3.04",
+  "build": "v133",
+  "version": "v133",
+  "mark": "ب3.05",
   "channel": "stable",
-  "minVersion": "v132",
-  "updatedAt": "2026-10-18T22:50:03Z",
+  "minVersion": "v133",
+  "updatedAt": "2026-10-18T23:30:23Z",
   "notes": {
-    "ar": "تدقيق تناقضات التقرير وتشخيص هندسي آمن — ب3.04",
-    "en": "Report consistency review and private geometry diagnostics — ب3.04"
+    "ar": "أدوات مستقلة وقياسات مرتبطة بكل نافذة وصورة — ب3.05",
+    "en": "Independent pane tools and frame-scoped measurements — ب3.05"
   }
 }
