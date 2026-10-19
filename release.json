@@ -1,12 +1,12 @@
 {
-  "build": "v133",
-  "version": "v133",
-  "mark": "ب3.05",
+  "build": "v134",
+  "version": "v134",
+  "mark": "ب3.06",
   "channel": "stable",
-  "minVersion": "v133",
-  "updatedAt": "2026-10-18T23:30:23Z",
+  "minVersion": "v134",
+  "updatedAt": "2026-10-19T00:07:57Z",
   "notes": {
-    "ar": "أدوات مستقلة وقياسات مرتبطة بكل نافذة وصورة — ب3.05",
-    "en": "Independent pane tools and frame-scoped measurements — ب3.05"
+    "ar": "حماية الخدمات والتحكم في حفظ مفاتيح الاتصال — ب3.06",
+    "en": "Fail-closed services and optional credential persistence — ب3.06"
   }
 }
