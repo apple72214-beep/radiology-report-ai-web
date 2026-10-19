@@ -23,7 +23,7 @@ with sync_playwright() as p:
  assert 'need a connection' in pg.locator('#about-conn').inner_text();context.set_offline(False)
  pg.wait_for_function("document.getElementById('about-conn').textContent.includes('Browser reports online')")
  pg.locator('#set-ui').evaluate('e=>e.open=true');pg.select_option('#theme-sel','light')
- assert pg.evaluate("getComputedStyle(document.querySelector('#settings-modal > div')).backgroundColor")=='rgb(238, 242, 247)'
+ assert pg.evaluate("getComputedStyle(document.querySelector('#settings-modal > div')).backgroundColor")=='rgb(248, 252, 253)'
  css=pg.locator('#pacs-relay-token').evaluate("e=>({bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e).color})");assert css['bg']!=css['fg']
  pg.click('#settings-close');pg.click('#lang-toggle');pg.click('#settings-btn');assert 'حفظ' in pg.locator('#text-pacs-remember').inner_text();assert pg.locator('#pacs-token-remember').is_checked()
  pg.click('#credentials-clear');assert pg.locator('#pacs-token').input_value()=='';assert pg.locator('#pacs-relay-token').input_value()==''

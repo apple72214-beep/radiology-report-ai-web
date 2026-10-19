@@ -1,12 +1,12 @@
 {
-  "build": "v135",
-  "version": "v135",
-  "mark": "ب3.07",
+  "build": "v136",
+  "version": "v136",
+  "mark": "ب3.08",
   "channel": "stable",
-  "minVersion": "v135",
-  "updatedAt": "2026-10-19T21:54:56Z",
+  "minVersion": "v136",
+  "updatedAt": "2026-10-19T22:20:57Z",
   "notes": {
-    "ar": "إعدادات متناسقة ولغة موحدة وعبارات خصوصية دقيقة — ب3.07",
-    "en": "Consistent settings, localized credentials and accurate privacy notices — ب3.07"
+    "ar": "مظهر فاتح سماوي طبي وخط أوضح وتباين متناسق — ب3.08",
+    "en": "Medical cyan light theme with readable typography and consistent contrast — ب3.08"
   }
 }
