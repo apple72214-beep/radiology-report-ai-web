@@ -1,12 +1,12 @@
 {
-  "build": "v134",
-  "version": "v134",
-  "mark": "ب3.06",
+  "build": "v135",
+  "version": "v135",
+  "mark": "ب3.07",
   "channel": "stable",
-  "minVersion": "v134",
-  "updatedAt": "2026-10-19T00:07:57Z",
+  "minVersion": "v135",
+  "updatedAt": "2026-10-19T21:54:56Z",
   "notes": {
-    "ar": "حماية الخدمات والتحكم في حفظ مفاتيح الاتصال — ب3.06",
-    "en": "Fail-closed services and optional credential persistence — ب3.06"
+    "ar": "إعدادات متناسقة ولغة موحدة وعبارات خصوصية دقيقة — ب3.07",
+    "en": "Consistent settings, localized credentials and accurate privacy notices — ب3.07"
   }
 }
