@@ -95,7 +95,7 @@ for (const f of ["start.html"]) {
   cks(t.includes('id="rrai-solo"') && t.includes('location.replace("./standalone.html?f=1")'), f + ": boot failure offers/auto-opens the single-file edition");
   cks(t.includes("rrai-solo-try") && t.includes("./diag.html"), f + ": escape hatch is once-per-session and points at diagnostics");
 }
-const ui = readFileSync(new URL("../ui.v136.html", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v137.html", import.meta.url), "utf-8");
 cks(ui.includes('href="./standalone.html"') && ui.includes('href="./diag.html"'), "ui: permanent standalone + diagnostics links in About");
 const dg = readFileSync(new URL("../diag.html", import.meta.url), "utf-8");
 cks(dg.includes("raw.githubusercontent") && dg.includes("cdn.jsdelivr.net") && dg.includes("allorigins"), "diag: probes every external origin the launcher depends on");
@@ -106,8 +106,8 @@ c("escape hatches wired in launcher, ui and diagnostics");
    service worker's byte table called every new launcher "tampered", served the
    cached one, and the device stayed on the old release however often it
    reloaded. Trust a whole launcher that carries a well-formed pinned commit. */
-const swx = readFileSync(new URL("../sw.v136.js", import.meta.url), "utf-8");
-const appx = readFileSync(new URL("../app.v136.js", import.meta.url), "utf-8");
+const swx = readFileSync(new URL("../sw.v137.js", import.meta.url), "utf-8");
+const appx = readFileSync(new URL("../app.v137.js", import.meta.url), "utf-8");
 cks(/const launcherOk = async \(buf, pathname\)/.test(swx), "sw: the launcher has its own check, not just a byte length");
 cks(/radiology-report-ai-web@\[0-9a-f\]\{40\}/.test(swx), "sw: a newer launcher is accepted when it carries a pinned commit");
 cks(/if \(!launcher \|\| await launcherOk\(buf, url\.pathname\)\)/.test(swx), "sw: a navigation to the launcher uses the new check");

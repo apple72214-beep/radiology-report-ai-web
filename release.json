@@ -1,12 +1,12 @@
 {
-  "build": "v136",
-  "version": "v136",
-  "mark": "ب3.08",
+  "build": "v137",
+  "version": "v137",
+  "mark": "ب3.09",
   "channel": "stable",
-  "minVersion": "v136",
-  "updatedAt": "2026-10-19T22:20:57Z",
+  "minVersion": "v137",
+  "updatedAt": "2026-10-19T22:51:11Z",
   "notes": {
-    "ar": "مظهر فاتح سماوي طبي وخط أوضح وتباين متناسق — ب3.08",
-    "en": "Medical cyan light theme with readable typography and consistent contrast — ب3.08"
+    "ar": "تصحيح سماكة خطوط المستوى في النافذة الثانية — ب3.09",
+    "en": "Correct secondary reference-line thickness using visible image scale — ب3.09"
   }
 }
