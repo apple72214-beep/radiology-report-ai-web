@@ -1,6 +1,6 @@
 /* Series awareness: an MR study is several sequences, never one mixed stack. */
 import { readFileSync } from "node:fs";
-import { groupSeries, seriesSummary, allSeriesRows, orientationFromIop, seriesRows, seriesRowText } from "../app.v137.js";
+import { groupSeries, seriesSummary, allSeriesRows, orientationFromIop, seriesRows, seriesRowText } from "../app.v138.js";
 
 let fails = 0;
 const eq = (a, b, m) => { if (a !== b) { fails++; console.log(`FAIL ${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`); } };
@@ -43,9 +43,9 @@ const many = { series: [1, 2, 3, 4, 5, 6].map((n) => ({ number: n, label: "Se" +
 eq(seriesSummary(many).endsWith("+2"), true, "long summaries are truncated with a count");
 
 /* --- wiring ------------------------------------------------------------- */
-const app = readFileSync(new URL("../app.v137.js", import.meta.url), "utf-8");
-const ui = readFileSync(new URL("../ui.v137.html", import.meta.url), "utf-8");
-const dcm = readFileSync(new URL("../dicom.v137.js", import.meta.url), "utf-8");
+const app = readFileSync(new URL("../app.v138.js", import.meta.url), "utf-8");
+const ui = readFileSync(new URL("../ui.v138.html", import.meta.url), "utf-8");
+const dcm = readFileSync(new URL("../dicom.v138.js", import.meta.url), "utf-8");
 ck(dcm.includes('"0020,000E"'), "parser captures SeriesInstanceUID");
 ck(app.includes("px.seriesUid = parsed.seriesUid"), "series identity kept on every frame");
 ck(app.includes("study.series = groupSeries(study.frames, study.modality)"), "series computed at ingest");
@@ -55,7 +55,7 @@ ck(/function activeFrames\(\)[\s\S]{0,420}indices\.map/.test(app), "the view is 
 ck(app.includes("mprApi.volumeFromFrames(frames"), "MPR builds its volume inside one series only");
 ck(/const key = \[current\.uid \|\| "", currentSeries/.test(app), "the volume cache is per series");
 ck(app.includes("mprOn = false;") && app.includes('this series cannot be resliced') && app.includes('display = "block"'), "a series that cannot be resliced falls back to the single view with a reason");
-ck(app.includes("seriesSummary(ensureSeries(s))"), "worklist shows the sequence breakdown");
+ck(app.includes("seriesSummary(s)"), "worklist shows the sequence breakdown");
 
 /* --- the comprehensive hanging: one row per series (v123) ------------------
    A study is read sequence by sequence — T1, T2, FLAIR — and each sequence in

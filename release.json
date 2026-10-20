@@ -1,12 +1,12 @@
 {
-  "build": "v137",
-  "version": "v137",
-  "mark": "ب3.09",
+  "build": "v138",
+  "version": "v138",
+  "mark": "ب3.10",
   "channel": "stable",
-  "minVersion": "v137",
-  "updatedAt": "2026-10-19T22:51:11Z",
+  "minVersion": "v138",
+  "updatedAt": "2026-10-20T20:51:38Z",
   "notes": {
-    "ar": "تصحيح سماكة خطوط المستوى في النافذة الثانية — ب3.09",
-    "en": "Correct secondary reference-line thickness using visible image scale — ب3.09"
+    "ar": "بحث وتصفية وفرز أوضح لقائمة الدراسات — ب3.10",
+    "en": "Search, filters and responsive study worklist — ب3.10"
   }
 }
