@@ -1,12 +1,12 @@
 {
-  "build": "v141",
-  "version": "v141",
-  "mark": "ب3.13",
+  "build": "v142",
+  "version": "v142",
+  "mark": "ب3.14",
   "channel": "stable",
-  "minVersion": "v141",
-  "updatedAt": "2026-10-20T21:55:10Z",
+  "minVersion": "v142",
+  "updatedAt": "2026-10-20T21:59:47Z",
   "notes": {
-    "ar": "عنوان أدوات بلون مميز وأيقونة إعدادات بدل السهم — ب3.13",
-    "en": "Distinct worklist tools heading and settings icon instead of arrow — ب3.13"
+    "ar": "ترقيم الدراسات بحسب ترتيب القائمة المعروضة — ب3.14",
+    "en": "Sequential numbering for the visible study list — ب3.14"
   }
 }
