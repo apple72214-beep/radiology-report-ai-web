@@ -1,4 +1,4 @@
-import { buildPackage, validatePackage, sha256FallbackHex } from "../consult.v140.js";
+import { buildPackage, validatePackage, sha256FallbackHex } from "../consult.v141.js";
 const enc = new TextEncoder();
 let fails = 0;
 // known SHA-256 vectors for the pure-JS fallback (LAN http:// path)

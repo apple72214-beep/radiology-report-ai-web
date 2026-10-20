@@ -14,7 +14,7 @@ with sync_playwright() as p:
  pg.reload();pg.wait_for_function("!!document.getElementById('wl-clear')?.onclick");assert fold.evaluate('e=>e.open')
  pg.fill('#wl-query','NO-SUCH-SYNTHETIC-STUDY');pg.wait_for_function("document.querySelectorAll('#worklist tbody tr').length===0")
  summary.click();assert not pg.locator('#wl-query').is_visible();assert pg.locator('#wl-active-filter').is_visible();assert '0' in pg.locator('#wl-count').inner_text()
- pg.click('#lang-toggle');pg.wait_for_function("document.documentElement.lang==='en'");assert summary.inner_text().startswith('Search, filter and sort');pg.wait_for_function("document.getElementById('wl-active-filter').textContent.includes('Filters active')");assert 'Filters active' in summary.inner_text();assert not fold.evaluate('e=>e.open')
+ pg.click('#lang-toggle');pg.wait_for_function("document.documentElement.lang==='en'");assert pg.locator('#wl-options-title').inner_text().startswith('Search, filter and sort');pg.wait_for_function("document.getElementById('wl-active-filter').textContent.includes('Filters active')");assert 'Filters active' in summary.inner_text();assert not fold.evaluate('e=>e.open')
  summary.click();pg.click('#wl-clear');pg.wait_for_function('(n)=>document.querySelectorAll("#worklist tbody tr").length===n',arg=rows);assert not pg.locator('#wl-active-filter').is_visible()
  summary.click();pg.wait_for_function("localStorage.getItem('rrai-worklist-options-open')==='0'")
  pg.reload();pg.wait_for_function("!!document.getElementById('wl-clear')?.onclick");pg.wait_for_selector('#worklist tbody tr button');assert not fold.evaluate('e=>e.open');assert pg.locator('#worklist tbody tr').count()==rows

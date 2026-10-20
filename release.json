@@ -1,12 +1,12 @@
 {
-  "build": "v140",
-  "version": "v140",
-  "mark": "ب3.12",
+  "build": "v141",
+  "version": "v141",
+  "mark": "ب3.13",
   "channel": "stable",
-  "minVersion": "v140",
-  "updatedAt": "2026-10-20T21:37:59Z",
+  "minVersion": "v141",
+  "updatedAt": "2026-10-20T21:55:10Z",
   "notes": {
-    "ar": "بطاقات حالات مختصرة على الهاتف وتفاصيل اختيارية — ب3.12",
-    "en": "Compact mobile study cards with optional details — ب3.12"
+    "ar": "عنوان أدوات بلون مميز وأيقونة إعدادات بدل السهم — ب3.13",
+    "en": "Distinct worklist tools heading and settings icon instead of arrow — ب3.13"
   }
 }
