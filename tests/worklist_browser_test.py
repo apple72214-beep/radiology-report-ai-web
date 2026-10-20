@@ -16,6 +16,7 @@ with sync_playwright() as p:
  pg.fill('#wl-query','ID-١٢٣');count(1);assert pg.evaluate('window.wlReads')==0
  pg.evaluate("()=>{IDBDatabase.prototype.transaction=window.originalTransaction}")
  pg.fill('#wl-query','2026-10-20');count(1);assert 'Beta Synthetic' in text()
+ pg.fill('#wl-query','٢٠٢٦/١٠/٢٠');count(1);assert 'Beta Synthetic' in text()
  pg.fill('#wl-query','SAGITTAL SEARCH SECRET');count(0);assert pg.locator('#empty').is_visible();assert not pg.evaluate("JSON.stringify(localStorage).includes('SAGITTAL SEARCH SECRET')")
  pg.click('#wl-clear');count(3);assert pg.locator('#wl-query').evaluate('e=>e===document.activeElement')
  pg.select_option('#wl-modality','MR');count(2);pg.select_option('#wl-state','signed');count(0);pg.click('#wl-clear');count(3)

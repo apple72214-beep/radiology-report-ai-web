@@ -2221,7 +2221,7 @@ function measureOut() {
 
 /** Worklist filtering is presentation-only; never merges patients or changes records. */
 export function worklistText(value){
- return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/[٠-٩]/g,x=>String(x.charCodeAt(0)-1632)).replace(/[۰-۹]/g,x=>String(x.charCodeAt(0)-1776)).replace(/\^/g,' ').toLocaleLowerCase().trim();
+ return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/[٠-٩]/g,x=>String(x.charCodeAt(0)-1632)).replace(/[۰-۹]/g,x=>String(x.charCodeAt(0)-1776)).replace(/\^/g,' ').replace(/\b(\d{4})[-/.](\d{2})[-/.](\d{2})\b/g,'$1$2$3').toLocaleLowerCase().trim();
 }
 export function worklistPriority(s){return s.consult?'consult':s.triage?.priority==='urgent'?'urgent':'routine';}
 export function selectWorklistStudies(studies,filter={}){

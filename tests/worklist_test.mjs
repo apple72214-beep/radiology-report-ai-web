@@ -5,7 +5,7 @@ const b={uid:'b',patient:'ID-456',meta:{patientName:'Beta',studyDate:'20261020'}
 const c={uid:'c',patient:'ID-789',meta:{patientName:'Cedar'},modality:'MR',created:4,consult:{},frames:[]};
 const rows=[b,c,a],before=JSON.stringify(rows);
 assert.equal(worklistText('أَحْمَد ١٢۳'), 'احمد 123');
-for(const query of ['احمد','أحمد علي','id-١٢٣','lumbar sagittal','2026-10-18'])assert.deepEqual(select(rows,{query}).map(s=>s.uid),['a'],query);
+for(const query of ['احمد','أحمد علي','id-١٢٣','lumbar sagittal','2026-10-18','2026/10/18','٢٠٢٦/١٠/١٨'])assert.deepEqual(select(rows,{query}).map(s=>s.uid),['a'],query);
 assert.deepEqual(select(rows,{query:'AXIAL chest'}).map(s=>s.uid),['b']);
 assert.equal(select(rows,{query:'[.*]'}).length,0);
 assert.deepEqual(select(rows,{sort:'urgent'}).map(s=>s.uid),['a','c','b']);
