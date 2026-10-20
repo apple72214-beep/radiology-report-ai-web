@@ -1,12 +1,12 @@
 {
-  "build": "v138",
-  "version": "v138",
-  "mark": "ب3.10",
+  "build": "v139",
+  "version": "v139",
+  "mark": "ب3.11",
   "channel": "stable",
-  "minVersion": "v138",
-  "updatedAt": "2026-10-20T20:51:38Z",
+  "minVersion": "v139",
+  "updatedAt": "2026-10-20T21:11:08Z",
   "notes": {
-    "ar": "بحث وتصفية وفرز أوضح لقائمة الدراسات — ب3.10",
-    "en": "Search, filters and responsive study worklist — ب3.10"
+    "ar": "بحث وتصفية مطويان اختياريًا لقائمة دراسات متقاربة — ب3.11",
+    "en": "Optional folded worklist tools for a compact study list — ب3.11"
   }
 }

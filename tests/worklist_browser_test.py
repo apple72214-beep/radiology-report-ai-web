@@ -9,6 +9,7 @@ with sync_playwright() as p:
  def count(n):
   pg.wait_for_timeout(220);pg.wait_for_function('(n)=>document.querySelectorAll("#worklist tbody tr").length===n',arg=n)
  def text():return pg.locator('#worklist tbody').inner_text()
+ pg.locator('#wl-options').evaluate('e=>e.open=true')
  count(3);assert '3' in pg.locator('#wl-count').inner_text()
  pg.evaluate("()=>{window.wlReads=0;window.originalTransaction=IDBDatabase.prototype.transaction;IDBDatabase.prototype.transaction=function(...args){if(String(args[0]).includes('studies')&&(args[1]||'readonly')==='readonly')window.wlReads++;return window.originalTransaction.apply(this,args)}}")
  pg.fill('#wl-query','احمد');count(1);assert 'أَحْمَد' in text()

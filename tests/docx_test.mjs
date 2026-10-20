@@ -1,5 +1,5 @@
-import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v138.js";
-import { signedDocHash } from "../report.v138.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v139.js";
+import { signedDocHash } from "../report.v139.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
