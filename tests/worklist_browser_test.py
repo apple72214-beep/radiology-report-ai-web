@@ -13,7 +13,7 @@ with sync_playwright() as p:
  count(3);assert '3' in pg.locator('#wl-count').inner_text()
  pg.evaluate("()=>{window.wlReads=0;window.originalTransaction=IDBDatabase.prototype.transaction;IDBDatabase.prototype.transaction=function(...args){if(String(args[0]).includes('studies')&&(args[1]||'readonly')==='readonly')window.wlReads++;return window.originalTransaction.apply(this,args)}}")
  pg.fill('#wl-query','احمد');count(1);assert 'أَحْمَد' in text()
- pg.locator('#worklist .wl-series summary').click();assert 'Sagittal T2 Synthetic' in text()
+ pg.locator('#worklist .wl-study-details > summary').click();pg.locator('#worklist .wl-series summary').click();assert 'Sagittal T2 Synthetic' in text()
  pg.fill('#wl-query','ID-١٢٣');count(1);assert pg.evaluate('window.wlReads')==0
  pg.evaluate("()=>{IDBDatabase.prototype.transaction=window.originalTransaction}")
  pg.fill('#wl-query','2026-10-20');count(1);assert 'Beta Synthetic' in text()

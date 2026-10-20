@@ -1,0 +1,739 @@
+
+<div id="splash" style="color:#fca5a5;padding:.5rem 1rem;font-size:.9rem;"></div><style>
+      :root { --bg:#0f172a; --panel:#1e293b; --line:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#34d399; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; background:var(--bg); color:var(--text); }
+      header { display:flex; align-items:baseline; gap:.8rem; padding:1rem 1.4rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+      header h1 { font-size:1.15rem; margin:0; }
+      header span { color:var(--muted); font-size:.8rem; }
+      .series-live-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.4rem; }
+      .series-live-tile { min-width:0; }
+      .series-live-tile button { width:100%;padding:.2rem; }
+      .series-live-tile canvas { width:100%;max-height:160px;object-fit:contain;display:block;background:#000; }
+      .series-live-tile span { display:block;font-size:.7rem; }
+      .series-live-tile input { width:100%; }
+      @media(max-width:820px){ #mpr-grid {grid-template-columns:1fr 1fr;} #mpr-grid .focus-plane, #mpr-grid:not(:has(.focus-plane)) #mpr-pane-axial {grid-column:1/-1;grid-row:1;} }
+      main { display:grid; grid-template-columns:minmax(0, min(44%, 620px)) minmax(0,1fr); gap:1rem; padding:1rem 1.4rem; }
+      @media (max-width:820px){ main { grid-template-columns:1fr; } }
+      main > section { min-width:0; }
+      .worklist-scroll { max-width:100%; overflow-x:auto; position:relative; isolation:isolate; }
+      #worklist { min-width:600px; overflow:visible; }
+      #worklist th:last-child, #worklist td:last-child { position:sticky; inset-inline-end:0; background:#12283f; z-index:1; min-width:90px; }
+      section { background:var(--panel); border:1px solid var(--line); border-radius:.6rem; padding:1rem; }
+      h2 { font-size:.95rem; margin:0 0 .8rem; color:var(--accent); }
+      button, select, input[type=file] { font:inherit; }
+      button { background:var(--accent); color:#082f49; border:0; border-radius:.4rem; padding:.45rem .9rem; cursor:pointer; font-weight:600; }
+      button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+      table { width:100%; border-collapse:separate; border-spacing:0; font-size:.85rem; background:#0e1c30; border:1px solid #274666; border-radius:.7rem; overflow:hidden; box-shadow:0 1px 0 rgba(255,255,255,.03) inset; }
+      th, td { text-align:right; padding:.55rem .5rem; border-bottom:1px solid #1a3050; }
+      thead th { background:#12283f; color:#9fc3e8; font-weight:600; border-bottom:1px solid #274666; }
+      tbody tr:nth-child(odd) { background:#0e1c30; }
+      tbody tr:nth-child(even) { background:#12233a; }
+      tbody tr:hover { background:#173250; }
+      tbody tr:last-child td { border-bottom:none; }
+      th { color:var(--muted); font-weight:500; }
+      .badge { padding:.1rem .55rem; border-radius:1rem; font-size:.72rem; font-weight:600; }
+      .badge.urgent { background:#7f1d1d; color:#fecaca; }
+      .badge.routine { background:#14532d; color:#bbf7d0; }
+      .viewer { display:flex; flex-direction:column; gap:.7rem; align-items:center; }
+      .viewer canvas { max-width:100%; background:#000; border-radius:.4rem;  }
+      /* v140 — #annot and #overlay are drawn ON TOP of #frame. A black canvas
+         background on those two turned the info layer into an opaque black
+         sheet: the image was painted correctly underneath and never seen.
+         The letterbox colour belongs to #frame and to #viewport only. */
+      .viewer canvas#annot, .viewer canvas#overlay { background:transparent; }
+      .mpr-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:.5rem; margin:.4rem 0; }
+      .mpr-pane { background:#000; border-radius:.4rem; padding:.3rem; }
+      .mpr-pane.max { grid-column:1 / -1; }
+      .mpr-grid.maxing { grid-template-columns:1fr; }
+      .mpr-pane canvas { width:100%; height:auto; display:block; background:#000; border-radius:.3rem; touch-action:none; cursor:crosshair; }
+      .mpr-lab { font-size:.72rem; color:#9fc3e8; text-align:center; margin:0 0 .2rem; direction:ltr; }
+      .mpr-ctl { display:flex; gap:.3rem; align-items:center; margin-top:.25rem; }
+      .mpr-ctl input[type=range] { flex:1 1 auto; width:auto; min-width:0; height:1.1rem; }
+      .mpr-ctl select { flex:0 0 auto; max-width:7.2rem; font-size:.66rem; padding:.15rem .2rem; background:#0b1220; color:#e2e8f0; border:1px solid var(--line); border-radius:.3rem; }
+      .controls { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; justify-content:center; color:var(--muted); font-size:.85rem; }
+      input[type=range] { width:min(320px,70vw); accent-color:var(--accent); }
+      .meta { color:var(--muted); font-size:.8rem; text-align:center; }
+      [data-theme="light"] { --bg:#eef2f7; --panel:#ffffff; --line:#cbd5e1; --text:#0f172a; --muted:#475569; --accent:#0284c7; --ok:#059669; }
+      [data-theme="light"] button { color:#fff; }
+      [data-theme="light"] .ghost { background:#e2e8f0; color:#0f172a; border:1px solid #94a3b8; }
+      [data-theme="light"] table { background:#fff; border-color:#94a3b8; }
+      [data-theme="light"] thead th { background:#dbeafe; color:#1e3a5f; }
+      [data-theme="light"] tbody tr:nth-child(odd) { background:#fff; }
+      [data-theme="light"] tbody tr:nth-child(even) { background:#eef4fb; }
+      [data-theme="light"] tbody tr:hover { background:#dbeafe; }
+      [data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { background:#fff !important; color:#0f172a !important; border-color:#94a3b8 !important; }
+      [data-theme="light"] #drawer > div, [data-theme="light"] #settings-modal > div { background:#fff; }
+      [data-theme="light"] #viewer-name { color:#0f172a; }
+      .empty { color:var(--muted); font-size:.85rem; text-align:center; padding:1.5rem 0; }
+      .hint { color:var(--muted); font-size:.72rem; }
+    .treason{font-size:.65rem;color:#94a3b8;margin-top:.2rem;max-width:8.5rem;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      #worklist td:first-child { font-weight:600; color:#e8f0fa; }
+      #worklist th:nth-child(1), #worklist td:nth-child(1) { width:30%; }
+      #worklist th:nth-child(2), #worklist td:nth-child(2) { width:8%; }
+      #worklist th:nth-child(3), #worklist td:nth-child(3) { width:14%; }
+      #worklist th:nth-child(4), #worklist td:nth-child(4) { width:22%; }
+      #worklist th:nth-child(5), #worklist td:nth-child(5) { width:8%; }
+      #worklist th:nth-child(6), #worklist td:nth-child(6) { width:18%; }
+      #worklist td:nth-child(3) { font-size:.82rem; color:#cbd5e1; }
+      .badge.signed { background:#1e3a5f; color:#bfdbfe; margin-inline-start:.35rem; }
+.badge.consult{background:#0ea5e9;}
+#print-root{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #print-root,#print-root *{visibility:visible;}
+  #print-root{display:block !important;position:absolute;inset:0;width:100%;}
+}
+#viewer-card:fullscreen { overflow:hidden; background:#000; padding:0; max-width:none; display:flex; flex-direction:column; justify-content:flex-end; gap:0; align-items:stretch; }
+#viewer-card:fullscreen #viewport { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; border-radius:0 !important; display:flex !important; align-items:center !important; justify-content:center !important; box-sizing:border-box !important; }
+#viewer-card:fullscreen h2, #viewer-card:fullscreen p, #viewer-card:fullscreen details { display:none !important; }
+#viewer-card:fullscreen .controls { position:relative; z-index:5; background:rgba(15,23,42,.85); margin:0; padding:.35rem .6rem; transition:opacity .25s; }
+#viewer-card:fullscreen.fs-hide .controls { opacity:0; pointer-events:none; }
+.fs-fake { position:fixed !important; inset:0 !important; z-index:60; overflow:hidden !important; background:#000; margin:0 !important; max-width:none !important; padding:0; border-radius:0 !important; display:flex !important; flex-direction:column !important; justify-content:flex-end; gap:0; align-items:stretch; }
+.fs-fake #viewport { position:absolute !important; inset:0; width:100%; height:100%; display:flex !important; align-items:center !important; justify-content:center !important; box-sizing:border-box !important; }
+.fs-fake h2, .fs-fake p, .fs-fake details { display:none !important; }
+.fs-fake .controls { position:relative; z-index:5; background:rgba(15,23,42,.85); margin:0; padding:.35rem .6rem; transition:opacity .25s; }
+.fs-fake.fs-hide .controls { opacity:0; pointer-events:none; }
+      /* v140 — compare side by side */
+      #cmp-scrim { position:fixed; inset:0; background:rgba(2,6,23,.62); z-index:55; }
+      #cmp-sheet { position:fixed; inset-inline:0; bottom:0; z-index:60; background:#0f172a; border:1px solid #334155; border-bottom:0; border-radius:14px 14px 0 0; padding:.6rem .7rem 1rem; max-height:88vh; overflow:auto; box-shadow:0 -10px 34px rgba(0,0,0,.55); }
+      @media (min-width:820px){ #cmp-sheet { inset-inline:auto; left:50%; transform:translateX(-50%); width:min(980px,96vw); border-radius:14px; border-bottom:1px solid #334155; bottom:1.5rem; } }
+      #cmp-grid { display:flex; gap:.6rem; flex-wrap:wrap; }
+      .cmp-pane { flex:1 1 260px; min-width:220px; background:#0b1220; border:1px solid #334155; border-radius:.5rem; padding:.45rem; overflow:hidden; }
+      .cmp-head { font-size:.82rem; color:#e2e8f0; margin-bottom:.3rem; font-weight:600; line-height:1.4; }
+      .cmp-cv { width:100%; height:auto; display:block; background:#000; border-radius:.35rem; touch-action:none; margin-inline:auto; }
+      .cmp-sub { font-size:.75rem; color:#94a3b8; margin-top:.25rem; direction:ltr; text-align:left; }
+      #series-scrim { position:fixed; inset:0; background:rgba(2,6,23,.62); z-index:55; }
+      #series-sheet { position:fixed; inset-inline:0; bottom:0; z-index:60; background:#0f172a; border:1px solid #334155; border-bottom:0; border-radius:14px 14px 0 0; padding:.6rem .7rem 1rem; max-height:66vh; overflow:auto; box-shadow:0 -10px 34px rgba(0,0,0,.55); }
+      @media (min-width:820px){ #series-sheet { inset-inline:auto; left:50%; transform:translateX(-50%); width:min(560px,94vw); border-radius:14px; border-bottom:1px solid #334155; bottom:1.5rem; } }
+      .sheet-head { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin:0 0 .5rem; }
+      .sheet-row { display:flex; align-items:center; gap:.6rem; width:100%; text-align:start; background:#1e293b; color:#e2e8f0; border:1px solid #334155; border-radius:.5rem; padding:.4rem .5rem; margin-bottom:.35rem; cursor:pointer; font:inherit; }
+      .sheet-row.on { border-color:#38bdf8; box-shadow:inset 0 0 0 1px #38bdf8; }
+      .sheet-thumb { width:46px; height:46px; border-radius:.3rem; background:#000; border:1px solid #334155; object-fit:cover; flex:0 0 auto; }
+      .sheet-txt { flex:1 1 auto; font-size:.86rem; line-height:1.5; }
+      .sheet-meta { flex:0 0 auto; font-size:.72rem; color:#94a3b8; }
+      .sheet-mark { flex:0 0 auto; width:1.3rem; text-align:center; color:#38bdf8; font-weight:700; }
+      #film-wrap { margin:.35rem 0 .1rem; }
+      #filmstrip { display:flex; gap:.3rem; overflow-x:auto; padding:.3rem .25rem; background:#0b1220; border:1px solid #334155; border-radius:.5rem; touch-action:pan-y; scrollbar-width:thin; }
+      .film-cell { position:relative; flex:0 0 auto; width:58px; height:58px; padding:0; background:#000; border:1px solid #334155; border-radius:.35rem; cursor:pointer; overflow:hidden; }
+      .film-cell.on { border-color:#38bdf8; box-shadow:inset 0 0 0 1px #38bdf8; }
+      .film-img { width:100%; height:100%; object-fit:cover; display:block; }
+      .film-num { position:absolute; bottom:0; inset-inline-end:0; background:rgba(2,6,23,.74); color:#e2e8f0; font-size:.62rem; line-height:1.3; padding:0 .22rem; border-radius:.25rem 0 0 0; }
+      /* v140 — in fullscreen the settings rows used to sit over the bottom of the
+         picture. They fold into one slim line; the picture keeps the screen. */
+      .fs-mini { display:none; }
+      .fs-fake .fs-mini, #viewer-card:fullscreen .fs-mini { display:flex; position:fixed; inset-inline:0; bottom:0; z-index:9; align-items:center; gap:.5rem; padding:.35rem .6rem; background:rgba(15,23,42,.86); border-top:1px solid #334155; font-size:.8rem; }
+      .fs-mini .ghost { padding:.28rem .65rem; font-size:.8rem; }
+      #fs-count { color:#e2e8f0; font-variant-numeric:tabular-nums; direction:ltr; }
+      /* v140 (2): the viewer's settings are one foldable group. */
+      #viewer-settings { margin:.35rem 0 .5rem; padding:.5rem .6rem; border:1px solid #334155; border-radius:.5rem; background:rgba(30,41,59,.45); }
+      [hidden] { display:none !important; }
+      .fs-fake:not(.fs-folded) #viewer-settings, #viewer-card:fullscreen:not(.fs-folded) #viewer-settings { display:block !important; position:relative; z-index:5; }
+      .fs-fake #vs-fold, #viewer-card:fullscreen #vs-fold { display:none !important; }
+      #viewer-settings .controls { margin:.18rem 0; }
+      #viewer-bar { margin:.35rem 0 .1rem; }
+      .fs-fake.fs-folded .controls, #viewer-card:fullscreen.fs-folded .controls { display:none !important; }
+      .fs-fake.fs-folded #viewer-settings, #viewer-card:fullscreen.fs-folded #viewer-settings { display:none !important; }
+      .fs-fake.fs-folded #film-wrap, #viewer-card:fullscreen.fs-folded #film-wrap,
+      .fs-fake.fs-folded #meta, #viewer-card:fullscreen.fs-folded #meta,
+      .fs-fake.fs-folded #dx-foot, #viewer-card:fullscreen.fs-folded #dx-foot,
+      .fs-fake.fs-folded #series-open, #viewer-card:fullscreen.fs-folded #series-open,
+      .fs-fake.fs-folded #series-bar, #viewer-card:fullscreen.fs-folded #series-bar,
+      .fs-fake.fs-folded #gen-report, #viewer-card:fullscreen.fs-folded #gen-report { display:none !important; }
+
+      /* Fullscreen is for the picture. Optional controls occupy a bounded,
+         opaque, scrollable bottom sheet, never the whole canvas. */
+      .fs-fake #series-overview, #viewer-card:fullscreen #series-overview,
+      .fs-fake #img-note, #viewer-card:fullscreen #img-note,
+      .fs-fake #dx-foot, #viewer-card:fullscreen #dx-foot { display:none !important; }
+      .fs-fake:not(.fs-folded) #viewer-settings,
+      #viewer-card:fullscreen:not(.fs-folded) #viewer-settings {
+        position:absolute !important; bottom:3rem; inset-inline:.4rem;
+        max-height:28vh; overflow:auto; overscroll-behavior:contain;
+        background:#0f172a !important; z-index:12; margin:0;
+        box-shadow:0 -3px 15px #000; flex-shrink:0;
+      }
+      .fs-fake #viewer-bar, #viewer-card:fullscreen #viewer-bar { display:none !important; }
+      .fs-fake #viewer-settings details, #viewer-card:fullscreen #viewer-settings details { display:block !important; }
+      .series-live-tile input[type=range] { min-width:0; max-width:100%; box-sizing:border-box; }
+
+      #session-bar { width:100%;min-width:0;margin:.35rem 0;padding:.35rem .5rem;background:#0f172a;border-radius:.4rem; }
+      #session-bar label,#session-position { display:block;font-size:.78rem;overflow-wrap:anywhere; }
+      #session-slice { width:100%;min-width:0;max-width:100%;direction:ltr; }
+      #viewer-settings { min-width:0;max-width:100%;overflow-x:hidden; }
+      #viewer-settings .controls { flex-wrap:wrap;min-width:0; }
+      #viewer-settings button,#viewer-settings label { max-width:100%;white-space:normal;overflow-wrap:anywhere; }
+      #viewer-settings input[type=range] { min-width:0;max-width:100%; }
+      .fs-fake #session-bar,#viewer-card:fullscreen #session-bar { position:absolute;bottom:3rem;inset-inline:.3rem;width:auto;z-index:8;background:#0f172a; }
+      .fs-fake:not(.fs-folded) #session-bar,#viewer-card:fullscreen:not(.fs-folded) #session-bar { display:none!important; }
+
+      #dual-layout { min-width:0;width:100%; }
+      .dual-on #dual-layout { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.5rem;align-items:start; }
+      #dual-secondary { min-width:0;background:#000;border:2px solid #64748b;border-radius:.4rem;overflow:hidden; }
+      #dual-frame { display:block;width:100%;height:auto;max-height:65vh;object-fit:contain;touch-action:none; }
+      #dual-slice { display:block;width:100%;min-width:0; }
+      .dual-on #viewport { border:2px solid #64748b; }
+      .dual-on .active-pane { border-color:#38bdf8!important; }
+      #dual-label { display:block;width:100%;font-size:.8rem; }
+      @media(max-width:820px){ .dual-on #dual-layout {grid-template-columns:1fr;} .dual-on #viewport {max-height:42vh;} #dual-frame {max-height:38vh;} }
+      .series-live-grid {display:flex;overflow-x:auto;gap:.35rem;padding:.3rem;}
+      .series-live-tile {flex:0 0 88px;width:88px;}
+      .series-live-tile canvas {height:72px;width:80px;object-fit:contain;}
+      .series-live-tile span {font-size:.62rem;max-height:2.8em;overflow:hidden;}
+      .series-live-tile input {display:none;}
+      .fs-fake #dual-toggle,#viewer-card:fullscreen #dual-toggle {display:none!important;}
+      .fs-fake.dual-on #dual-layout,#viewer-card:fullscreen.dual-on #dual-layout {position:absolute;inset:0 0 8rem;display:grid;grid-template-columns:1fr 1fr;overflow:auto;}
+      .fs-fake.dual-on #viewport,#viewer-card:fullscreen.dual-on #viewport {position:relative!important;inset:auto!important;height:100%!important;max-height:none;}
+      .fs-fake.dual-on #dual-secondary,#viewer-card:fullscreen.dual-on #dual-secondary {position:relative;z-index:2;}
+      @media(max-width:820px){.fs-fake.dual-on #dual-layout,#viewer-card:fullscreen.dual-on #dual-layout {grid-template-columns:1fr;grid-template-rows:1fr 1fr;} .fs-fake.dual-on #dual-frame,#viewer-card:fullscreen.dual-on #dual-frame {max-height:34vh;}}
+
+      #series-preview-fold { width:100%;max-width:100%;min-width:0;align-self:stretch;box-sizing:border-box; }
+      #series-preview-summary { cursor:pointer;padding:.5rem .7rem;border:1px solid #334155;border-radius:.4rem;font-size:.85rem; }
+      #series-overview { width:100%;max-width:100%;min-width:0; }
+      #series-overview .series-live-grid { width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain; }
+      .fs-fake #series-preview-fold,#viewer-card:fullscreen #series-preview-fold { display:none!important; }
+
+      #pane-selector {display:flex;gap:.3rem;flex-wrap:wrap;align-items:center;max-width:100%;font-size:.75rem;}
+      #pane-selector [aria-pressed=true] {border-color:#38bdf8;}
+      #dual-secondary {isolation:isolate;}
+      #dual-frame {transform-origin:center;}
+      .fs-fake #pane-selector,#viewer-card:fullscreen #pane-selector {position:absolute;top:.3rem;inset-inline:.3rem;z-index:15;background:#0f172a;opacity:.92;}
+
+      /* Shared input treatment includes fields which used to fall back to browser-white. */
+      #settings-modal input:not([type=checkbox]):not([type=range]):not([type=file]),
+      #settings-modal select, #settings-modal textarea, #ai-service-token {
+        font:inherit; color:var(--text) !important; background:var(--bg) !important;
+        border:1px solid var(--line) !important; border-radius:.45rem;padding:.5rem;
+        min-width:0;max-width:100%; color-scheme:dark;
+      }
+      [data-theme="light"] #settings-modal input,[data-theme="light"] #settings-modal select,
+      [data-theme="light"] #settings-modal textarea,[data-theme="light"] #ai-service-token {color-scheme:light;}
+      #settings-modal > div {max-width:min(660px,100%);overflow-wrap:anywhere;background:var(--bg) !important;color:var(--text);border-color:var(--line) !important;}
+      .credential-choice {display:inline-flex;align-items:flex-start;gap:.45rem;line-height:1.6;}
+      .credential-choice input {flex:none;margin-top:.3em;accent-color:var(--accent);}
+      #settings-modal label[for="pacs-relay-token"],label[for="ai-service-token"] {display:block;font-size:.85rem;margin-bottom:.35rem;}
+      #credentials-clear {font-size:.85rem;max-width:100%;white-space:normal;}
+      #settings-modal :is(input,select,button):focus-visible,#ai-service-token:focus-visible {outline:2px solid var(--accent);outline-offset:2px;}
+
+/* v140: medical cyan surfaces, teal actions, ink text. Image canvases stay black.
+   Light-theme only: no image processing, intensity mapping or dark-theme changes. */
+[data-theme="light"] {
+ --bg:#eaf6f8; --panel:#ffffff; --line:#b7d4da; --text:#153641;
+ --muted:#425e68; --accent:#087b87; --ok:#136b50;
+ --light-soft:#f2fafb; --light-tint:#e1f1f4; --light-selected:#d4ecef;
+ color-scheme:light;
+}
+[data-theme="light"] body {background:var(--bg);color:var(--text);font-family:Tahoma,"Segoe UI",Arial,sans-serif;line-height:1.75;}
+[data-theme="light"] header {background:#f6fcfd;border-color:var(--line);padding:1rem 1.2rem;gap:.45rem;}
+[data-theme="light"] header h1 {font-size:1.12rem;line-height:1.6;font-weight:700;}
+[data-theme="light"] #subtitle {color:var(--muted);font-size:.9rem;line-height:1.8;}
+[data-theme="light"] main {padding:1rem 1.2rem;gap:1rem;}
+[data-theme="light"] main > section {border-color:var(--line);border-radius:1rem;box-shadow:0 3px 14px rgba(24,78,88,.045);}
+[data-theme="light"] h2 {color:#086977;font-size:1.08rem;font-weight:700;line-height:1.7;}
+[data-theme="light"] button {background:var(--accent);color:#fff;min-height:42px;border-radius:.65rem;font-weight:600;line-height:1.55;}
+[data-theme="light"] button.ghost {background:var(--light-soft);color:#204b57;border:1px solid #9bbfc7;}
+[data-theme="light"] button.ghost:hover {background:var(--light-tint);border-color:#629aa6;}
+[data-theme="light"] :is(button,input,select,textarea,summary,a):focus-visible {outline:3px solid #147789;outline-offset:3px;}
+[data-theme="light"] :is(button,[role=button])[aria-pressed=true] {background:var(--light-selected);color:#124e5b;border-color:#237786;}
+[data-theme="light"] :is(input,select,textarea):not([type=range]):not([type=checkbox]):not([type=file]) {
+ background:#fff !important;color:var(--text) !important;border:1px solid #91b7c1 !important;border-radius:.5rem;font:inherit;line-height:1.6;min-height:40px;padding:.4rem .55rem;
+}
+[data-theme="light"] :is(input,textarea)::placeholder {color:#536c74;opacity:1;}
+[data-theme="light"] input[type=checkbox] {accent-color:#087b87;}
+[data-theme="light"] :is(.hint,.meta,.empty,.treason) {color:var(--muted);font-size:.88rem;line-height:1.85;}
+[data-theme="light"] .empty {padding:1.1rem .4rem;}
+[data-theme="light"] #viewer-settings {
+ background:var(--light-soft) !important;border:1px solid var(--line);color:var(--text);padding:.75rem;border-radius:.8rem;box-shadow:none;
+}
+[data-theme="light"] #viewer-settings .controls {background:transparent !important;color:var(--muted);gap:.5rem;}
+[data-theme="light"] #viewer-settings summary {font-size:.9rem;line-height:1.8;padding:.3rem 0;cursor:pointer;}
+[data-theme="light"] :is(#session-bar,#series-preview-summary,#filmstrip) {background:var(--light-tint) !important;color:var(--text);border-color:var(--line);}
+[data-theme="light"] :is(#session-position,#session-label,#measure-out,#meta,#img-note,#reference-status,#active-pane-status) {color:var(--muted) !important;line-height:1.8;}
+[data-theme="light"] #worklist {background:#fff;border-color:var(--line);box-shadow:none;}
+[data-theme="light"] #worklist :is(th,td) {border-color:#d2e4e8;color:var(--text);font-size:.88rem;line-height:1.65;}
+[data-theme="light"] #worklist thead th {background:#dceff3;color:#204b57;font-weight:700;}
+[data-theme="light"] #worklist tbody tr:nth-child(odd) {background:#fff;}
+[data-theme="light"] #worklist tbody tr:nth-child(even) {background:#f1f9fa;}
+[data-theme="light"] #worklist tbody tr:hover {background:#e1f1f4;}
+[data-theme="light"] #worklist td:first-child {color:#153641;}
+[data-theme="light"] #worklist td:nth-child(3) {color:#425e68;}
+[data-theme="light"] #worklist :is(th,td):last-child {background:#e9f5f7;border-inline-start:1px solid #b7d4da;}
+[data-theme="light"] .badge.urgent {background:#fce8e8;color:#912e32;border:1px solid #e8b3b5;}
+[data-theme="light"] .badge.routine {background:#e2f3eb;color:#225e46;border:1px solid #a8d4bd;}
+[data-theme="light"] .badge.signed {background:#e4eef9;color:#284f80;border:1px solid #b4cce7;}
+[data-theme="light"] .badge.consult {background:#edeafa;color:#51457b;border:1px solid #c9c0e5;}
+[data-theme="light"] :is(#ingest-status,#pacs-status) {color:#136b50 !important;opacity:1;}
+[data-theme="light"] [data-status="warning"]:is(#ingest-status,#pacs-status) {color:#942d35 !important;}
+[data-theme="light"] :is(#drawer-status,#about-conn) {color:#136b50 !important;}
+[data-theme="light"] #update-banner {background:#fff4d9;color:#77520a !important;border:1px solid #ddc68b;border-radius:.6rem;margin:1rem;padding:.65rem !important;}
+[data-theme="light"] .treason[data-status="warning"],[data-theme="light"] #splash {color:#942d35 !important;}
+[data-theme="light"] #purge-warn {background:#fff4d9 !important;color:#77520a !important;border-color:#d7bd7d;}
+[data-theme="light"] #dx-foot {background:#fff7e6 !important;color:#77520a !important;border-color:#d7bd7d;}
+[data-theme="light"] :is(#settings-modal > div,#drawer > div,#series-sheet,#cmp-sheet) {background:#f8fcfd !important;color:var(--text);border-color:var(--line) !important;}
+[data-theme="light"] #settings-modal > div {box-shadow:0 14px 50px rgba(9,49,61,.16);padding:1.1rem !important;}
+[data-theme="light"] #settings-modal details {border-bottom:1px solid #d5e7eb;padding:.45rem 0;}
+[data-theme="light"] #settings-modal summary {font-weight:600;line-height:1.8;padding:.25rem 0;}
+[data-theme="light"] #settings-modal :is(p,label,summary),[data-theme="light"] #composer-set label {opacity:1 !important;}
+[data-theme="light"] #settings-modal p {font-size:.9rem !important;line-height:1.9;}
+[data-theme="light"] :is(#about-disclaimer,#about-privacy,#about-licenses,#about-support) {color:var(--muted);}
+[data-theme="light"] a {color:#096b80 !important;text-decoration-thickness:1px;text-underline-offset:3px;}
+[data-theme="light"] :is(#report-ar,#storage-out,#geometry-diagnostic-output,#archive-list > div,#tpl-list > div) {background:var(--light-soft) !important;color:var(--text) !important;border-color:var(--line) !important;}
+[data-theme="light"] :is(#series-sheet .sheet-row,.cmp-pane) {background:var(--light-soft);color:var(--text);border-color:var(--line);}
+[data-theme="light"] :is(.sheet-meta,.sheet-mark,.cmp-head,.cmp-sub) {color:#425e68;}
+/* These are image stages, NOT light form surfaces. Never recolor their pixels. */
+[data-theme="light"] :is(#viewport,#dual-secondary,#dual-image-stage,.mpr-pane) {background:#000 !important;}
+[data-theme="light"] :is(.mpr-lab,#fs-count) {color:#d9eef2;}
+[data-theme="light"] #dual-label {background:#102d38;color:#e8f5f8;border-color:#496c77;}
+[data-theme="light"] :is(#viewer-card.fs-fake,#viewer-card:fullscreen) {background:#020a10 !important;}
+[data-theme="light"] :is(.fs-fake,#viewer-card:fullscreen) :is(#viewer-settings,#session-bar,.fs-mini,#pane-selector) {background:#f2fafb !important;color:#153641;border-color:#b7d4da;}
+[data-theme="light"] :is(.fs-fake,#viewer-card:fullscreen) #fs-count {color:#153641;}
+[data-theme="light"] :is(.fs-mini,.mpr-ctl) button {min-height:34px;}
+@media(max-width:600px){
+ [data-theme="light"] header {padding:.8rem 1rem;}
+ [data-theme="light"] main {padding:.8rem;gap:.8rem;}
+ [data-theme="light"] main > section {padding:.85rem;}
+ [data-theme="light"] #viewer-settings {padding:.65rem;}
+}
+@media print { [data-theme="light"] #print-root {background:#fff;color:#000;} }
+
+
+      #wl-tools {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;align-items:end;}
+      #wl-tools .wl-search {grid-column:1/-1;}
+      #wl-tools label {display:flex;flex-direction:column;gap:.25rem;font-size:.83rem;min-width:0;}
+      #wl-tools :is(input,select) {width:100%;min-width:0;max-width:100%;padding:.5rem;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:.5rem;min-height:42px;}
+      #wl-clear {grid-column:1/-1;}
+      #wl-count {font-weight:600;}
+      .wl-description {font-size:.85rem;line-height:1.7;color:var(--muted);font-weight:400;overflow-wrap:anywhere;}
+      .wl-series {font-weight:400;font-size:.8rem;line-height:1.7;}
+      .wl-series summary {cursor:pointer;color:var(--accent);}
+      .wl-series ul {padding-inline-start:1.2rem;margin:.3rem 0;max-height:12rem;overflow:auto;overflow-wrap:anywhere;}
+      #worklist td:first-child {overflow-wrap:anywhere;}
+      .wl-card-meta,.wl-mobile-only {display:none;}
+      .wl-study-details > summary {display:none;}
+      @media(max-width:600px){
+        #worklist {display:block;min-width:0;border:0;background:transparent;box-shadow:none;}
+        #worklist thead {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+        #worklist tbody {display:grid;gap:.45rem;}
+        #worklist tbody tr {display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:.55rem;padding:.45rem .6rem;gap:0;background:var(--panel);}
+        #worklist tbody tr td {display:block;width:auto!important;padding:0;border:0;min-width:0;}
+        #worklist td:first-child {grid-column:1/-1;}
+        #worklist .wl-name {font-size:.85rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere;}
+        #worklist .wl-card-meta {display:flex;flex-wrap:wrap;align-items:center;gap:.2rem .4rem;font-size:.72rem;color:var(--muted);line-height:1.45;margin-top:.2rem;}
+        #worklist .wl-card-meta .badge {font-size:.67rem;}
+        #worklist .wl-card-meta [data-status="warning"] {margin:0;}
+        #worklist tbody td:nth-child(n+2):not(:last-child) {display:none;}
+        #worklist tbody td:last-child {position:static;grid-column:1/-1;display:flex;gap:.35rem;min-width:0;justify-content:flex-start;align-items:center;padding:.1rem 0 0;border:0;background:transparent;border-radius:0;}
+        #worklist tbody button {min-height:36px;min-width:36px;padding:.25rem .65rem;font-size:.78rem;}
+        #worklist .wl-study-details > summary {display:flex;align-items:center;min-height:36px;cursor:pointer;color:var(--accent);font-size:.75rem;gap:.35rem;}
+        #worklist .wl-study-details > summary::before {content:'▸';}
+        [dir="rtl"] #worklist .wl-study-details > summary::before {content:'◂';}
+        #worklist .wl-study-details[open] > summary::before {content:'▾';}
+        #worklist .wl-study-info {padding:.15rem 0 .35rem;}
+        #worklist .wl-mobile-only {display:block;}
+        #worklist .wl-description,#worklist .wl-series,#worklist .treason {font-size:.75rem;line-height:1.5;white-space:normal;max-width:none;overflow-wrap:anywhere;}
+        #worklist .wl-series summary {min-height:36px;display:flex;align-items:center;}
+        #wl-tools {gap:.4rem;}
+        #wl-tools label {font-size:.78rem;}
+        #wl-tools :is(input,select) {padding:.35rem;font-size:.78rem;min-height:38px;}
+        #wl-help {font-size:.72rem;line-height:1.5;margin:.4rem 0;}
+        #wl-clear {min-height:36px;padding:.3rem .6rem;font-size:.78rem;}
+      }
+
+      #wl-options {margin:.35rem 0;}
+      #wl-options-summary {cursor:pointer;font-size:.85rem;font-weight:600;padding:.45rem .65rem;border:1px solid var(--line);border-radius:.5rem;background:var(--bg);}
+      #wl-options[open] #wl-tools {margin-top:.65rem;}
+      #wl-active-filter {font-size:.75rem;font-weight:400;margin-inline-start:.4rem;}
+      #wl-count {margin:.35rem 0;}
+</style>
+<header>
+      <h1><img id="app-logo" src="./icons/logo.png" alt="Radiology report AI" style="height:2.4rem;width:2.4rem;border-radius:.6rem;vertical-align:middle;margin-inline-end:.55rem;box-shadow:0 0 0 1px #334155;" />Radiology report AI <button id="menu-btn" class="ghost" style="font-size:.8rem;padding:.2rem .6rem;" title="القائمة / Menu">☰</button> <button id="settings-btn" class="ghost" style="font-size:.8rem;padding:.2rem .6rem;" title="الإعدادات / Settings">⚙</button> <button id="lang-toggle" class="ghost" style="font-size:.7rem;padding:.2rem .6rem;">EN</button></h1>
+      <span id="subtitle">نسخة المتصفح — عارض وتقارير محلية؛ الخدمات السحابية اختيارية</span>
+    </header>
+    <p id="update-banner" class="hint" style="display:none; color:#fcd34d; padding:0 1.4rem;"></p>
+    <div id="drawer" style="position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:50;">
+  <div style="position:absolute;inset-inline-start:0;top:0;bottom:0;width:min(320px,86vw);background:#0d1728;border-inline-end:1px solid #334155;padding:1rem;overflow:auto;">
+    <p style="display:flex;justify-content:space-between;align-items:center;margin:0 0 .6rem;"><b id="drawer-title">القائمة</b><button id="drawer-close" class="ghost" style="padding:.2rem .6rem;">✕</button></p>
+    <p style="margin:.1rem 0 .7rem;font-size:.8rem;color:#34d399;" id="drawer-status">🟢 Offline Ready</p>
+    <p style="margin:.25rem 0;"><button id="drawer-worklist" class="ghost" style="width:100%;text-align:start;">📋 قائمة العمل الرئيسية</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-critical" class="ghost" style="width:100%;text-align:start;">🚨 الحالات الحرجة فقط (0)</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-archive" class="ghost" style="width:100%;text-align:start;">📑 الأرشيف وسجل التقارير</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-data" class="ghost" style="width:100%;text-align:start;">📥 إدارة البيانات (استيراد/تصدير)</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-ai" class="ghost" style="width:100%;text-align:start;">🤖 إعدادات الذكاء الاصطناعي والقوالب</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-settings" class="ghost" style="width:100%;text-align:start;">⚙ الإعدادات العامة</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-install" class="ghost" style="width:100%;text-align:start;">📱 تثبيت التطبيق (PWA)</button></p>
+    <p style="margin:.25rem 0;"><button id="drawer-help" class="ghost" style="width:100%;text-align:start;">❓ حول والمساعدة</button></p>
+  </div>
+</div>
+<div id="settings-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:60;overflow:auto;">
+  <div style="max-width:660px;margin:1.5rem auto;background:#0d1728;border:1px solid #334155;border-radius:.8rem;padding:1rem;">
+    <p style="display:flex;justify-content:space-between;align-items:center;margin:0 0 .6rem;"><b id="settings-title">⚙ الإعدادات</b><button id="settings-close" class="ghost" style="padding:.2rem .6rem;">✕</button></p>
+    <details id="set-pacs" open style="margin:.3rem 0;">
+      <summary id="set-pacs-sum" style="cursor:pointer;">خادم الأشعة (PACS / DICOMweb)</summary>
+      <p style="margin:.5rem 0 .2rem;font-size:.8rem;" id="lbl-pacs-url-s">عنوان الخادم (URL):</p>
+      <p style="margin:.1rem 0 .4rem;"><input id="pacs-url-s" type="text" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" dir="ltr" /></p>
+      <p style="margin:.2rem 0 .2rem;font-size:.8rem;" id="lbl-pacs-token">رمز PACS المباشر (للجلسة افتراضيًا):</p>
+      <p style="margin:.1rem 0 .4rem;"><input id="pacs-token" type="password" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" dir="ltr" /></p>
+      <p><label class="credential-choice"><input id="pacs-token-remember" type="checkbox" /> <span id="text-pacs-remember">حفظ رمز PACS المباشر على هذا الجهاز</span></label></p>
+      <p><label for="pacs-relay-token"><span id="lbl-pacs-relay-token">رمز وسيط المؤسسة — للجلسة فقط</span></label><input id="pacs-relay-token" dir="ltr" spellcheck="false" type="password" autocomplete="off" style="width:100%;" /></p>
+      <p class="hint"><span id="relay-security-note">الوسيط السحابي للقراءة فقط؛ يتطلب رمزًا ووجهات HTTPS مصرحًا بها، ولا يصل للشبكات الخاصة. روابط المشاركة: نزّل ثم افتح محليًا.</span></p>
+      <button id="credentials-clear" type="button" class="ghost">مسح مفاتيح الاتصال دون الدراسات</button>
+      <p style="margin:.3rem 0 .2rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;"><label id="lbl-pacs-ae" style="opacity:.85;font-size:.78rem;">AE Title (لأنظمة DICOM القديمة — لا يستخدمه DICOMweb):</label><input id="pacs-ae" dir="ltr" placeholder="PACS-AE" autocomplete="off" spellcheck="false" style="width:8rem;" /></p>
+      <p style="margin:.2rem 0 .3rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;"><label id="lbl-pacs-port" style="opacity:.85;font-size:.78rem;">منفذ اختياري يُضاف للعنوان:</label><input id="pacs-port" type="number" min="0" max="65535" placeholder="8042" style="width:6rem;" /></p>
+      <p style="margin:.2rem 0 .4rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;"><button id="pacs-test" class="ghost" style="padding:.25rem .7rem;font-size:.78rem;">اختبار الاتصال</button><label id="lbl-pacs-auto" style="opacity:.85;font-size:.8rem;">السحب التلقائي:</label><select id="pacs-auto" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="0" selected>معطّل</option><option value="5">كل 5 دقائق</option><option value="15">كل 15 دقيقة</option><option value="30">كل 30 دقيقة</option></select></p>
+    </details>
+    <details id="set-ai" style="margin:.3rem 0;">
+      <summary id="set-ai-sum" style="cursor:pointer;">🤖 الذكاء الاصطناعي والتنبيهات</summary>
+      <p style="margin:.5rem 0 .4rem;"><label id="lbl-crit-alert" style="font-size:.85rem;"><input type="checkbox" id="crit-alert" /> تنبيه صوتي واهتزاز عند اكتشاف حالة حرجة جديدة</label></p>
+      <p style="margin:.2rem 0 .4rem;font-size:.8rem;opacity:.8;" id="set-ai-note">المعالجة الأساسية محلية دائمًا؛ الذكاء السحابي اختياري بموافقتك لكل طلب.</p>
+    </details>
+    <details id="set-store" style="margin:.3rem 0;">
+      <summary id="set-store-sum" style="cursor:pointer;">🗄 التخزين والخصوصية</summary>
+      <pre id="storage-out" style="white-space:pre-wrap;background:#0b1220;border:1px solid #334155;border-radius:.5rem;padding:.5rem;font-family:inherit;font-size:.78rem;margin:.5rem 0;"></pre>
+      <p style="margin:.2rem 0 .4rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;"><button id="free-images" class="ghost" style="padding:.25rem .7rem;font-size:.78rem;">تفريغ صور الدراسات المؤرشفة تقاريرها</button><label id="lbl-anon" style="font-size:.85rem;"><input type="checkbox" id="anon-exp" /> إخفاء هوية المريض في حزم الاستشارة المصدّرة</label></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-perf-smooth" style="font-size:.85rem;"><input type="checkbox" id="perf-smooth" checked /> تنعيم الصور (تعطيله يسرّع الشرائح الكثيفة)</label></p>
+      <p style="margin:.3rem 0 .2rem;display:flex;gap:.5rem;flex-wrap:wrap;"><button id="rebuild-cache" class="ghost" style="padding:.25rem .7rem;font-size:.78rem;">إعادة بناء مخبأ الأوفلاين</button><button id="clear-db" class="ghost" style="padding:.25rem .7rem;font-size:.78rem;">تفريغ قاعدة الدراسات المحلية</button></p>
+    </details>
+    <details id="set-ui" style="margin:.3rem 0;">
+      <summary id="set-ui-sum" style="cursor:pointer;">🎨 العرض واللغة</summary>
+      <p style="margin:.5rem 0 .4rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-lang" style="font-size:.85rem;">لغة الواجهة:</label><select id="lang-sel" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="ar" selected>العربية</option><option value="en">English</option></select></p>
+      <p style="margin:.3rem 0 .4rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-theme" style="font-size:.85rem;">المظهر:</label><select id="theme-sel" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="dark" selected>داكن طبي عالي التباين</option><option value="light">فاتح</option></select></p>
+    </details>
+    <details id="set-view" style="margin:.3rem 0;">
+      <summary id="set-view-sum" style="cursor:pointer;">🖥 تفضيلات العارض</summary>
+      <p style="margin:.5rem 0 .3rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-default-win" style="font-size:.85rem;">النافذة الافتراضية:</label><select id="default-win-sel" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="auto" selected>تلقائي</option><option value="lung">رئة</option><option value="mediastinum">منصف</option><option value="bone">عظم</option></select></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-ov-name" style="font-size:.85rem;"><input type="checkbox" id="ov-name-chk" checked /> إظهار اسم المريض وبياناته فوق الصورة</label></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-ov-meta" style="font-size:.85rem;"><input type="checkbox" id="ov-meta-chk" checked /> إظهار سطر معلومات الشريحة أسفل العارض</label></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-ov-seq" style="font-size:.85rem;"><input type="checkbox" id="ov-seq-chk" checked /> طبقة معلومات على الصورة: نوع الفحص والتسلسل (T1/T2/FLAIR…)</label></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-ov-tech" style="font-size:.85rem;"><input type="checkbox" id="ov-tech-chk" checked /> إظهار TE/TR داخل طبقة المعلومات (علامة ~ تعني مشتقًا من القياسات لا من الوسم)</label></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-ov-diag" style="font-size:.85rem;"><input type="checkbox" id="ov-diag-chk" /> طبقة تشخيص على الصورة (الإصدار، السلسلة، الأبعاد، النافذة، المدى، التباين) — مفيدة عند طلب الدعم</label></p>
+      <p style="margin:.2rem 0 .3rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-measure-color" style="font-size:.85rem;">لون أدوات القياس:</label><input type="color" id="measure-color" value="#38bdf8" style="width:3rem;height:2rem;border:1px solid #334155;border-radius:.4rem;background:#0b1220;" /><label id="lbl-measure-unit" style="font-size:.85rem;">الوحدة:</label><select id="measure-unit" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="mm" selected>مليمتر (مم)</option><option value="cm">سنتيمتر (سم)</option></select></p>
+    </details>
+    <details id="set-work" style="margin:.3rem 0;">
+      <summary id="set-work-sum" style="cursor:pointer;">📋 إعدادات قائمة العمل</summary>
+      <p style="margin:.5rem 0 .3rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-sort" style="font-size:.85rem;">الفرز الافتراضي:</label><select id="sort-sel" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="urgent" selected>الحرج أولًا</option><option value="date">الأحدث إضافةً</option><option value="study" id="opt-study">تاريخ الدراسة</option><option value="name">أبجديًا بالاسم</option></select></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-auto-open" style="font-size:.85rem;"><input type="checkbox" id="auto-open-chk" /> فتح أول دراسة تلقائيًا بعد الرفع</label></p>
+    </details>
+    <details id="set-keys" style="margin:.3rem 0;">
+      <summary id="set-keys-sum" style="cursor:pointer;">⌨ اختصارات لوحة المفاتيح</summary>
+      <p id="keys-hint" style="font-size:.78rem;opacity:.85;margin:.4rem 0 .3rem;">اضغط داخل الحقل ثم اضغط المفتاح المطلوب لتعيينه.</p>
+      <p style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.2rem 0 .3rem;"><label id="ks-next-lbl" style="font-size:.8rem;">شريحة تالية:</label><input id="ks-next" spellcheck="false" style="width:5rem;" /><label id="ks-prev-lbl" style="font-size:.8rem;">شريحة سابقة:</label><input id="ks-prev" spellcheck="false" style="width:5rem;" /><label id="ks-fit-lbl" style="font-size:.8rem;">ملاءمة:</label><input id="ks-fit" spellcheck="false" style="width:5rem;" /><label id="ks-measure-lbl" style="font-size:.8rem;">قياس:</label><input id="ks-measure" spellcheck="false" style="width:5rem;" /><label id="ks-zoomin-lbl" style="font-size:.8rem;">تكبير:</label><input id="ks-zoom-in" spellcheck="false" style="width:5rem;" /><label id="ks-zoomout-lbl" style="font-size:.8rem;">تصغير:</label><input id="ks-zoom-out" spellcheck="false" style="width:5rem;" /><label id="ks-contrast-lbl" style="font-size:.8rem;">تبديل التباين:</label><input id="ks-contrast" spellcheck="false" style="width:5rem;" /></p>
+    </details>
+    <details id="set-io" style="margin:.3rem 0;">
+      <summary id="set-io-sum" style="cursor:pointer;">📤 الاستيراد والتصدير</summary>
+      <p style="margin:.5rem 0 .3rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-default-export" style="font-size:.85rem;">تنسيق التصدير الافتراضي:</label><select id="default-export-sel" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="word" selected>Word (قالب المستشفى)</option><option value="pdf">PDF</option></select></p>
+      <p style="margin:.2rem 0 .3rem;"><label id="lbl-gzip" style="font-size:.85rem;"><input type="checkbox" id="gzip-chk" /> ضغط حزم الاستشارة (gzip)</label></p>
+    </details>
+    <details id="set-priv" style="margin:.3rem 0;">
+      <summary id="set-priv-sum" style="cursor:pointer;">🔒 الخصوصية والأمان</summary>
+      <p style="margin:.5rem 0 .3rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-set-retention" style="font-size:.85rem;">حذف تلقائي للمسودات/الدراسات بعد:</label><select id="set-retention-days" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="30">٣٠ يومًا</option><option value="90" selected>٩٠ يومًا</option><option value="180">١٨٠ يومًا</option><option value="365">سنة</option><option value="0">تعطيل</option></select></p>
+      <p style="margin:.2rem 0 .3rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><label id="lbl-set-retention-signed" style="font-size:.85rem;">الموقّع بعد:</label><select id="set-retention-signed" style="padding:.3rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="90">٩٠ يومًا</option><option value="180">١٨٠ يومًا</option><option value="365" selected>سنة</option><option value="730">سنتان</option><option value="0">تعطيل</option></select></p>
+    </details>
+    <details id="set-about" style="margin:.3rem 0;">
+      <summary id="set-about-sum" style="cursor:pointer;">ℹ حول التطبيق</summary>
+      <p id="about-ver" style="font-size:.85rem;margin:.4rem 0 .2rem;"></p>
+      <p id="about-conn" style="font-size:.85rem;margin:.2rem 0;color:#34d399;"></p>
+      <p id="about-disclaimer" style="font-size:.78rem;opacity:.85;margin:.3rem 0;"></p>
+      <p id="about-privacy" style="font-size:.78rem;opacity:.85;margin:.3rem 0;"></p>
+      <p id="about-licenses" style="font-size:.78rem;opacity:.85;margin:.3rem 0;"></p>
+      <p id="about-support" style="font-size:.78rem;opacity:.85;margin:.3rem 0;"></p>
+      <p style="font-size:.78rem;margin:.5rem 0 0;"><a id="about-standalone-link" href="./standalone.html" style="color:#38bdf8;text-decoration:none">فتح نسخة الملف الواحد</a> · <a href="./diag.html" style="color:#7dd3fc;text-decoration:none" id="about-diagnostics-link">تشخيص</a></p>
+    </details>
+  </div>
+</div>
+<main>
+      <section>
+        <h2 id="h-upload">رفع دراسات DICOM</h2>
+        <input id="files" type="file" multiple style="display:none;" />
+        <p style="margin:.2rem 0 .3rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;"><button id="files-btn" class="ghost" style="padding:.4rem .9rem;">اختيار الملفات</button><span id="files-lbl" class="hint" style="opacity:.85;">لم يتم اختيار أي ملف</span></p>
+        <input id="files-dir" type="file" webkitdirectory directory multiple style="display:none;" />
+        <p style="margin:.3rem 0 .3rem;"><button id="pick-dir" class="ghost">اختيار مجلد DICOM كامل بدل اختيار الملفات واحدًا واحدًا</button></p>
+        <p class="hint" id="pick-hint" style="margin:0 0 .6rem;"></p>
+        <p>
+          <button id="upload">رفع وتحليل</button>
+          <button id="demo" class="ghost">توليد ديمو</button>
+        </p>
+        <p class="hint" id="ingest-status"></p>
+        <p style="margin:.3rem 0 .2rem;"><button id="import-report-btn" class="ghost" style="display:none;padding:.35rem .8rem;">نسخ تقرير آخر استيراد</button></p>
+        <pre id="import-report" dir="ltr" style="display:none;white-space:pre-wrap;text-align:left;background:#0b1220;border:1px solid var(--line);border-radius:.5rem;padding:.6rem;font-size:.72rem;max-height:14rem;overflow:auto;"></pre>
+        <details id="pacs-set" style="margin:1rem 0;">
+        <summary id="pacs-sum" style="cursor:pointer;opacity:.85;">سحب من PACS (DICOMweb)</summary>
+        <p style="margin:.6rem 0 .3rem;"><input id="pacs-url" type="text" placeholder="https://pacs.hospital.local/dicom-web" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+        <p style="margin:.3rem 0 .6rem;"><input id="pacs-q" type="text" placeholder="معرف المريض (اختياري)" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+        <p style="margin:.6rem 0 .3rem;"><label id="lbl-dl-url" for="pacs-dl-url" style="opacity:.85;">رابط التنزيل (WeTransfer / ZIP / DICOM)</label></p>
+        <p style="margin:.3rem 0 .6rem;"><input id="pacs-dl-url" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://we.tl/t-… أو https://…/study.zip أو https://…/study.dcm" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+        <button id="pacs-pull" class="ghost">سحب أول دراسة مطابقة</button>
+        <button id="pacs-dl" class="ghost" style="margin-inline-start:.5rem;">سحب من رابط تنزيل (WeTransfer/ZIP/DICOM)</button>
+        <p class="hint" id="pacs-status"></p>
+        <p class="hint" id="pacs-dl-hint"></p>
+      </details>
+      <h2 id="h-worklist">قائمة الدراسات</h2>
+      <details id="wl-options">
+        <summary id="wl-options-summary"><span id="wl-options-title">البحث والتصفية والفرز</span><span id="wl-active-filter" hidden></span></summary>
+      <div id="wl-tools" role="search" aria-labelledby="h-worklist">
+        <label class="wl-search"><span id="lbl-wl-query">بحث في الدراسات</span><input id="wl-query" maxlength="256" type="search" autocomplete="off" spellcheck="false" /></label>
+        <label><span id="lbl-wl-modality">نوع الفحص</span><select id="wl-modality"><option value="">كل الأنواع</option></select></label>
+        <label><span id="lbl-wl-priority">الأولوية</span><select id="wl-priority"><option value="">كل الأولويات</option><option value="urgent">حرج</option><option value="consult">استشارة</option><option value="routine">روتيني</option></select></label>
+        <label><span id="lbl-wl-state">التوقيع</span><select id="wl-state"><option value="">الكل</option><option value="signed">موقّع</option><option value="unsigned">غير موقّع</option></select></label>
+        <label><span id="lbl-wl-sort">ترتيب القائمة</span><select id="wl-sort"><option value="urgent">الحرج أولًا</option><option value="date">الأحدث إضافةً</option><option value="study">تاريخ الدراسة (DICOM)</option><option value="name">أبجديًا بالاسم</option></select></label>
+        <button id="wl-clear" class="ghost" type="button">مسح البحث والتصفية</button>
+      </div>
+      <p id="wl-help" class="hint">البحث محلي ولا يُحفظ؛ التصفية لا تحذف الدراسات.</p>
+      </details>
+      <p id="wl-count" role="status" aria-live="polite" class="hint"></p>
+      <p id="wl-critical-note" class="hint" hidden></p>
+        <div class="worklist-scroll" tabindex="0" role="region" aria-labelledby="h-worklist">
+        <table id="worklist" role="table" aria-labelledby="h-worklist">
+          <thead><tr><th id="th-patient">المريض</th><th id="th-mod">النوع</th><th id="th-date">التاريخ</th><th id="th-pri">الأولوية</th><th id="th-slices">الشرائح</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        </div>
+        <p class="empty" id="empty">لا توجد دراسات — ارفع DICOM أو اضغط "توليد ديمو".</p>
+        <details id="data-mgmt" style="margin:.5rem 0 .2rem;"><summary id="data-mgmt-sum" class="ghost" style="display:inline-block;padding:.4rem 1rem;cursor:pointer;">إدارة البيانات ▾</summary>
+        <p style="margin:.4rem 0 .2rem;display:flex;gap:.5rem;flex-wrap:wrap;"><button id="export-csv" class="ghost">تصدير جميع الدراسات CSV</button> <button id="clear-all" class="ghost">حذف جميع الدراسات من الجهاز</button></p></details>
+        <p class="hint" id="hint-main">⚙ الاستيراد والعارض والتقارير محلية. AI السحابي اختياري بموافقتك؛ PACS والتنزيل يتصلان بخدمات خارجية. من قائمة المتصفح ⋮ ← "إضافة إلى الشاشة الرئيسية" لتثبيتها كتطبيق.</p>
+      </section>
+      <section class="viewer" id="viewer-card">
+        <h2 id="h-viewer">العارض</h2>
+        <p id="prior-line" style="display:none;margin:0 0 .3rem;color:#9fc3e8;font-size:.8rem;text-align:center;cursor:pointer;"></p>
+        <p id="viewer-name" style="margin:.2rem 0 .45rem;color:#e2e8f0;font-size:.88rem;text-align:center;direction:ltr;display:none;"></p>
+        <button id="dual-toggle" class="ghost" type="button" aria-pressed="false">نافذتان / Split</button>
+        <div id="pane-selector" role="group" aria-label="اختيار نافذة الأدوات">
+          <button id="select-pane-1" class="ghost" type="button" hidden aria-pressed="true">نافذة 1</button>
+          <button id="select-pane-2" class="ghost" type="button" hidden aria-pressed="false">نافذة 2</button>
+          <span id="active-pane-status" hidden role="status"></span>
+        </div>
+        <div id="dual-layout">
+        <div id="viewport" style="display:none; position:relative; overflow:hidden; width:100%; background:#000; border-radius:.4rem; touch-action:none;">
+          <div id="vwrap" style="transform-origin:center; position:relative; width:max-content; margin:0 auto;">
+            <canvas id="frame" style="display:none; "></canvas>
+            <canvas id="reference-overlay" style="position:absolute;inset:0;pointer-events:none;background:transparent;"></canvas>
+            <canvas id="overlay" style="position:absolute; inset:0; pointer-events:none; background:transparent;"></canvas>
+          </div>
+          <canvas id="annot" style="position:absolute; inset:0; pointer-events:none; display:block; background:transparent;"></canvas>
+        </div>
+        <div id="dual-secondary" hidden>
+          <button id="dual-label" type="button" class="ghost">2</button>
+          <div id="dual-image-stage" style="overflow:hidden;background:#000;"><canvas id="dual-frame" width="8" height="8" aria-label="الصورة الثانية — Second pane"></canvas></div>
+          <input id="dual-slice" type="range" min="0" max="0" value="0" aria-label="شرائح النافذة الثانية" />
+        </div>
+        </div>
+<div id="session-bar" hidden>
+          <label for="session-slice">شرائح الدراسة / Study slices</label>
+          <input id="session-slice" type="range" min="0" max="0" value="0" step="1" />
+          <output id="session-position" for="session-slice" dir="auto"></output>
+        </div>
+        <small id="reference-status" hidden style="font-size:.72rem;color:#94a3b8;"></small>
+        <details id="series-preview-fold" hidden>
+          <summary id="series-preview-summary">السلاسل — إظهار المصغّرات / Series thumbnails</summary>
+          <div id="series-overview" hidden aria-label="جميع السلاسل — All series"></div>
+        </details>
+<div id="img-note" style="display:none; margin:.45rem 0; padding:.55rem .7rem; border:1px solid #f59e0b; border-radius:.45rem; background:#2a1d06; color:#fde68a; font-size:.82rem; line-height:1.8; direction:ltr; text-align:left; word-break:break-word;">
+          <span id="img-note-text"></span>
+          <button id="img-note-copy" class="ghost" style="display:none; margin-top:.35rem;">Copy diagnostics</button>
+        </div>
+          <div id="mpr-grid" class="mpr-grid" style="display:none">
+          <div class="mpr-pane" id="mpr-pane-axial"><p class="mpr-lab" id="mpr-lab-axial">محوري</p><canvas id="mpr-c-axial" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-axial" min="0" max="0" value="0" step="1" aria-label="slice Axial" /><select id="mpr-preset-axial" aria-label="window Axial"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
+        <div id="all-grid" style="display:none; width:100%;"></div>
+          <div class="mpr-pane" id="mpr-pane-coronal"><p class="mpr-lab" id="mpr-lab-coronal">إكليلي</p><canvas id="mpr-c-coronal" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-coronal" min="0" max="0" value="0" step="1" aria-label="slice Coronal" /><select id="mpr-preset-coronal" aria-label="window Coronal"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
+          <div class="mpr-pane" id="mpr-pane-sagittal"><p class="mpr-lab" id="mpr-lab-sagittal">سهمي</p><canvas id="mpr-c-sagittal" width="8" height="8"></canvas><div class="mpr-ctl"><input type="range" id="mpr-slice-sagittal" min="0" max="0" value="0" step="1" aria-label="slice Sagittal" /><select id="mpr-preset-sagittal" aria-label="window Sagittal"><option value="auto">تلقائي</option><option value="soft">نسيج رخو</option><option value="mediastinum">منصف</option><option value="bone">عظم</option><option value="lung">رئة</option><option value="brain">دماغ</option></select></div></div>
+        </div>
+                  <!-- v140 (2): the row a hand reaches for while reading a picture. -->
+        <div class="controls" id="viewer-bar">
+          <button id="zoom-reset" class="ghost">ملاءمة</button>
+          <span id="zscale" class="meta" style="margin-inline-start:.5rem"></span>
+          <button id="fs-toggle" class="ghost">ملء الشاشة</button>
+          <button id="vs-fold" class="ghost" type="button" aria-expanded="false" aria-controls="viewer-settings" title="إعدادات العارض: القياس، الشريحة، النافذة، التدوير، السلاسل — Viewer settings">⚙ إعدادات العارض ▾</button>
+        </div>
+        <div id="viewer-settings" hidden>
+          <details id="geometry-diagnostic"><summary>تشخيص خطوط المستوى / Geometry diagnostics</summary>
+            <p style="font-size:.75rem">يُصدّر الموضع والاتجاه والتباعد فقط؛ بلا صور أو أسماء أو معرّفات DICOM. تبقى هندسة الدراسة بيانات ينبغي مشاركتها مع جهة موثوقة فقط.</p>
+            <button id="geometry-export" type="button" class="ghost">تصدير تقرير هندسي / Export diagnostic</button>
+            <pre id="geometry-diagnostic-output" hidden style="white-space:pre-wrap;direction:ltr;overflow-wrap:anywhere;"></pre>
+          </details>
+          <details id="spatial-sync-options"><summary>المزامنة المكانية (اختيارية) / Spatial sync</summary></details>
+          <p class="hint" id="vs-hint" style="margin:.1rem 0 .35rem; font-size:.75rem;">كل إعدادات العارض في مكان واحد — تُطوى ليأخذ التشريح الشاشة.</p>
+        <div class="controls" id="measure-bar">
+          <button id="measure" class="ghost">قياس</button>
+          <button id="cine-toggle" class="ghost">عرض متحرك</button>
+          <button id="id-toggle" class="ghost">إخفاء الهوية</button>
+          <span id="measure-out"></span>
+        </div>
+          <div class="controls">
+          <label id="lbl-slice" style="display:none">الشريحة <input id="slice" type="range" min="0" max="0" value="0" /></label>
+          <button id="redraw-btn" class="ghost" style="display:none;padding:.35rem .8rem;">إعادة الرسم</button>
+          <label id="lbl-win">النافذة:
+            <select id="preset">
+              <option value="auto">تلقائي</option>
+              <option value="soft">نسيج رخو</option>
+              <option value="lung">رئة</option>
+              <option value="mediastinum">منصف</option>
+              <option value="bone">عظم</option>
+              <option value="brain">دماغ</option>
+            </select>
+          </label>
+        </div>
+<div class="controls" id="orient-bar">
+          <button id="orient-invert" class="ghost" type="button" aria-pressed="false" title="قلب الأبيض والأسود — Invert">قلب اللون</button>
+          <button id="orient-rotate" class="ghost" type="button" title="تدوير ٩٠° — Rotate">تدوير 0°</button>
+          <button id="orient-fliph" class="ghost" type="button" aria-pressed="false" title="قلب أفقي — Flip H">قلب أفقي</button>
+          <button id="orient-flipv" class="ghost" type="button" aria-pressed="false" title="قلب رأسي — Flip V">قلب رأسي</button>
+          <button id="orient-reset" class="ghost" type="button" title="عودة إلى وضع التصوير الأصلي — Reset view">الوضع الأصلي</button>
+        </div>
+        <div class="controls" id="series-bar" style="display:none; flex-wrap:wrap; gap:.35rem;"></div>
+        <button id="series-open" class="ghost" style="display:none; margin:.15rem 0;" type="button">السلاسل ▾</button>
+          <div class="controls" id="mpr-bar">
+          <button id="mpr-toggle" class="ghost">MPR: محوري / إكليلي / سهمي</button>
+          <button id="all-toggle" class="ghost">عرض شامل: كل السلاسل × ٣ مستويات</button>
+          <span id="mpr-note" class="meta" style="font-size:.75rem"></span>
+          <span id="all-note" class="meta" style="font-size:.75rem"></span>
+          <button id="scan-btn" class="ghost" style="display:none;">فحص السلسلة</button>
+        </div>
+<div id="film-wrap" style="display:none">
+          <div id="filmstrip" role="listbox" aria-label="filmstrip"></div>
+        </div>
+          <p class="meta" id="meta"></p>
+        </div>
+        <div id="dx-foot" style="display:none; margin:.5rem 0; padding:.55rem .7rem; border:1px solid #b45309; border-radius:.45rem; background:#241704; color:#fcd34d; font-size:.8rem; line-height:1.8;">
+          <span id="dx-foot-text">هذا العارض أداة عرض ومسودة تقرير؛ <b>غير معتمد للتشخيص النهائي</b>. القرار السريري يبقى للطبيب المختص.</span>
+          <button id="dx-foot-ok" class="ghost" style="margin-inline-start:.5rem;">إخفاء</button>
+        </div>
+        <p><button id="gen-report" class="ghost">توليد مسودة التقرير (ع/EN)</button></p>
+        <details id="composer-set" style="margin:1rem 0;">
+          <summary id="composer-sum" style="cursor:pointer;opacity:.85;">تأليف التقرير التشخيصي (نمط تقرير المستشفى)</summary>
+          <p style="margin:.5rem 0 .3rem;"><button id="tpl-open" class="ghost">⚙ قوالب الطبيعي والمرضيات (إعدادات)</button></p>
+          <details id="tpl-set" style="margin:.3rem 0;">
+            <summary id="tpl-sum" style="cursor:pointer;opacity:.85;">قوالب جاهزة حسب المنطقة — إدراج/تعديل/حذف</summary>
+            <div id="tpl-list" style="margin:.4rem 0;"></div>
+            <details id="tpl-edit-set" style="margin:.3rem 0;">
+              <summary id="tpl-edit-sum" style="cursor:pointer;opacity:.85;">إضافة/تعديل قالب مخصص (يُحفظ على جهازك)</summary>
+              <p style="margin:.4rem 0 .3rem;"><input id="tpl-name" type="text" placeholder="اسم القالب / Template name" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+              <p style="margin:.3rem 0 .3rem;"><select id="tpl-region" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;">
+                <option value="brain">brain</option><option value="spine">spine</option><option value="msk">msk</option><option value="chest">chest</option><option value="abdomen">abdomen</option><option value="generic">generic</option>
+              </select></p>
+              <p style="margin:.3rem 0 .3rem;"><textarea id="tpl-findings" rows="5" placeholder="FINDINGS — سطر لكل جملة" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;"></textarea></p>
+              <p style="margin:.3rem 0 .3rem;"><textarea id="tpl-impression" rows="3" placeholder="IMPRESSION — سطر لكل نقطة" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;"></textarea></p>
+              <p style="margin:.3rem 0 .5rem;"><button id="tpl-save" class="ghost">حفظ القالب</button></p>
+            </details>
+          </details>
+          <p style="margin:.6rem 0 .3rem;"><label id="lbl-ai-provider" for="ai-provider" style="opacity:.85;">المزوّد (كلها بلا بطاقة ائتمان)</label></p>
+          <p style="margin:.3rem 0 .3rem;"><select id="ai-provider" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;">
+            <option value="groq">Groq — مجاني بلا بطاقة (افتراضي)</option>
+            <option value="openrouter">OpenRouter — نماذج :free بلا بطاقة</option>
+            <option value="gemini">Google Gemini — إن قبل حسابك التسجيل بلا فوترة</option>
+            <option value="server">سيرفر المؤسسة (Vercel) — المفتاح عند القسم لا على الجهاز</option>
+          </select></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-ai-key" for="ai-key" style="opacity:.85;">مفتاح API (للجلسة افتراضيًا)</label></p>
+          <p style="margin:.3rem 0 .3rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+            <input id="ai-key" type="password" autocomplete="off" placeholder="gsk_… (Groq) أو sk-or-… (OpenRouter) أو AIza… (Gemini)" style="flex:1; min-width:12rem; padding:.5rem; border-radius:.4rem; border:1px solid #334155; background:#0b1220; color:#e2e8f0;" />
+            <button id="ai-gen" class="ghost">توليد بمساعدة AI (مسودة للمراجعة)</button>
+          </p>
+          <p><label class="credential-choice"><input id="ai-key-remember" type="checkbox" /> <span id="text-ai-remember">حفظ مفتاح AI على هذا الجهاز</span></label> <button id="ai-key-clear" type="button" class="ghost">مسح المفتاح</button></p>
+          <p class="hint"><span id="credential-storage-note">الحفظ اختياري وغير مشفّر؛ تجنّبه على جهاز مشترك.</span></p>
+          <p><label for="ai-service-token"><span id="lbl-ai-service-token">رمز وصول ذكاء المؤسسة — للجلسة فقط</span></label><input id="ai-service-token" dir="ltr" spellcheck="false" type="password" autocomplete="off" style="width:100%;" /></p>
+          <p class="hint" id="ai-hint"></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-ai-extra" for="ai-extra" style="opacity:.85;">لقطات شاشة إضافية للفحص (اختياري — حتى 2، تُرسل مع نفس الموافقة)</label></p>
+          <p style="margin:.3rem 0 .6rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;"><input id="ai-extra" type="file" accept="image/png,image/jpeg" multiple style="display:none;" /><button id="ai-extra-btn" class="ghost" style="padding:.35rem .8rem;">اختيار الملفات</button><span id="ai-extra-lbl" class="hint" style="opacity:.85;">لم يتم اختيار أي ملف</span><span id="ai-extra-count" class="hint"></span></p>
+          <p style="margin:.6rem 0 .3rem;"><label id="lbl-rep-exam" for="rep-exam" style="opacity:.85;">اسم الفحص (Exam)</label></p>
+          <p style="margin:.3rem 0 .6rem;"><input id="rep-exam" type="text" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-indication" for="rep-indication" style="opacity:.85;">الدلالة السريرية (Clinical Indication)</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-indication" rows="2" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"></textarea></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-notes" for="rep-notes" style="opacity:.85;">ملاحظات خام / إملاء (مصدر أولي للتحويل إلى تقرير)</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-notes" rows="3" placeholder="مثال: مريض بعد تثبيت قطني قبل 6 سنوات، ألم أسفل الظهر مع اعتلال جذري أيمن…" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"></textarea></p>
+          <p><label for="rep-technique">التقنية / Technique — راجع الصبغة</label><textarea id="rep-technique" rows="3" style="width:100%;background:#0b1220;color:#e2e8f0;border:1px solid #334155;padding:.5rem;direction:ltr;"></textarea></p>
+          <button id="report-review" class="ghost" type="button">تدقيق اتساق التقرير / Review</button>
+          <div id="report-review-output" hidden role="status" style="border:1px solid #f59e0b;padding:.6rem;overflow-wrap:anywhere;"></div>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-findings" for="rep-findings" style="opacity:.85;">الوصف (FINDINGS) — سطر لكل جملة</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-findings" rows="6" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;"></textarea></p>
+          <p style="margin:.3rem 0 .3rem;"><label id="lbl-rep-impression" for="rep-impression" style="opacity:.85;">الانطباع (IMPRESSION) — سطر لكل نقطة</label></p>
+          <p style="margin:.3rem 0 .6rem;"><textarea id="rep-impression" rows="4" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;"></textarea><button id="mic-imp" class="ghost" style="padding:.2rem .6rem;font-size:.78rem;margin-inline-start:.4rem;" title="إملاء صوتي عبر محرك المتصفح (قد يتطلب إنترنت وفق سياسة المتصفح)">🎤 إملاء</button></p>
+          <p style="margin:.3rem 0 .6rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;"><label id="lbl-fu" for="fu-months" style="opacity:.85;">خطة متابعة:</label><select id="fu-months" style="padding:.4rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="0" selected>بدون متابعة</option><option value="3">مراجعة بعد 3 أشهر</option><option value="6">مراجعة بعد 6 أشهر</option><option value="12">مراجعة بعد سنة</option></select><button id="preview-a4" class="ghost" style="padding:.2rem .6rem;font-size:.78rem;">معاينة A4</button><button id="print-a4" class="ghost" style="padding:.2rem .6rem;font-size:.78rem;">🖨 طباعة A4</button></p>
+          <details id="a4-set" style="margin:.2rem 0 .5rem;"><summary id="a4-sum" style="cursor:pointer;opacity:.85;font-size:.8rem;">المعاينة الداخلية A4</summary><div id="a4-prev" style="background:#fff;color:#111;border-radius:.5rem;padding:1rem;direction:ltr;text-align:left;font-family:Calibri,Arial,sans-serif;font-size:.85rem;"></div></details>
+          <details id="bank-set" style="margin:.6rem 0;">
+            <summary id="bank-sum" style="cursor:pointer;opacity:.85;">بنك الصياغات المهنية — اضغط الجملة لإدراجها</summary>
+            <div id="bank-list" style="margin:.4rem 0;"></div>
+          </details>
+          <p class="hint" id="composer-hint"></p>
+          <p style="margin:.5rem 0 .3rem;"><button id="archive-save" class="ghost">💾 حفظ التقرير الحالي في الأرشيف</button></p>
+          <details id="archive-set" style="margin:.4rem 0;">
+            <summary id="archive-sum" style="cursor:pointer;opacity:.85;">أرشيف التقارير المحفوظة (0)</summary>
+            <p style="margin:.4rem 0 .3rem;"><label id="lbl-archive-q" for="archive-q" style="opacity:.85;">بحث في الأرشيف (مريض/فحص/بصمة)</label></p>
+            <p style="margin:.3rem 0 .4rem;"><input id="archive-q" type="text" style="width:100%;padding:.5rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;" /></p>
+            <p style="margin:.3rem 0 .4rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;"><label id="lbl-retention" for="retention-days" style="opacity:.85;">الحذف التلقائي بعد:</label><select id="retention-days" style="padding:.4rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="30">30 يوم</option><option value="90" selected>3 أشهر (90 يوم)</option><option value="180">6 أشهر</option><option value="365">سنة</option><option value="0">بدون حذف تلقائي</option></select><label id="lbl-retention-signed" for="retention-signed-days" style="opacity:.85;margin-inline-start:.6rem;">الموقّع يُحذف بعد:</label><select id="retention-signed-days" style="padding:.4rem;border-radius:.4rem;border:1px solid #334155;background:#0b1220;color:#e2e8f0;"><option value="90">3 أشهر</option><option value="180">6 أشهر</option><option value="365" selected>سنة</option><option value="730">سنتان</option><option value="0">بدون حذف</option></select><button id="purge-now" class="ghost" style="padding:.2rem .6rem;font-size:.75rem;">تنظيف الآن</button></p>
+            <p id="purge-warn" style="display:none;margin:.3rem 0 .4rem;padding:.45rem .6rem;border:1px solid #b45309;background:#2a1a0a;color:#fed7aa;border-radius:.5rem;font-size:.78rem;"></p>
+            <p style="margin:.4rem 0 .4rem;display:flex;gap:.5rem;flex-wrap:wrap;"><button id="archive-backup" class="ghost" style="padding:.2rem .6rem;font-size:.75rem;">⬇ نسخة احتياطية (ملف)</button><button id="archive-restore" class="ghost" style="padding:.2rem .6rem;font-size:.75rem;">⬆ استيراد نسخة</button><input type="file" id="archive-restore-file" accept=".json,application/json" style="display:none;"></p>
+            <div id="archive-list"></div>
+            <details id="stats-set" style="margin:.5rem 0 .2rem;"><summary id="stats-sum" style="cursor:pointer;opacity:.9;">📊 إحصاءات الجهاز</summary><p style="margin:.4rem 0;"><button id="stats-refresh" class="ghost" style="padding:.2rem .6rem;font-size:.75rem;">تحديث الإحصاءات</button> <button id="stats-csv" class="ghost" style="padding:.2rem .6rem;font-size:.75rem;">تصدير الإحصاءات CSV</button></p><pre id="stats-out" style="white-space:pre-wrap;background:#0b1220;border:1px solid var(--line);border-radius:.5rem;padding:.6rem;font-family:inherit;font-size:.8rem;margin:.2rem 0 .4rem;"></pre></details>
+          </details>
+        </details>
+        <pre id="report-ar" style="display:none; white-space:pre-wrap; text-align:right; color:var(--text); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.82rem;"></pre>
+        <pre id="report-en" style="display:none; white-space:pre-wrap; text-align:left; direction:ltr; color:var(--muted); background:#0b1220; border:1px solid var(--line); border-radius:.5rem; padding:.7rem; font-family:inherit; font-size:.78rem;"></pre>
+        <p class="controls" id="sign-row" style="display:none">
+          <label><input type="checkbox" id="signoff" /> اعتماد مراجعة الأخصائي</label>
+          <input id="signer" placeholder="اسم الأخصائي" style="background:#0b1220; color:var(--text); border:1px solid var(--line); border-radius:.4rem; padding:.3rem .5rem;" />
+          <button id="copy-report" class="ghost">نسخ المسودة</button>
+        </p>
+        <div id="fs-mini" class="fs-mini">
+          <button id="fs-fold" class="ghost" type="button" aria-expanded="false" title="الإعدادات / Settings">⚙</button>
+          <span id="fs-count"></span>
+          <button id="fs-exit" class="ghost" type="button" style="margin-inline-start:auto" title="خروج من ملء الشاشة / Exit fullscreen">⛶</button>
+        </div>
+      </section>
+    </main>
+<div id="sign-extra" style="display:none;margin-top:.6rem;gap:.5rem;flex-wrap:wrap;align-items:center;">
+  <input id="signer-license" placeholder="رقم الترخيص/النقابة" style="flex:1;min-width:10rem;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:.4rem;padding:.3rem .5rem;" />
+  <button id="sign-export" class="primary">توقيع وتصدير PDF</button>
+  <button id="sign-export-word" class="ghost">توقيع وتصدير Word</button>
+  <details id="org-set" style="width:100%;">
+    <summary id="org-sum" style="cursor:pointer;opacity:.85;">إعدادات ترويسة المؤسسة</summary>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;">
+      <input id="org-ar" placeholder="اسم المستشفى (عربي)" style="flex:1;min-width:9rem;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:.4rem;padding:.3rem .5rem;" />
+      <input id="org-en" placeholder="Hospital name (EN)" dir="ltr" style="flex:1;min-width:9rem;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:.4rem;padding:.3rem .5rem;" />
+      <button id="org-save" class="ghost">حفظ الترويسة</button>
+    </div>
+  </details>
+</div>
+<div id="cmp-scrim" style="display:none" aria-hidden="true"></div>
+<div id="cmp-sheet" style="display:none" role="dialog" aria-modal="true" aria-labelledby="cmp-title" aria-hidden="true">
+  <div class="sheet-head">
+    <b id="cmp-title">مقارنة جنبًا إلى جنب</b>
+    <button id="cmp-close" class="ghost" type="button" aria-label="إغلاق">×</button>
+  </div>
+  <p class="controls" id="cmp-pick-row" style="margin:.2rem 0 .45rem">
+    <label id="lbl-cmp-pick">الدراسة الأخرى:
+      <select id="cmp-pick"></select>
+    </label>
+  </p>
+  <div id="cmp-grid">
+    <div class="cmp-pane">
+      <div class="cmp-head" id="cmp-head-a"></div>
+      <canvas id="cmp-cv-a" class="cmp-cv"></canvas>
+      <input id="cmp-slice-a" type="range" min="0" max="0" value="0" style="width:100%">
+      <div class="cmp-sub" id="cmp-sub-a"></div>
+    </div>
+    <div class="cmp-pane">
+      <div class="cmp-head" id="cmp-head-b"></div>
+      <canvas id="cmp-cv-b" class="cmp-cv"></canvas>
+      <input id="cmp-slice-b" type="range" min="0" max="0" value="0" style="width:100%">
+      <div class="cmp-sub" id="cmp-sub-b"></div>
+      <label id="lbl-win-b">النافذة:
+        <select id="cmp-win-b"></select>
+      </label>
+      <button id="cmp-open-b" class="ghost" type="button" style="padding:.2rem .6rem;font-size:.78rem;margin-top:.3rem">فتح هذه الدراسة</button>
+    </div>
+  </div>
+  <p class="controls" id="cmp-bar" style="margin:.5rem 0 .2rem">
+    <label><input type="checkbox" id="cmp-sync-slice" checked> <span id="lbl-cmp-slice">مزامنة الشريحة</span></label>
+    <label><input type="checkbox" id="cmp-sync-zoom" checked> <span id="lbl-cmp-zoom">مزامنة التكبير</span></label>
+    <label><input type="checkbox" id="cmp-sync-win" checked> <span id="lbl-cmp-win">مزامنة النافذة</span></label>
+  </p>
+  <p class="hint" id="cmp-note"></p>
+</div>
+<div id="series-scrim" style="display:none" aria-hidden="true"></div>
+<div id="series-sheet" style="display:none" role="dialog" aria-modal="true" aria-labelledby="series-sheet-title" aria-hidden="true">
+  <div class="sheet-head">
+    <b id="series-sheet-title">سلاسل الدراسة</b>
+    <button id="series-sheet-close" class="ghost" type="button" aria-label="إغلاق">×</button>
+  </div>
+  <div id="series-list"></div>
+</div>
+<div id="print-root"></div>

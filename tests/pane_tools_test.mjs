@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import {secondaryImagePoint,paneMeasurementKey} from '../app.v139.js';
-import {orientPoint,orientSize} from '../viewer-state.v139.js';
+import {secondaryImagePoint,paneMeasurementKey} from '../app.v140.js';
+import {orientPoint,orientSize} from '../viewer-state.v140.js';
 for(const rotate of [0,90,180,270])for(const flipH of [false,true])for(const flipV of [false,true]){
  const o={rotate,flipH,flipV},frame={w:120,h:80},[dw,dh]=orientSize(frame.w,frame.h,o);
  for(const p of [[10,15],[55,40],[100,60]]){

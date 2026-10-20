@@ -1,12 +1,12 @@
 {
-  "build": "v139",
-  "version": "v139",
-  "mark": "ب3.11",
+  "build": "v140",
+  "version": "v140",
+  "mark": "ب3.12",
   "channel": "stable",
-  "minVersion": "v139",
-  "updatedAt": "2026-10-20T21:11:08Z",
+  "minVersion": "v140",
+  "updatedAt": "2026-10-20T21:37:59Z",
   "notes": {
-    "ar": "بحث وتصفية مطويان اختياريًا لقائمة دراسات متقاربة — ب3.11",
-    "en": "Optional folded worklist tools for a compact study list — ب3.11"
+    "ar": "بطاقات حالات مختصرة على الهاتف وتفاصيل اختيارية — ب3.12",
+    "en": "Compact mobile study cards with optional details — ب3.12"
   }
 }
