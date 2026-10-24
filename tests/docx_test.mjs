@@ -1,5 +1,5 @@
-import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v143.js";
-import { signedDocHash } from "../report.v143.js";
+import { buildDocxReport, buildDocxReportEn, crc32 } from "../docx.v144.js";
+import { signedDocHash } from "../report.v144.js";
 import fs from "node:fs";
 let fails = 0;
 const enc = new TextEncoder();
@@ -53,7 +53,7 @@ cCheck(cXml.includes("• Post-operative changes of lower lumbar laminectomy.") 
 cCheck(cXml.includes("this draft is not a diagnosis"), "disclaimer-kept");
 const compDup = { exam: "MR Study", indication: "", findings: ["Post-operative changes are noted in the lower **lumbar spine**.", "Post-operative changes are noted in the lower **lumbar spine**.", "Second line."], impression: ["Dup bullet.", "Dup bullet."] };
 const dXml = Buffer.from(buildDocxReportEn(study, draft, m, compDup)).toString("utf8");
-cCheck((dXml.match(/Post-operative changes are noted/g) || []).length === 1 && (dXml.match(/Dup bullet\./g) || []).length === 1, "dedupe-consecutive");
+cCheck((dXml.match(/Post-operative changes are noted/g) || []).length === 2 && (dXml.match(/Dup bullet\./g) || []).length === 2, "preserve-reviewed-consecutive-lines");
 const compAnat = { exam: "MR", indication: "", findings: ["The <anat>thecal sac</anat> is indented."], impression: [] };
 const aXml = Buffer.from(buildDocxReportEn(study, draft, m, compAnat)).toString("utf8");
 cCheck(aXml.includes("<w:b/>") && aXml.includes("thecal sac</w:t>"), "anat-bold-alias");

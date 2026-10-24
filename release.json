@@ -1,12 +1,12 @@
 {
-  "build": "v143",
-  "version": "v143",
-  "mark": "ب3.15",
+  "build": "v144",
+  "version": "v144",
+  "mark": "ب3.16",
   "channel": "stable",
-  "minVersion": "v143",
-  "updatedAt": "2026-10-20T22:13:53Z",
+  "minVersion": "v144",
+  "updatedAt": "2026-10-24T21:40:09Z",
   "notes": {
-    "ar": "استكمال ترجمة أدوات العارض والإعدادات للإنجليزية — ب3.15",
-    "en": "Complete viewer and settings interface translations — ب3.15"
+    "ar": "تنزيل تقرير Word الإنجليزي من المحرر بخطوة واحدة دون مسودات متكررة — ب3.16",
+    "en": "One English Word report download from the reviewed composer, no automatic draft downloads — ب3.16"
   }
 }
