@@ -1,12 +1,12 @@
 {
-  "build": "v144",
-  "version": "v144",
-  "mark": "ب3.16",
+  "build": "v145",
+  "version": "v145",
+  "mark": "ب3.17",
   "channel": "stable",
-  "minVersion": "v144",
-  "updatedAt": "2026-10-24T21:40:09Z",
+  "minVersion": "v145",
+  "updatedAt": "2026-10-25T20:15:40Z",
   "notes": {
-    "ar": "تنزيل تقرير Word الإنجليزي من المحرر بخطوة واحدة دون مسودات متكررة — ب3.16",
-    "en": "One English Word report download from the reviewed composer, no automatic draft downloads — ب3.16"
+    "ar": "اتصال AI مضبوط مع إعادة محاولة محدودة وإلغاء وحماية نص الحالة — ب3.17",
+    "en": "Bounded AI retries, accurate errors, cancellation and study/edit guards — ب3.17"
   }
 }
