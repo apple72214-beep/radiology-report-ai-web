@@ -1,12 +1,12 @@
 {
-  "build": "v145",
-  "version": "v145",
-  "mark": "ب3.17",
+  "build": "v146",
+  "version": "v146",
+  "mark": "ب3.18",
   "channel": "stable",
-  "minVersion": "v145",
-  "updatedAt": "2026-10-25T20:15:40Z",
+  "minVersion": "v146",
+  "updatedAt": "2026-10-25T20:37:49Z",
   "notes": {
-    "ar": "اتصال AI مضبوط مع إعادة محاولة محدودة وإلغاء وحماية نص الحالة — ب3.17",
-    "en": "Bounded AI retries, accurate errors, cancellation and study/edit guards — ب3.17"
+    "ar": "اختبار اتصال AI دون بيانات مرضى وسجل تقني آمن لكل محاولة — ب3.18",
+    "en": "Patient-free AI connectivity probe and safe per-attempt diagnostics — ب3.18"
   }
 }

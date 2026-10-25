@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {selectWorklistStudies as select,worklistText} from '../app.v145.js';
+import {selectWorklistStudies as select,worklistText} from '../app.v146.js';
 const a={uid:'a',patient:'ID-123',meta:{patientName:'أَحْمَد^علي',studyDesc:'MRI Lumbar spine',studyDate:'20261018'},modality:'MR',created:2,triage:{priority:'urgent'},series:[{description:'Sagittal T2'}],frames:[]};
 const b={uid:'b',patient:'ID-456',meta:{patientName:'Beta',studyDate:'20261020'},modality:'CT',created:3,signedBy:'Synthetic doctor',frames:[{seq:{seriesDescription:'Axial Chest'}}]};
 const c={uid:'c',patient:'ID-789',meta:{patientName:'Cedar'},modality:'MR',created:4,consult:{},frames:[]};
