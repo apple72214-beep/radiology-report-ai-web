@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {drawFrame,validDisplayWindow} from '../app.v150.js';
+const ctx={createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData:i=>{ctx.image=i;}};
+const cv={width:2,height:2,getContext:()=>ctx};
+const f={kind:'gray',w:2,h:2,data:new Int16Array([0,98,200,1000]),volumeUnit:'HU',info:{slope:1,intercept:0}};
+const sample=()=>ctx.image.data[4];
+const original=Array.from(f.data);
+drawFrame(cv,f,'brain','CT');assert.equal(sample(),255);
+drawFrame(cv,f,'brain','CT',{center:100,width:200});assert.equal(sample(),125);assert.match(f.__img.k,/WL=100\|WW=200/);
+drawFrame(cv,f,'brain','CT',{center:120,width:200});assert(sample()<125);
+drawFrame(cv,f,'brain','CT',{center:100,width:400});assert(sample()>125);
+drawFrame(cv,f,'brain','CT');assert.equal(sample(),255,'preset restored, no stale manual cache');
+drawFrame(cv,f,'brain','CT',{center:98,width:1});assert.equal(sample(),255);assert.equal(ctx.image.data[0],0);
+for(const x of [null,{}, {center:Infinity,width:200},{center:100,width:0},{center:100,width:NaN},{center:'100',width:200},{center:-40000,width:200}])assert.equal(validDisplayWindow(x),null);
+drawFrame(cv,f,'brain','MR');const m=sample();drawFrame(cv,f,'brain','MR',{center:100,width:200});assert.equal(sample(),m,'CT-only override');
+assert.deepEqual(Array.from(f.data),original);assert.deepEqual(f.info,{slope:1,intercept:0});assert.equal(f.volumeUnit,'HU');
+drawFrame(cv,f,'brain','CT',{center:3000,width:200});assert.equal(sample(),0);assert.equal(f.__blank,0,'intentional display clipping is not missing source data');
+console.log('PASS CT display-only WL/WW, 98 brain saturation to midgray, direction, cache separation/reset, threshold WW1, invalid-input rejection, MR ignored and unchanged source/HU');

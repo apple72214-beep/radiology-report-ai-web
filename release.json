@@ -1,12 +1,12 @@
 {
-  "build": "v149",
-  "version": "v149",
-  "mark": "ب3.21",
+  "build": "v150",
+  "version": "v150",
+  "mark": "ب3.22",
   "channel": "stable",
-  "minVersion": "v149",
-  "updatedAt": "2026-10-29T21:59:55Z",
+  "minVersion": "v150",
+  "updatedAt": "2026-10-29T22:57:32Z",
   "notes": {
-    "ar": "تصحيح معرف السلسلة والقيم العشرية في DICOM وتحديث آمن عند إعادة الاستيراد — ب3.21",
-    "en": "Correct DICOM series UID/decimal rescale parsing and safe duplicate refresh — ب3.21"
+    "ar": "ضبط سطوع وتباين CT يدويًا عبر WL وWW لكل نافذة دون تعديل الكثافات — ب3.22",
+    "en": "Independent CT window level/width brightness and contrast controls without altering pixels — ب3.22"
   }
 }
