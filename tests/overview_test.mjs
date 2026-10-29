@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {spatialMatch} from '../app.v150.js';
+import {spatialMatch} from '../app.v151.js';
 const f=(z,uid='frame1',iop=[1,0,0,0,1,0])=>({geometry:{ipp:[0,0,z],iop,frameOfReferenceUid:uid,spacingBetweenSlices:2}});
 assert.equal(spatialMatch(f(4),[f(0),f(2),f(4)]),2);
 assert.equal(spatialMatch(f(4),[f(4,'other')]),-1);

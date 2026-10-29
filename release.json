@@ -1,12 +1,12 @@
 {
-  "build": "v150",
-  "version": "v150",
-  "mark": "ب3.22",
+  "build": "v151",
+  "version": "v151",
+  "mark": "ب3.23",
   "channel": "stable",
-  "minVersion": "v150",
-  "updatedAt": "2026-10-29T22:57:32Z",
+  "minVersion": "v151",
+  "updatedAt": "2026-10-29T23:14:38Z",
   "notes": {
-    "ar": "ضبط سطوع وتباين CT يدويًا عبر WL وWW لكل نافذة دون تعديل الكثافات — ب3.22",
-    "en": "Independent CT window level/width brightness and contrast controls without altering pixels — ب3.22"
+    "ar": "ضبط WL وWW بالسحب على صورة CT مع بقاء التكبير بإصبعين — ب3.23",
+    "en": "Direct CT image drag for WL and WW with preserved pinch zoom — ب3.23"
   }
 }

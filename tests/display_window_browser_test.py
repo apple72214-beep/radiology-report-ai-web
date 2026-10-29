@@ -25,7 +25,7 @@ with sync_playwright() as p:
  assert not requests,requests
  stored=pg.evaluate("""async()=>{const db=await new Promise(r=>{const q=indexedDB.open('rrai',2);q.onsuccess=()=>r(q.result)}),tx=db.transaction('studies');const s=await new Promise(r=>{const q=tx.objectStore('studies').get('1.2.3.7');q.onsuccess=()=>r(q.result)});db.close();return {value:s.frames[0].data[18],slope:s.frames[0].info.slope,intercept:s.frames[0].info.intercept,hu:s.frames[0].volumeUnit};}""")
  assert stored=={'value':98,'slope':1,'intercept':0,'hu':'HU'}
- pg.locator('#worklist tbody tr button').nth(1).click();pg.select_option('#preset','brain');assert gray()==255,'manual override must not leak to another case'
+ pg.locator('#worklist tbody tr').nth(1).locator('button').first.click();pg.select_option('#preset','brain');assert gray()==255,'manual override must not leak to another case'
  pg.reload();pg.wait_for_selector('#worklist tbody tr button');pg.locator('#worklist tbody tr button').first.click();pg.select_option('#preset','brain');assert gray()==255,'manual override is not persisted'
  assert not errors,errors
  print('PASS real canvas 98 white→125 gray, sliders/numeric input, pane independence/reset, preset switching, AR/EN, 360–1280 containment, no non-GET requests, unchanged saved pixels/calibration, session-only; errors []')

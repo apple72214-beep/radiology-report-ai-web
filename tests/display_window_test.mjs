@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {drawFrame,validDisplayWindow} from '../app.v150.js';
+import {drawFrame,validDisplayWindow} from '../app.v151.js';
 const ctx={createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData:i=>{ctx.image=i;}};
 const cv={width:2,height:2,getContext:()=>ctx};
 const f={kind:'gray',w:2,h:2,data:new Int16Array([0,98,200,1000]),volumeUnit:'HU',info:{slope:1,intercept:0}};

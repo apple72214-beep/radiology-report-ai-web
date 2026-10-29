@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {draggedDisplayWindow} from '../app.v151.js';
+const start={center:100,width:200};
+assert.deepEqual(draggedDisplayWindow(start,0,0,400,400),start);
+assert.equal(draggedDisplayWindow(start,200,0,400,400).width,400);
+assert.equal(draggedDisplayWindow(start,-200,0,400,400).width,100);
+assert.equal(draggedDisplayWindow(start,0,-100,400,400).center,200);
+assert.equal(draggedDisplayWindow(start,0,100,400,400).center,0);
+assert.equal(draggedDisplayWindow(start,1e9,-1e9,400,400).width,131070);
+assert.equal(draggedDisplayWindow(start,-1e9,1e9,400,400).width,1);
+assert.equal(draggedDisplayWindow(start,0,0,0,400),null);
+assert.equal(draggedDisplayWindow(start,NaN,0,400,400),null);
+assert.equal(draggedDisplayWindow({center:0,width:0},10,10,400,400),null);
+assert.deepEqual(start,{center:100,width:200});
+console.log('PASS drag WL/WW directions, viewport scaling, width ratio, finite bounds, invalid geometry/input refusal and immutable starting window');
