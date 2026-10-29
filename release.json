@@ -1,12 +1,12 @@
 {
-  "build": "v147",
-  "version": "v147",
-  "mark": "ب3.19",
+  "build": "v148",
+  "version": "v148",
+  "mark": "ب3.20",
   "channel": "stable",
-  "minVersion": "v147",
-  "updatedAt": "2026-10-29T20:59:51Z",
+  "minVersion": "v148",
+  "updatedAt": "2026-10-29T21:49:14Z",
   "notes": {
-    "ar": "عرض حجمي اختياري لحالات CT المتوافقة فقط — ب3.19",
-    "en": "Optional local volume rendering for compatible CT series only — ب3.19"
+    "ar": "تشخيص 3D من نافذة واحدة وعرض سبب الرفض داخل الإعدادات — ب3.20",
+    "en": "Single-pane 3D diagnostics with inline refusal details — ب3.20"
   }
 }

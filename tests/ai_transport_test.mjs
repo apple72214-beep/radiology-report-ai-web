@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {aiRunRequests} from '../app.v147.js';
+import {aiRunRequests} from '../app.v148.js';
 const obj={findings:['Synthetic finding'],impression:['Synthetic impression']};
 const good=()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(obj)}]}}]}),{status:200});
 const requests=['model-a','model-b'].map(model=>({model,url:'https://synthetic.invalid',headers:{},body:{images:['SYNTHETIC']}}));
