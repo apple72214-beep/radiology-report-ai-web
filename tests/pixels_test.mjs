@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v146.js";
-import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v146.js";
+import { parseDicom } from "../dicom.v147.js";
+import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v147.js";
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
 
@@ -138,14 +138,14 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v146.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v147.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) {") && src.includes("bad++;"), "ingest counts files with unreadable pixels");
 ck(/if \(!study\.frames\.length\) \{ bad\+\+;.*continue; \}/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v146.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v147.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
@@ -253,6 +253,18 @@ ck(src.includes('x.indexOf("opaque:") === 0'),
   "an opaque layer is repaired like any other layout fault");
 ck(/if \(an\) an\.style\.background = "transparent"/.test(src),
   "the layout repair clears #annot's background");
+
+// CT volume eligibility is metadata only: it must not double-rescale 2D pixels.
+{
+ const extra=[el(0x0008,0x0060,"CS",cs("CT")),el(0x0008,0x0016,"UI",cs("1.2.840.10008.5.1.4.1.1.2")),el(0x0028,0x1052,"DS",cs("-1024")),el(0x0028,0x1053,"DS",cs("1"))];
+ const bytes=Buffer.alloc(32);bytes.writeUInt16LE(1100,0);
+ const parsed=parseDicom(asBuffer(dcm({extra,bytes})));
+ ck(parsed.pixels.volumeUnit==="HU"&&parsed.pixels.data[0]===76,"CT HU eligibility retains exactly-once rescale");
+ ck(parseDicom(asBuffer(dcm({extra:extra.slice(0,2),bytes}))).pixels.volumeUnit!=="HU","no guessed HU when rescale tags absent");
+ ck(parseDicom(asBuffer(dcm({extra:extra.concat([el(0x0028,0x1054,"LO",cs("OTHER"))]),bytes}))).pixels.volumeUnit!=="HU","non-HU declared units rejected");
+ ck(parseDicom(asBuffer(dcm({extra:extra.concat([el(0x0008,0x0060,"CS",cs("MR"))]),bytes}))).pixels.volumeUnit!=="HU","MR rescale never enables CT 3D");
+ ck(parseDicom(asBuffer(dcm({extra,bytes,frames:2}))).pixels.volumeUnit!=="HU","enhanced/multiframe not guessed as a conventional stack");
+}
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
 process.exit(fails ? 1 : 0);

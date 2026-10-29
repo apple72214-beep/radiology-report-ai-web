@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {prepareRenderVolume} from '../mpr.v147.js';
+const make=(z)=>({kind:'gray',w:8,h:6,seriesUid:'synthetic-ct',volumeUnit:'HU',info:{frames:1},spacing:[.8,.5],geometry:{frameOfReferenceUid:'synthetic-for',iop:[1,0,0,0,1,0],ipp:[0,0,z],sliceThickness:1},data:Int16Array.from({length:48},(_,i)=>i===0?-1000:1000+z*100)});
+const stack=()=>[3,0,2,1].map(make);const build=fs=>prepareRenderVolume(fs,{modality:'CT'});
+const original=stack(),before=original.map(f=>Array.from(f.data));let v=build(original);assert(v.ok);assert.deepEqual(v.extent,[3.5,4,3]);assert.equal(v.sourceSlices,4);assert.deepEqual(original.map(f=>Array.from(f.data)),before);assert.equal(original[0].geometry.ipp[2],3);assert(v.data[1]<v.data[3*48+1]);
+const check=(change,reason)=>{const fs=stack();change(fs);assert.equal(build(fs).reason,reason);};
+assert.equal(prepareRenderVolume(stack(),{modality:'MR'}).reason,'ct-only');assert.equal(build(stack().slice(0,3)).reason,'slices');
+check(f=>delete f[0].volumeUnit,'hu');check(f=>f[0].info.frames=2,'hu');check(f=>f[0].info.depthFit='partial16','hu');
+check(f=>f[0].kind='rgb','pixels');check(f=>f[0].w=9,'pixels');check(f=>f[0].data=new Float32Array(2),'pixels');
+check(f=>f[0].seriesUid='other','mixed');check(f=>f[0].geometry.frameOfReferenceUid='other','mixed');
+check(f=>delete f[0].geometry.iop,'geometry');check(f=>f[0].geometry.iop=[1,0,0,0,0,1],'geometry');check(f=>f[0].geometry.ipp[0]=NaN,'geometry');
+check(f=>f[0].spacing[0]=0,'spacing');check(f=>f[1].spacing=[1,1],'spacing');check(f=>f[0].geometry.ipp[0]=1,'tilt');
+check(f=>f[0].geometry.ipp[2]=2,'duplicates');check(f=>f[0].geometry.ipp[2]=5,'irregular');
+check(f=>f.forEach(x=>x.data.fill(3)),'flat');
+let big=Array.from({length:8},(_,z)=>({...make(z*5),w:512,h:512,data:Int16Array.from({length:512*512},(_,i)=>i%3000-1000)}));v=build(big);assert(v.ok&&v.downsample&&v.anisotropy>3&&v.gaps);assert(v.nx<=160&&v.ny<=160&&v.nz<=192&&v.data.byteLength<=4e6);assert.deepEqual(v.extent,[255.5,408.8,35]);
+console.log('PASS CT/HU-only, strict single-series geometry, duplicate/irregular/tilted stack rejection, physical extents, ordered bytes, bounded preview, anisotropy/gap warnings and source immutability');

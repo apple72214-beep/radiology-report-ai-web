@@ -1,4 +1,4 @@
-import { dist, segMm, angleDeg, ellipseStats, grayAt, rectStats } from "../measure.v146.js";
+import { dist, segMm, angleDeg, ellipseStats, grayAt, rectStats } from "../measure.v147.js";
 let fails = 0;
 const ok = (name, cond) => { if (cond) console.log("PASS " + name); else { fails++; console.log("FAIL " + name); } };
 ok("dist-3-4-5", Math.abs(dist([0, 0], [3, 4]) - 5) < 1e-9);

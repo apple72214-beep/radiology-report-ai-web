@@ -1,12 +1,12 @@
 {
-  "build": "v146",
-  "version": "v146",
-  "mark": "ب3.18",
+  "build": "v147",
+  "version": "v147",
+  "mark": "ب3.19",
   "channel": "stable",
-  "minVersion": "v146",
-  "updatedAt": "2026-10-25T20:37:49Z",
+  "minVersion": "v147",
+  "updatedAt": "2026-10-29T20:59:51Z",
   "notes": {
-    "ar": "اختبار اتصال AI دون بيانات مرضى وسجل تقني آمن لكل محاولة — ب3.18",
-    "en": "Patient-free AI connectivity probe and safe per-attempt diagnostics — ب3.18"
+    "ar": "عرض حجمي اختياري لحالات CT المتوافقة فقط — ب3.19",
+    "en": "Optional local volume rendering for compatible CT series only — ب3.19"
   }
 }
