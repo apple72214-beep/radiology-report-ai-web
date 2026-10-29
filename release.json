@@ -1,12 +1,12 @@
 {
-  "build": "v148",
-  "version": "v148",
-  "mark": "ب3.20",
+  "build": "v149",
+  "version": "v149",
+  "mark": "ب3.21",
   "channel": "stable",
-  "minVersion": "v148",
-  "updatedAt": "2026-10-29T21:49:14Z",
+  "minVersion": "v149",
+  "updatedAt": "2026-10-29T21:59:55Z",
   "notes": {
-    "ar": "تشخيص 3D من نافذة واحدة وعرض سبب الرفض داخل الإعدادات — ب3.20",
-    "en": "Single-pane 3D diagnostics with inline refusal details — ب3.20"
+    "ar": "تصحيح معرف السلسلة والقيم العشرية في DICOM وتحديث آمن عند إعادة الاستيراد — ب3.21",
+    "en": "Correct DICOM series UID/decimal rescale parsing and safe duplicate refresh — ب3.21"
   }
 }

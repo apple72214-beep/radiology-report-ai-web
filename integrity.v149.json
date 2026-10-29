@@ -1,0 +1,79 @@
+{
+  "build": "v149",
+  "pinned_commit": "6c230d01c446e9576f07f40b07104c404f8880fa",
+  "pinned_origin": "https://cdn.jsdelivr.net/gh/apple72214-beep/radiology-report-ai-web@6c230d01c446e9576f07f40b07104c404f8880fa/",
+  "files": {
+    "consult": {
+      "path": "consult.v149.js",
+      "chars": 5295,
+      "bytes": 5397,
+      "sha256": "3d4c03cd223723f54d3d9b598daa9360ce5b2bb1d62d6e8cd11ba3d305e9425a"
+    },
+    "decode": {
+      "path": "codecs/decode.v149.js",
+      "chars": 5236,
+      "bytes": 5236,
+      "sha256": "f2b87411b1e3c14edc6b0815a16cb775dffccdffa078d946968db818e1f9abd2"
+    },
+    "dicom": {
+      "path": "dicom.v149.js",
+      "chars": 16423,
+      "bytes": 16429,
+      "sha256": "8c0f40de06aae2449d1d3254c29340d9e60dde55a9aaa99c8e6b166018859dcd"
+    },
+    "triage": {
+      "path": "triage.v149.js",
+      "chars": 5206,
+      "bytes": 5542,
+      "sha256": "a434a45f28ede36f9018e983fb3c8f3a599df0674d0e94528843fd7db2b83a47"
+    },
+    "docx": {
+      "path": "docx.v149.js",
+      "chars": 20347,
+      "bytes": 20652,
+      "sha256": "ecc97506ed012c6eef68a55bb326a4254b22a6997ddad9f4b609e5c33e5709a8"
+    },
+    "measure": {
+      "path": "measure.v149.js",
+      "chars": 2804,
+      "bytes": 2808,
+      "sha256": "fc9ae2aff41142c6f84cfb4c79167995edcf11efec3ed275da6ca31b058d0525"
+    },
+    "compare": {
+      "path": "compare.v149.js",
+      "chars": 1442,
+      "bytes": 1444,
+      "sha256": "a4308f873614e66ca3c21378554778d11afbbb9ebd9f2e8e41bf7b3cefe23c0b"
+    },
+    "report": {
+      "path": "report.v149.js",
+      "chars": 8574,
+      "bytes": 9460,
+      "sha256": "0e46cb9e36837d05d069de060d94c7fefb3001a07bee532fe29bde05c01e091e"
+    },
+    "mpr": {
+      "path": "mpr.v149.js",
+      "chars": 19410,
+      "bytes": 19418,
+      "sha256": "a7d1b1e3113ba3983c3bfa1f57216b08d233b4676aa44387f3e73c7b352bb651"
+    },
+    "viewer-state": {
+      "path": "viewer-state.v149.js",
+      "chars": 12957,
+      "bytes": 12985,
+      "sha256": "16dc35078b454c54499e91ae64dff1ec77b830c245e0fdab79b3ae4719fde650"
+    },
+    "app": {
+      "path": "app.v149.js",
+      "chars": 377079,
+      "bytes": 394511,
+      "sha256": "ccb097a059df9dc9e1b7d5a01b4b563aca361b71480129d875604a0837937966"
+    },
+    "ui": {
+      "path": "ui.v149.html",
+      "chars": 85639,
+      "bytes": 90778,
+      "sha256": "19fcdc78445f319a6ef017c167edcc0f0bd86443bbee3c131157ced37bb63892"
+    }
+  }
+}

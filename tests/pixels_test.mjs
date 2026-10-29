@@ -1,8 +1,8 @@
 /* A frame that cannot be drawn must never render as a silent black rectangle.
    This suite locks that rule: refuse bad pixel data at parse time, say why on
    the canvas and in the viewer, and never feed blank frames to MPR. */
-import { parseDicom } from "../dicom.v148.js";
-import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v148.js";
+import { parseDicom } from "../dicom.v149.js";
+import { drawFrame, pixelProblem, pixelProblemText, fixStoredDepth } from "../app.v149.js";
 import fs from "node:fs";
 const build = JSON.parse(fs.readFileSync(new URL("../release.json", import.meta.url), "utf8")).build;
 
@@ -138,14 +138,14 @@ function paintCanvas() {
 }
 
 /* ---- 4. wiring: ingest refuses them, MPR refuses them, UI has a place to say so ---- */
-const src = fs.readFileSync(new URL("../app.v148.js", import.meta.url), "utf-8");
+const src = fs.readFileSync(new URL("../app.v149.js", import.meta.url), "utf-8");
 ck(src.includes("if (pixelProblem(px)) {") && src.includes("bad++;"), "ingest counts files with unreadable pixels");
 ck(/if \(!study\.frames\.length\) \{ bad\+\+;.*continue; \}/.test(src), "a study with no drawable frame is not stored");
 ck(src.includes("const badFrame = frames.find((f) => pixelProblem(f));"), "MPR refuses to reslice blank frames");
 ck(src.includes("showPixelNote(f0);"), "viewer shows the reason under the image");
 ck(src.includes("function copyDiagnostics(px)"), "one-tap diagnostics report for support");
 ck(/len=" \+ st\.len/.test(src), "meta line exposes len/need for forensics");
-const ui = fs.readFileSync(new URL("../ui.v148.html", import.meta.url), "utf-8");
+const ui = fs.readFileSync(new URL("../ui.v149.html", import.meta.url), "utf-8");
 ck(ui.includes('id="img-note"') && ui.includes('id="img-note-copy"'), "viewer has a diagnostics box + copy button");
 ck(ui.includes('id="img-note-text"'), "diagnostics text node present");
 const probe = fs.readFileSync(new URL("../probe.html", import.meta.url), "utf-8");
@@ -264,6 +264,20 @@ ck(/if \(an\) an\.style\.background = "transparent"/.test(src),
  ck(parseDicom(asBuffer(dcm({extra:extra.concat([el(0x0028,0x1054,"LO",cs("OTHER"))]),bytes}))).pixels.volumeUnit!=="HU","non-HU declared units rejected");
  ck(parseDicom(asBuffer(dcm({extra:extra.concat([el(0x0008,0x0060,"CS",cs("MR"))]),bytes}))).pixels.volumeUnit!=="HU","MR rescale never enables CT 3D");
  ck(parseDicom(asBuffer(dcm({extra,bytes,frames:2}))).pixels.volumeUnit!=="HU","enhanced/multiframe not guessed as a conventional stack");
+}
+
+// Regression: hexadecimal tag keys are lowercase; DS accepts decimals/exponents.
+{
+ const bytes=Buffer.alloc(32);for(let i=0;i<16;i++)bytes.writeUInt16LE(i===15?2024:1054,i*2);
+ const extra=[el(0x0008,0x0060,"CS",cs("CT")),el(0x0008,0x0016,"UI",cs("1.2.840.10008.5.1.4.1.1.2")),el(0x0020,0x000e,"UI",cs("1.2.3.9")),el(0x0028,0x1052,"DS",cs("-1.024e+3")),el(0x0028,0x1053,"DS",cs("1.0"))];
+ let f=parseDicom(asBuffer(dcm({extra,bytes})));
+ ck(f.seriesUid==="1.2.3.9"&&f.seq.seriesUid==="1.2.3.9","SeriesInstanceUID numeric tag key survives hexadecimal letter case");
+ ck(f.pixels.data[0]===30&&f.pixelInfo.intercept===-1024,"scientific intercept yields 30 HU, not 1053 HU");
+ const extra2=extra.concat([el(0x0028,0x1053,"DS",cs("5e-1"))]);f=parseDicom(asBuffer(dcm({extra:extra2,bytes})));
+ ck(f.pixels.data[0]===-497&&f.pixelInfo.slope===.5,"fractional/scientific slope is not truncated or defaulted to one");
+ const capture={width:4,height:4,getContext:()=>({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData:img=>{capture.image=img;}})};
+ const correct=parseDicom(asBuffer(dcm({extra,bytes}))).pixels;drawFrame(capture,correct,'brain','CT');
+ ck(capture.image.data[0]>80&&capture.image.data[0]<120,"30 HU in the brain window is intermediate gray, not saturated white");
 }
 
 console.log(fails ? "pixels: " + fails + " FAIL" : "pixels: ok");
