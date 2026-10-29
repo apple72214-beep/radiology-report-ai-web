@@ -1,12 +1,12 @@
 {
-  "build": "v151",
-  "version": "v151",
-  "mark": "ب3.23",
+  "build": "v152",
+  "version": "v152",
+  "mark": "ب3.24",
   "channel": "stable",
-  "minVersion": "v151",
-  "updatedAt": "2026-10-29T23:14:38Z",
+  "minVersion": "v152",
+  "updatedAt": "2026-10-29T23:38:44Z",
   "notes": {
-    "ar": "ضبط WL وWW بالسحب على صورة CT مع بقاء التكبير بإصبعين — ب3.23",
-    "en": "Direct CT image drag for WL and WW with preserved pinch zoom — ب3.23"
+    "ar": "ضبط سطوع CT بالسحب مباشرة دون تفعيل ومنع تحديد النص داخل أداة العرض — ب3.24",
+    "en": "CT image drag adjusts WL WW immediately without activation; scoped touch selection protection — ب3.24"
   }
 }
