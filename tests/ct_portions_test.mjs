@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {prepareRenderVolume,volumeGeometryReport,compatibleCtPortions,ctPixelIssue} from '../mpr.v154.js';
+import {prepareRenderVolume,volumeGeometryReport,compatibleCtPortions,ctPixelIssue} from '../mpr.v155.js';
 const make=z=>({kind:'gray',w:8,h:6,seriesUid:'synthetic-series',volumeUnit:'HU',info:{frames:1},spacing:[.8,.5],geometry:{frameOfReferenceUid:'synthetic-reference',iop:[1,0,0,0,1,0],ipp:[0,0,z],sliceThickness:1},data:Int16Array.from({length:48},(_,i)=>i===0?-1000:100+i+z)});
 const mixed=()=>Array.from({length:114},(_,z)=>z===103?{...make(z),w:9,data:new Int16Array(54),geometry:{...make(z).geometry,iop:[1,0,0,0,0,1]}}:make(z));
 let frames=mixed(),before=frames.map(f=>({data:Array.from(f.data),w:f.w,h:f.h,iop:[...f.geometry.iop],ipp:[...f.geometry.ipp],uid:f.seriesUid}));

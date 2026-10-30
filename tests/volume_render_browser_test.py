@@ -13,16 +13,19 @@ with sync_playwright() as p:
  pg.click('#vr-open');pg.wait_for_function("document.getElementById('vr-dialog').open&&!document.getElementById('vr-controls').hidden")
  pg.wait_for_timeout(200)
  def pixels():return pg.locator('#vr-canvas').evaluate("c=>{let g=c.getContext('webgl2'),p=new Uint8Array(c.width*c.height*4);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,p);let sum=0,n=0;for(let i=0;i<p.length;i+=4){sum+=p[i]+p[i+1]+p[i+2];if(p[i]+p[i+1]+p[i+2]>30)n++;}return {sum,n,e:g.getError()};}")
+ assert pg.locator('#vr-style').input_value()=='surface' and pg.locator('#vr-opacity').is_disabled()
  first=pixels();assert first['n']>1000 and first['e']==0,first
  box=pg.locator('#vr-canvas').bounding_box();pg.mouse.move(box['x']+box['width']*.4,box['y']+box['height']*.5);pg.mouse.down();pg.mouse.move(box['x']+box['width']*.65,box['y']+box['height']*.6,steps=4);pg.mouse.up();pg.wait_for_timeout(150);assert pixels()['sum']!=first['sum']
  pg.locator('#vr-threshold').evaluate("e=>{e.value='1800';e.dispatchEvent(new Event('input'))}");pg.wait_for_timeout(150);assert pixels()['n']==0
  pg.click('#vr-reset');pg.wait_for_timeout(150);assert pixels()['n']>1000
  pg.locator('#vr-cut').evaluate("e=>{e.value='90';e.dispatchEvent(new Event('input'))}");pg.wait_for_timeout(150);assert pixels()['sum']<first['sum']
+ pg.select_option('#vr-style','volume');assert pg.locator('#vr-opacity').is_enabled()
  pg.locator('#vr-threshold').evaluate("e=>{e.value='400';e.dispatchEvent(new Event('input'))}")
  pg.locator('#vr-opacity').evaluate("e=>{e.value='1.7';e.dispatchEvent(new Event('input'))}")
  pg.select_option('#vr-quality','high');pg.wait_for_function("!document.getElementById('vr-controls').hidden&&/عالية|high/.test(document.getElementById('vr-info').textContent)");pg.wait_for_timeout(200)
  assert pg.locator('#vr-threshold').input_value()=='400' and pg.locator('#vr-opacity').input_value()=='1.7'
  assert pixels()['n']>1000 and pixels()['e']==0,'High R16F texture must really render'
+ assert pg.locator('#vr-style').input_value()=='volume' and pg.locator('#vr-opacity').is_enabled()
  pg.select_option('#vr-quality','balanced');pg.wait_for_function("!document.getElementById('vr-controls').hidden&&/متوازنة|balanced/.test(document.getElementById('vr-info').textContent)");assert pg.locator('#vr-threshold').input_value()=='400'
  pg.click('#vr-reset');pg.wait_for_timeout(150);pg.screenshot(path='/home/user/ct-volume-v147-synthetic.png')
  for width in [360,720,1280]:

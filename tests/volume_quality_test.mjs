@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {renderVolumeGrid,prepareRenderVolume} from '../mpr.v154.js';
+import {renderVolumeGrid,prepareRenderVolume} from '../mpr.v155.js';
 for(const quality of ['balanced','high']){
  const g=renderVolumeGrid(512,565,113,quality);assert.equal(g.nz,113,'in-plane reduction must not unnecessarily reduce depth to32');assert(g.nx*g.ny*g.nz<=g.budget);assert(g.nx<=512&&g.ny<=565);assert.equal(g.quality,quality);
  for(const [w,h,z] of [[512,512,202],[1024,512,1000],[2,10000,500],[4096,4096,4096],[8,6,4]]){const d=renderVolumeGrid(w,h,z,quality);assert(d.nx*d.ny*d.nz<=d.budget);assert(d.nz<=z&&d.nx<=w&&d.ny<=h);assert(d.nz<= (quality==='high'?256:192));}

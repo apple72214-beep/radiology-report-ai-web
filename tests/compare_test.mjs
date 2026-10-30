@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import { frameStats, normalize01, diffStats, frameGrayFlat } from "../compare.v154.js";
-import { cmpCandidates, cmpRatio, cmpIndex, cmpPartner, cmpNameKey, cmpSamePatient, cmpOthers, cmpCrossPatient } from "../app.v154.js";
+import { frameStats, normalize01, diffStats, frameGrayFlat } from "../compare.v155.js";
+import { cmpCandidates, cmpRatio, cmpIndex, cmpPartner, cmpNameKey, cmpSamePatient, cmpOthers, cmpCrossPatient } from "../app.v155.js";
 let fails = 0;
 let checks = 0;
 const ok = (n, c) => { checks++; if (c) console.log("PASS " + n); else { fails++; console.log("FAIL " + n); } };
@@ -75,8 +75,8 @@ ok("an unnamed study matches nobody", cmpSamePatient(mk("S1", "", ""), mk("S2", 
   ok("no partner at all is not flagged", cmpCrossPatient(me, null) === false);
 }
 
-const appSrc = fs.readFileSync(new URL("../app.v154.js", import.meta.url), "utf8");
-const uiSrc = fs.readFileSync(new URL("../ui.v154.html", import.meta.url), "utf8");
+const appSrc = fs.readFileSync(new URL("../app.v155.js", import.meta.url), "utf8");
+const uiSrc = fs.readFileSync(new URL("../ui.v155.html", import.meta.url), "utf8");
 ok("the picker is filled from the same-patient list", appSrc.includes("cmpCandidates(await allStudies(), current)") || appSrc.includes("cmpCandidates(all, current)"));
 ok("the panes are linked by depth, never by index", appSrc.includes("cmpPartner(i, n, cmpCount(other))"));
 ok("slice, zoom and window can each be unlinked", appSrc.includes('for (const kind of ["slice", "zoom", "win"])') && appSrc.includes("cmpSyncSet(kind, box.checked)"));

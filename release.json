@@ -1,12 +1,12 @@
 {
-  "build": "v154",
-  "version": "v154",
-  "mark": "ب3.26",
+  "build": "v155",
+  "version": "v155",
+  "mark": "ب3.27",
   "channel": "stable",
-  "minVersion": "v154",
-  "updatedAt": "2026-10-30T01:49:04Z",
+  "minVersion": "v155",
+  "updatedAt": "2026-10-30T02:37:22Z",
   "notes": {
-    "ar": "تحسين دقة CT الحجمي مع حفظ عمق الشرائح وخيار جودة عالية وإظهار عظمي أوضح — ب3.26",
-    "en": "CT volume quality: preserve slice depth, optional high quality and clearer bone shading — ب3.26"
+    "ar": "إظهار سطح عظمي معتم مع إبقاء الإظهار الحجمي للمقارنة — ب3.27",
+    "en": "Opaque threshold bone surface with volume mode retained for comparison — ب3.27"
   }
 }
