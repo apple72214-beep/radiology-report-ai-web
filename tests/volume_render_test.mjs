@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {prepareRenderVolume} from '../mpr.v153.js';
+import {prepareRenderVolume} from '../mpr.v154.js';
 const make=(z)=>({kind:'gray',w:8,h:6,seriesUid:'synthetic-ct',volumeUnit:'HU',info:{frames:1},spacing:[.8,.5],geometry:{frameOfReferenceUid:'synthetic-for',iop:[1,0,0,0,1,0],ipp:[0,0,z],sliceThickness:1},data:Int16Array.from({length:48},(_,i)=>i===0?-1000:1000+z*100)});
 const stack=()=>[3,0,2,1].map(make);const build=fs=>prepareRenderVolume(fs,{modality:'CT'});
 const original=stack(),before=original.map(f=>Array.from(f.data));let v=build(original);assert(v.ok);assert.deepEqual(v.extent,[3.5,4,3]);assert.equal(v.sourceSlices,4);assert.deepEqual(original.map(f=>Array.from(f.data)),before);assert.equal(original[0].geometry.ipp[2],3);assert(v.data[1]<v.data[3*48+1]);

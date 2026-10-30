@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {refreshedCtStudy,privateDisplayReport} from '../app.v153.js';
+import {refreshedCtStudy,privateDisplayReport} from '../app.v154.js';
 const frames=(fresh=false)=>Array.from({length:4},(_,z)=>({kind:'gray',w:4,h:4,seriesUid:fresh?'1.2.3.9':'',volumeUnit:'HU',spacing:[1,1],seq:{seriesNumber:3},geometry:{frameOfReferenceUid:'1.2.3.4',ipp:[0,0,z],iop:[1,0,0,0,1,0]},info:{frames:1,bitsAllocated:16,slope:1,intercept:fresh?-1024:-1},data:Float32Array.from({length:16},(_,i)=>i*100+(fresh?-1024:-1)),__win:{lo:1},__img:{k:'bad-cache'}}));
 const old=()=>({uid:'1.2.3.7',modality:'CT',frames:frames(),report:{findings:'Physician text'},measurementFrames:{'1:0':{test:'keep'}},signedBy:'Synthetic',meta:{age:'021Y'}});
 const fresh=()=>({uid:'1.2.3.7',modality:'CT',frames:frames(true)});

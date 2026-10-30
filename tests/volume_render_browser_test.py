@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 BASE=os.getenv('BASE','http://127.0.0.1:8899/standalone.html')
 with sync_playwright() as p:
  b=p.chromium.launch(args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader','--enable-webgl']);pg=b.new_page(viewport={'width':390,'height':1000});errors=[];downloads=[];pg.on('pageerror',lambda e:errors.append(str(e)));pg.on('download',lambda d:downloads.append(d))
- pg.goto(BASE);pg.wait_for_function("!!document.getElementById('vr-open')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_timeout(1200)
+ pg.goto(BASE);pg.wait_for_function("!!document.getElementById('vr-open')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_function("!location.pathname.endsWith('standalone.html') || sessionStorage.getItem('rrai-sw-reload')==='1'");pg.wait_for_load_state('load');pg.wait_for_timeout(1200)
  pg.evaluate("""async()=>{const db=await new Promise(r=>{const q=indexedDB.open('rrai',2);q.onsuccess=()=>r(q.result)});const frames=[];for(let z=0;z<32;z++){const data=new Int16Array(64*64);for(let y=0;y<64;y++)for(let x=0;x<64;x++){const r=Math.hypot(x-30,y-32,(z-15.5)*1.4);data[y*64+x]=r>21?-1000:r>16?1200:20;}frames.push({kind:'gray',w:64,h:64,data,spacing:[.8,.8],seriesUid:'phantom-series',seq:{seriesNumber:1,seriesDescription:'Synthetic CT phantom'},volumeUnit:'HU',hu:true,info:{frames:1,bitsAllocated:16,slope:1,intercept:0},geometry:{frameOfReferenceUid:'phantom-for',ipp:[0,0,z],iop:[1,0,0,0,1,0],sliceThickness:1}});}const tx=db.transaction('studies','readwrite');tx.objectStore('studies').clear();tx.objectStore('studies').put({uid:'ct-phantom',patient:'SYNTHETIC ONLY',modality:'CT',created:1,frames,meta:{studyDesc:'Synthetic CT phantom'},triage:{score:0,priority:'routine',reasons:[]}});await new Promise(r=>tx.oncomplete=r);db.close();}""")
  pg.reload();pg.wait_for_selector('#worklist tbody tr button');pg.locator('#worklist tbody tr button').first.click();pg.wait_for_function("!document.getElementById('vr-open').hidden")
  pg.click('#vs-fold');assert pg.locator('#vr-open').is_visible();assert not pg.locator('#vr-dialog').is_visible()
@@ -18,6 +18,12 @@ with sync_playwright() as p:
  pg.locator('#vr-threshold').evaluate("e=>{e.value='1800';e.dispatchEvent(new Event('input'))}");pg.wait_for_timeout(150);assert pixels()['n']==0
  pg.click('#vr-reset');pg.wait_for_timeout(150);assert pixels()['n']>1000
  pg.locator('#vr-cut').evaluate("e=>{e.value='90';e.dispatchEvent(new Event('input'))}");pg.wait_for_timeout(150);assert pixels()['sum']<first['sum']
+ pg.locator('#vr-threshold').evaluate("e=>{e.value='400';e.dispatchEvent(new Event('input'))}")
+ pg.locator('#vr-opacity').evaluate("e=>{e.value='1.7';e.dispatchEvent(new Event('input'))}")
+ pg.select_option('#vr-quality','high');pg.wait_for_function("!document.getElementById('vr-controls').hidden&&/عالية|high/.test(document.getElementById('vr-info').textContent)");pg.wait_for_timeout(200)
+ assert pg.locator('#vr-threshold').input_value()=='400' and pg.locator('#vr-opacity').input_value()=='1.7'
+ assert pixels()['n']>1000 and pixels()['e']==0,'High R16F texture must really render'
+ pg.select_option('#vr-quality','balanced');pg.wait_for_function("!document.getElementById('vr-controls').hidden&&/متوازنة|balanced/.test(document.getElementById('vr-info').textContent)");assert pg.locator('#vr-threshold').input_value()=='400'
  pg.click('#vr-reset');pg.wait_for_timeout(150);pg.screenshot(path='/home/user/ct-volume-v147-synthetic.png')
  for width in [360,720,1280]:
   pg.set_viewport_size({'width':width,'height':1000});assert pg.locator('#vr-dialog').evaluate('e=>e.getBoundingClientRect().width<=innerWidth')
