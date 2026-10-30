@@ -1,12 +1,12 @@
 {
-  "build": "v152",
-  "version": "v152",
-  "mark": "ب3.24",
+  "build": "v153",
+  "version": "v153",
+  "mark": "ب3.25",
   "channel": "stable",
-  "minVersion": "v152",
-  "updatedAt": "2026-10-29T23:38:44Z",
+  "minVersion": "v153",
+  "updatedAt": "2026-10-29T23:58:10Z",
   "notes": {
-    "ar": "ضبط سطوع CT بالسحب مباشرة دون تفعيل ومنع تحديد النص داخل أداة العرض — ب3.24",
-    "en": "CT image drag adjusts WL WW immediately without activation; scoped touch selection protection — ب3.24"
+    "ar": "فحص مفصل للبكسلات واختيار أجزاء CT المتوافقة صراحة لبناء الحجم دون خلط أو حذف — ب3.25",
+    "en": "Detailed CT pixel diagnostics and explicit compatible contiguous volume portions without source edits — ب3.25"
   }
 }

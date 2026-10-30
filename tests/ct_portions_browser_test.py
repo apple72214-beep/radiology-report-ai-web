@@ -1,0 +1,29 @@
+"""Synthetic incompatible matrix/orientation: explicit partial preview, never silent omission."""
+import os,json
+from playwright.sync_api import sync_playwright
+BASE=os.getenv('BASE','http://127.0.0.1:8899/standalone.html')
+with sync_playwright() as p:
+ b=p.chromium.launch(args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader','--enable-webgl']);pg=b.new_page(viewport={'width':390,'height':1000});errors=[];downloads=[];pg.on('pageerror',lambda e:errors.append(str(e)));pg.on('download',lambda d:downloads.append(d))
+ pg.goto(BASE);pg.wait_for_function("!!document.getElementById('vr-open')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_timeout(1600)
+ pg.evaluate("""async()=>{const db=await new Promise(r=>{const q=indexedDB.open('rrai',2);q.onsuccess=()=>r(q.result)});const frames=Array.from({length:12},(_,z)=>{const bad=z===6,w=bad?9:8;return {kind:'gray',w,h:6,data:Int16Array.from({length:w*6},(_,i)=>i<w?-1000:1000+z*20),spacing:[.8,.5],seriesUid:'SYNTHETIC_SECRET_SERIES',seq:{seriesNumber:1},volumeUnit:'HU',hu:true,info:{frames:1,bitsAllocated:16,slope:1,intercept:0},geometry:{frameOfReferenceUid:'SYNTHETIC_SECRET_REFERENCE',ipp:[0,0,z],iop:bad?[1,0,0,0,0,1]:[1,0,0,0,1,0],sliceThickness:1}}});const tx=db.transaction('studies','readwrite'),st=tx.objectStore('studies');st.clear();st.put({uid:'1.2.3.7',patient:'SYNTHETIC A',modality:'CT',created:2,frames,report:{findings:'Retain physician text'},signedBy:'Synthetic Reviewer',measurementFrames:{'1:0':{test:'keep'}},meta:{},triage:{score:0,priority:'routine',reasons:[]}});st.put({uid:'1.2.3.8',patient:'SYNTHETIC B',modality:'CT',created:1,frames:frames.slice(0,4),meta:{},triage:{score:0,priority:'routine',reasons:[]}});await new Promise(r=>tx.oncomplete=r);db.close();}""")
+ pg.reload();pg.wait_for_selector('#worklist tbody tr button');pg.locator('#worklist tbody tr').filter(has_text='SYNTHETIC A').locator('button').first.click();pg.wait_for_function("document.getElementById('viewer-name').textContent.includes('SYNTHETIC A')");pg.click('#vs-fold')
+ before=pg.locator('#frame').evaluate('c=>c.toDataURL()');sent=[];pg.on('request',lambda r:sent.append(r.url) if r.method!='GET' else None)
+ pg.click('#vr-open');pg.wait_for_function("document.querySelectorAll('#vr-portions button').length===2")
+ assert pg.locator('#vr-canvas').is_hidden() and pg.locator('#vr-controls').is_hidden(),'must not automatically discard frames/render a subset'
+ report=json.loads(pg.locator('#vr-diagnostic').inner_text());assert report['reason']=='pixels' and report['detail']=='inconsistent-matrix';assert report['firstPixelIssue']['slice']==7 and report['differentOrientations']==1
+ assert [c['slices'] for c in report['compatiblePortions']]==[6,5];assert [c['excluded'] for c in report['compatiblePortions']]==[6,7]
+ assert 'SYNTHETIC_SECRET' not in pg.locator('#vr-diagnostic').inner_text()
+ assert '6/12' in pg.locator('#vr-portions button').first.inner_text()
+ pg.locator('#vr-portions button').first.click();pg.wait_for_function("!document.getElementById('vr-controls').hidden");assert 'حجم جزئي' in pg.locator('#vr-status').inner_text();assert '6/12' in pg.locator('#vr-info').inner_text() and 'مستبعد 6' in pg.locator('#vr-info').inner_text()
+ assert pg.locator('#vr-canvas').evaluate("c=>{const g=c.getContext('webgl2'),p=new Uint8Array(c.width*c.height*4);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,p);return p.some((v,i)=>i%4!==3&&v>0)}")
+ pg.click('#vr-close');assert pg.locator('#frame').evaluate('c=>c.toDataURL()')==before
+ pg.click('#vr-open');pg.wait_for_function("document.querySelectorAll('#vr-portions button').length===2");pg.evaluate("window.oldPortion=document.querySelector('#vr-portions button')");pg.click('#vr-close')
+ pg.locator('#worklist tbody tr').filter(has_text='SYNTHETIC B').locator('button').first.click();pg.wait_for_function("document.getElementById('viewer-name').textContent.includes('SYNTHETIC B')");pg.evaluate('window.oldPortion.click()');assert not pg.locator('#vr-dialog').is_visible(),'stale choice cannot reopen another study'
+ pg.click('#lang-toggle');pg.locator('#worklist tbody tr').filter(has_text='SYNTHETIC A').locator('button').first.click();pg.wait_for_function("document.getElementById('viewer-name').textContent.includes('SYNTHETIC A')")
+ pg.click('#vr-open');pg.wait_for_function("document.querySelectorAll('#vr-portions button').length===2");assert 'Preview portion' in pg.locator('#vr-portions button').first.inner_text();pg.locator('#vr-portions button').nth(1).click();pg.wait_for_function("!document.getElementById('vr-controls').hidden");assert 'PARTIAL VOLUME' in pg.locator('#vr-status').inner_text() and '5/12' in pg.locator('#vr-info').inner_text()
+ for width in [360,720,1280]:pg.set_viewport_size({'width':width,'height':1000});assert pg.locator('#vr-dialog').evaluate('e=>e.getBoundingClientRect().width<=innerWidth')
+ pg.click('#vr-close');assert not sent and not downloads,(sent,downloads)
+ stored=pg.evaluate("""async()=>{const db=await new Promise(r=>{const q=indexedDB.open('rrai',2);q.onsuccess=()=>r(q.result)}),tx=db.transaction('studies');const s=await new Promise(r=>{const q=tx.objectStore('studies').get('1.2.3.7');q.onsuccess=()=>r(q.result)});db.close();return s.frames.length===12&&s.frames.every((f,z)=>f.w===(z===6?9:8)&&f.data.every((v,i)=>v===(i<f.w?-1000:1000+z*20))&&f.seriesUid==='SYNTHETIC_SECRET_SERIES')&&s.report.findings==='Retain physician text'&&s.signedBy==='Synthetic Reviewer'&&s.measurementFrames['1:0'].test==='keep';}""")
+ assert stored and not errors,(stored,errors)
+ print('PASS exact refusal diagnostics, no automatic omission, explicit two contiguous portions/WebGL, persistent partial/exclusion warnings, AR/EN, stale-choice cancellation, responsive dialog, unchanged 2D/all saved samples/report/annotations/reviewer, no requests/downloads; errors []')
+ b.close()
