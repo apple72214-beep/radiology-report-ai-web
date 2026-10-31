@@ -3,7 +3,7 @@ import os
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
  b=p.chromium.launch(args=['--no-sandbox']);pg=b.new_page(viewport={'width':390,'height':1000});errors=[];pg.on('pageerror',lambda e:errors.append(str(e)))
- pg.goto(os.getenv('BASE','http://127.0.0.1:8899/standalone.html'));pg.wait_for_function("!!document.getElementById('wl-clear')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_timeout(1500)
+ pg.goto(os.getenv('BASE','http://127.0.0.1:8899/standalone.html'));pg.wait_for_function("!!document.getElementById('wl-clear')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_function("!location.pathname.endsWith('standalone.html') || sessionStorage.getItem('rrai-sw-reload')==='1'");pg.wait_for_load_state('load');pg.wait_for_timeout(1500)
  fold=pg.locator('#wl-options');summary=pg.locator('#wl-options-summary')
  assert not fold.evaluate('e=>e.open');assert not pg.locator('#wl-query').is_visible();assert pg.locator('#wl-count').is_visible();assert not pg.locator('#wl-help').is_visible()
  pg.click('#demo');pg.wait_for_selector('#worklist tbody tr button',timeout=30000);assert not fold.evaluate('e=>e.open')

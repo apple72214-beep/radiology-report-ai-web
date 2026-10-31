@@ -3,7 +3,7 @@ import os
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
  b=p.chromium.launch(args=['--no-sandbox']);context=b.new_context(viewport={'width':360,'height':800});pg=context.new_page();errors=[];pg.on('pageerror',lambda e:errors.append(str(e)))
- pg.goto(os.getenv('BASE','http://127.0.0.1:8899/standalone.html'));pg.wait_for_function("!!document.getElementById('credentials-clear')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_timeout(1500)
+ pg.goto(os.getenv('BASE','http://127.0.0.1:8899/standalone.html'));pg.wait_for_function("!!document.getElementById('credentials-clear')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_function("!location.pathname.endsWith('standalone.html') || sessionStorage.getItem('rrai-sw-reload')==='1'");pg.wait_for_load_state('load');pg.wait_for_timeout(1500)
  pg.click('#settings-btn');pg.fill('#pacs-relay-token','SYNTHETIC-ONLY');pg.check('#pacs-token-remember');pg.fill('#pacs-token','SYNTHETIC-PACS')
  ids=['pacs-relay-token','pacs-ae','pacs-port','pacs-token']
  for width in [360,720,1280]:

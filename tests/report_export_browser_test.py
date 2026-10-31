@@ -9,7 +9,7 @@ with sync_playwright() as p:
  b=p.chromium.launch(args=['--no-sandbox']);pg=b.new_page(viewport={'width':390,'height':1000},accept_downloads=True)
  errors=[];downloads=[];pg.on('pageerror',lambda e:errors.append(str(e)));pg.on('download',lambda d:downloads.append(d))
  pg.goto(BASE);pg.wait_for_function("!!document.getElementById('wl-clear')?.onclick&&!!document.getElementById('sign-export-word-en')?.__reportExport")
- pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_timeout(1500)
+ pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_function("!location.pathname.endsWith('standalone.html') || sessionStorage.getItem('rrai-sw-reload')==='1'");pg.wait_for_load_state('load');pg.wait_for_timeout(1500)
  pg.click('#demo');pg.wait_for_selector('#worklist tbody tr button');pg.locator('#worklist tbody tr button').first.click();pg.wait_for_selector('#viewport',state='visible')
  pg.locator('#composer-set').evaluate('e=>e.open=true')
  for id in ['gen-report','copy-report','sign-export','sign-export-word','preview-a4','print-a4','report-ar','report-en','a4-set']:

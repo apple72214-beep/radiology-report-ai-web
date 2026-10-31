@@ -1,12 +1,12 @@
 {
-  "build": "v156",
-  "version": "v156",
-  "mark": "ب3.28",
+  "build": "v157",
+  "version": "v157",
+  "mark": "ب3.29",
   "channel": "stable",
-  "minVersion": "v156",
-  "updatedAt": "2026-10-31T22:02:59Z",
+  "minVersion": "v157",
+  "updatedAt": "2026-10-31T23:10:53Z",
   "notes": {
-    "ar": "تأكيد حفظ الحالات والتنبيه عند فشل التخزين وتوضيح حدود نسخة التقارير — ب3.28",
-    "en": "Confirm study transaction commits, expose storage failures and clarify report-only backups — ب3.28"
+    "ar": "نسخة محلية مشفرة للدراسات والتقارير مع تحقق واستعادة دون استبدال الحالات — ب3.29",
+    "en": "Encrypted local study/report backup with validation and non-overwriting restore — ب3.29"
   }
 }

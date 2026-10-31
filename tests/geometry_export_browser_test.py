@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 BASE=os.getenv('BASE','http://127.0.0.1:8899/standalone.html')
 with sync_playwright() as p:
  b=p.chromium.launch(args=['--no-sandbox']);pg=b.new_page(viewport={'width':390,'height':1000});errors=[];pg.on('pageerror',lambda e:errors.append(str(e)))
- pg.goto(BASE);pg.wait_for_function("!!document.getElementById('geometry-export')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_timeout(1200)
+ pg.goto(BASE);pg.wait_for_function("!!document.getElementById('geometry-export')?.onclick");pg.wait_for_function('!!navigator.serviceWorker.controller');pg.wait_for_function("!location.pathname.endsWith('standalone.html') || sessionStorage.getItem('rrai-sw-reload')==='1'");pg.wait_for_load_state('load');pg.wait_for_timeout(1200)
  pg.evaluate("""async()=>{const db=await new Promise(r=>{const q=indexedDB.open('rrai',2);q.onsuccess=()=>r(q.result)}),tx=db.transaction('studies','readwrite'),st=tx.objectStore('studies');st.clear();st.put({uid:'synthetic-ct-secret-uid',patient:'SYNTHETIC_PRIVATE_NAME',modality:'CT',created:1,meta:{patientName:'SYNTHETIC_PRIVATE_NAME'},triage:{score:0,priority:'routine',reasons:[]},frames:Array.from({length:4},(_,z)=>({kind:'gray',w:4,h:4,data:Int16Array.from({length:16},(_,i)=>i*100),seriesUid:'SYNTHETIC_SECRET_SERIES',volumeUnit:'HU',info:{frames:1},spacing:[1,1],geometry:{ipp:[0,0,z],iop:[1,0,0,0,1,0]}}))});await new Promise(r=>tx.oncomplete=r);db.close();}""")
  pg.reload();pg.wait_for_selector('#worklist tbody tr button');pg.locator('#worklist tbody tr button').first.click();pg.click('#vs-fold')
  pg.locator('#geometry-diagnostic').evaluate('e=>e.open=true')

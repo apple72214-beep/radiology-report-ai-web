@@ -1,5 +1,5 @@
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
-const source=fs.readFileSync(new URL('../app.v156.js',import.meta.url),'utf8');
+const source=fs.readFileSync(new URL('../app.v157.js',import.meta.url),'utf8');
 const code=source.slice(source.indexOf('/* Durable-save contract:'),source.indexOf('/* ---- triage'));
 const transactions=[];const c={db:{transaction(){const request={};const transaction={request,objectStore:()=>({put:()=>request})};transactions.push(transaction);return transaction;}},STORE:'studies',memStudies:new Map(),LANG:'en'};vm.createContext(c);vm.runInContext(code,c);
 let done=false;const first=c.putStudy({uid:'a',report:'first'}).then(x=>(done=true,x));await Promise.resolve();assert(!done);assert.equal(transactions[0].request.onsuccess,undefined);await Promise.resolve();assert(!done,'request creation is not commit');transactions[0].oncomplete();assert.equal((await first).persisted,true);assert.equal(c.memStudies.size,0);
