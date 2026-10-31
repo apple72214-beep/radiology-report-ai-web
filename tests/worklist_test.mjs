@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {selectWorklistStudies as select,worklistText} from '../app.v157.js';
+import {selectWorklistStudies as select,worklistText} from '../app.v158.js';
 const a={uid:'a',patient:'ID-123',meta:{patientName:'أَحْمَد^علي',studyDesc:'MRI Lumbar spine',studyDate:'20261018'},modality:'MR',created:2,triage:{priority:'urgent'},series:[{description:'Sagittal T2'}],frames:[]};
 const b={uid:'b',patient:'ID-456',meta:{patientName:'Beta',studyDate:'20261020'},modality:'CT',created:3,signedBy:'Synthetic doctor',frames:[{seq:{seriesDescription:'Axial Chest'}}]};
 const c={uid:'c',patient:'ID-789',meta:{patientName:'Cedar'},modality:'MR',created:4,consult:{},frames:[]};
@@ -14,6 +14,6 @@ assert.deepEqual(select(rows,{sort:'study'}).map(s=>s.uid),['b','a','c']);
 assert.equal(select(rows,{modality:'MR',state:'signed'}).length,0);
 assert.deepEqual(select(rows,{priority:'consult',state:'unsigned'}).map(s=>s.uid),['c']);
 assert.deepEqual(select(rows,{critical:true}).map(s=>s.uid),['a','c']);
-assert.deepEqual(select(rows,{state:'signed'}).map(s=>s.uid),['b']);
+assert.deepEqual(select(rows,{state:'signed'}).map(s=>s.uid),[],'legacy name alone cannot prove current text approval');assert(select(rows,{state:'unsigned'}).some(s=>s.uid==='b'));
 assert.equal(JSON.stringify(rows),before);
 console.log('WORKLIST PASS: Arabic/digits/caret/multiword normalization, series/date/ID search, literal query, combined filters, ordering, immutability');

@@ -1,12 +1,12 @@
 {
-  "build": "v157",
-  "version": "v157",
-  "mark": "ب3.29",
+  "build": "v158",
+  "version": "v158",
+  "mark": "ب3.30",
   "channel": "stable",
-  "minVersion": "v157",
-  "updatedAt": "2026-10-31T23:10:53Z",
+  "minVersion": "v158",
+  "updatedAt": "2026-10-31T23:47:43Z",
   "notes": {
-    "ar": "نسخة محلية مشفرة للدراسات والتقارير مع تحقق واستعادة دون استبدال الحالات — ب3.29",
-    "en": "Encrypted local study/report backup with validation and non-overwriting restore — ب3.29"
+    "ar": "حالات التقرير وإصدارات اعتماد محفوظة وتمييز التعديل بعد الاعتماد — ب3.30",
+    "en": "Report lifecycle, preserved approval revisions and explicit post-approval amendments — ب3.30"
   }
 }

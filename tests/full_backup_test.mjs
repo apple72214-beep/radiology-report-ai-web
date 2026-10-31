@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import {webcrypto} from 'node:crypto';
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
-import {fullBackupPack as pack,fullBackupUnpack as unpack,fullBackupValidate as validate,fullBackupEncrypt as encrypt,fullBackupDecrypt as decrypt}from'../app.v157.js';
+import {fullBackupPack as pack,fullBackupUnpack as unpack,fullBackupValidate as validate,fullBackupEncrypt as encrypt,fullBackupDecrypt as decrypt}from'../app.v158.js';
 const arrays=[new Int16Array(new Int16Array([999,1,2,888]).buffer,2,2),new Uint8Array([0,255]),new Uint8ClampedArray([9]),new Int8Array([-9]),new Uint16Array([65535]),new Int16Array([-1024,1200]),new Uint32Array([4294967295]),new Int32Array([-2147483648]),new Float32Array([98.25,NaN,Infinity,-Infinity]),new Float64Array([Math.PI]),new DataView(new Uint8Array([1,2]).buffer),new Uint8Array([7,8]).buffer];
 const value={arrays,undefined:undefined,date:new Date('2026-11-01T00:00:00Z'),nan:NaN,inf:Infinity,negative:-Infinity,text:'نص اصطناعي <script>not executable</script>',tags:{t:'binary',type:'not a real typed tag'}};
 assert.deepEqual(unpack(pack(value)),value);const opposite=pack(new Uint16Array([1,2]));opposite.order=opposite.order==='LE'?'BE':'LE';assert.throws(()=>unpack(opposite),/byte order/);const cycle={};cycle.self=cycle;assert.throws(()=>pack(cycle),/cyclic/);assert.throws(()=>unpack({t:'object',v:[['__proto__',{}]]}),/Unsafe/);assert.throws(()=>unpack({t:'binary',type:'Function',v:'AAAA'}),/Invalid/);assert.throws(()=>unpack({t:'binary',type:'Uint16Array',v:'AQ=='}),/length/);
