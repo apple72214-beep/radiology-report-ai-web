@@ -1,0 +1,13 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../app.v156.js',import.meta.url),'utf8');
+const code=source.slice(source.indexOf('/* Durable-save contract:'),source.indexOf('/* ---- triage'));
+const transactions=[];const c={db:{transaction(){const request={};const transaction={request,objectStore:()=>({put:()=>request})};transactions.push(transaction);return transaction;}},STORE:'studies',memStudies:new Map(),LANG:'en'};vm.createContext(c);vm.runInContext(code,c);
+let done=false;const first=c.putStudy({uid:'a',report:'first'}).then(x=>(done=true,x));await Promise.resolve();assert(!done);assert.equal(transactions[0].request.onsuccess,undefined);await Promise.resolve();assert(!done,'request creation is not commit');transactions[0].oncomplete();assert.equal((await first).persisted,true);assert.equal(c.memStudies.size,0);
+const aborted=c.putStudy({uid:'a',report:'second'});transactions[1].onabort();assert.equal((await aborted).persisted,false);assert.equal(c.memStudies.get('a').report,'second');assert.equal(c.studyOverlay([{uid:'a',report:'old'},{uid:'b'}]).find(x=>x.uid==='a').report,'second');
+const failed=c.putStudy({uid:'a',report:'third'});transactions[2].request.onerror();assert.equal((await failed).persisted,false);transactions[2].onabort();assert.equal(c.memStudies.get('a').report,'third');
+const old=c.putStudy({uid:'a',report:'older'}),latest=c.putStudy({uid:'a',report:'latest'});transactions[3].oncomplete();assert.equal((await old).persisted,true);assert.equal(c.memStudies.get('a').report,'latest','older completion cannot clear newer edits');transactions[4].onabort();assert.equal((await latest).persisted,false);
+const retry=c.putStudy(c.memStudies.get('a'));transactions[5].oncomplete();assert((await retry).persisted);assert.equal(c.memStudies.size,0);
+c.db=null;const temporary=await c.putStudy({uid:'temp'});assert.equal(temporary.persisted,false);assert.equal(temporary.code,'session-only');await assert.rejects(c.requireStoredStudy({uid:'temp'}),/not saved/);
+c.db={transaction(){throw Error('quota')}};assert.equal((await c.putStudy({uid:'sync'})).persisted,false);assert(c.memStudies.has('sync'));
+assert(source.includes('await requireStoredStudy(record)'));assert(source.includes('await requireStoredStudy(fixed)'));assert(source.includes('await requireStoredStudy(study);\n    say("study committed'));
+console.log('PASS committed transaction only, request error/abort/synchronous quota/session-only, pending memory overlay, stale completion isolation, retry, strict import/signing save guards');

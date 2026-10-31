@@ -1,12 +1,12 @@
 {
-  "build": "v155",
-  "version": "v155",
-  "mark": "ب3.27",
+  "build": "v156",
+  "version": "v156",
+  "mark": "ب3.28",
   "channel": "stable",
-  "minVersion": "v155",
-  "updatedAt": "2026-10-30T02:37:22Z",
+  "minVersion": "v156",
+  "updatedAt": "2026-10-31T22:02:59Z",
   "notes": {
-    "ar": "إظهار سطح عظمي معتم مع إبقاء الإظهار الحجمي للمقارنة — ب3.27",
-    "en": "Opaque threshold bone surface with volume mode retained for comparison — ب3.27"
+    "ar": "تأكيد حفظ الحالات والتنبيه عند فشل التخزين وتوضيح حدود نسخة التقارير — ب3.28",
+    "en": "Confirm study transaction commits, expose storage failures and clarify report-only backups — ب3.28"
   }
 }
